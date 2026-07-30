@@ -1,0 +1,1 @@
+# smart-campus-management-platform
