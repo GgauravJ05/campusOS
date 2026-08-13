@@ -18,20 +18,3 @@ Colleges currently manage campus clubs, special interest groups (SIGs), venue al
 ---
 
 ## 🏛️ System Architecture & Pillar Breakdown
-
-The platform is divided across 3 specialized engineering sub-teams:
-
-```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           CampusOS PLATFORM                             │
-└────────────────────────────────────┬────────────────────────────────────┘
-                                     │
-       ┌─────────────────────────────┼─────────────────────────────┐
-       ▼                             ▼                             ▼
-┌──────────────┐              ┌──────────────┐              ┌──────────────┐
-│    TEAM 1    │              │    TEAM 2    │              │    TEAM 3    │
-├──────────────┤              ├──────────────┤              ├──────────────┤
-│ Resource     │              │ Student      │              │ Auth, Admin  │
-│ Scheduling   │              │ Services &   │              │ Governance   │
-│ Engine       │              │ Notifications│              │ & Analytics  │
-└──────────────┘              └──────────────┘              └──────────────┘
