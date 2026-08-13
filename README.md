@@ -18,3 +18,6 @@ Colleges currently manage campus clubs, special interest groups (SIGs), venue al
 ---
 
 ## 🏛️ System Architecture & Pillar Breakdown
+<p align="center">
+  <img src="docs/images/CampusOS_Structure_Overview.png" alt="CampusOS System Architecture Overview" width="100%" />
+</p>
