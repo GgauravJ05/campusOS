@@ -1,1 +1,1 @@
-All the images that we will be using in the Github ReadME files
+Adding all the images used in this Github Repo's ReadME files
