@@ -1,0 +1,60 @@
+# ============================================================
+# CampusOS - local development dependencies.
+#
+#   docker compose up -d        start PostgreSQL
+#   docker compose down         stop it (data survives)
+#   docker compose down -v      stop it and wipe the data
+#
+# Gives all 12 team members an identical database without anyone
+# installing PostgreSQL by hand. Ports are non-default so this cannot
+# collide with a PostgreSQL someone already runs locally.
+# ============================================================
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: campusos-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: campusos
+    ports:
+      - "55432:5432"
+    volumes:
+      - campusos-db-data:/var/lib/postgresql/data
+      # Applied automatically the first time the volume is created.
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d campusos"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Separate database for the test suite, so running tests never touches
+  # the data you are developing against.
+  db-test:
+    image: postgres:16-alpine
+    container_name: campusos-db-test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: campusos_test
+    ports:
+      - "55433:5432"
+    # tmpfs: the test database lives in RAM and is thrown away on restart.
+    tmpfs:
+      - /var/lib/postgresql/data
+    volumes:
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d campusos_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  campusos-db-data:
