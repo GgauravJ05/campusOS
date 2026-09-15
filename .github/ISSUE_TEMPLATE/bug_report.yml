@@ -1,0 +1,54 @@
+name: Bug report
+description: Something is broken or behaves differently from the SRS
+title: "[Bug]: "
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting. Please check existing issues first.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Sign in as coordinator.it@mmcoe.edu.in
+        2. Open ...
+        3. Click ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Auth & accounts
+        - Venues & scheduling
+        - Approvals
+        - Events & RSVP
+        - Notifications
+        - Admin & analytics
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Layer
+      options: [Frontend, Backend API, Database, CI / tooling, Not sure]
+  - type: input
+    id: request-id
+    attributes:
+      label: Request ID
+      description: The X-Request-Id response header, if an API call failed. Lets us find the exact log line.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: Never paste passwords, tokens or .env contents.

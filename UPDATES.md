@@ -1,8 +1,66 @@
 # CampusOS — Update Log
 
 A running record of what changed, why, and what it means for the rest of the
-team. Newest entry first. Add an entry whenever you land something other
-people need to know about.
+team. **Newest entry first. Old entries are never deleted** — this file is the
+build history. Every change that lands gets an entry (see
+[CONTRIBUTING.md](CONTRIBUTING.md#4-record-every-change-in-updatesmd)).
+
+## Build history
+
+| Date | Change | Author |
+| ---- | ------ | ------ |
+| 2026-09-15 | [Repository standards & CI/CD](#repository-standards--cicd-2026-09-15) | Gaurav |
+| 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
+| 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
+| 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Repository standards & CI/CD (2026-09-15)
+
+Makes the repository work like a professional project: every pull request is
+checked automatically, every merge to `main` produces a release, and the team
+has written rules for branches, commits, reviews and conduct. **No application
+behaviour changed.**
+
+### ⚠️ What you need to do
+
+- Read [`CONTRIBUTING.md`](CONTRIBUTING.md) — branch names, commit message
+  format, and the PR rules are now the team standard.
+- Open pull requests against `dev` and fill in the template. **Add an entry to
+  this file in every PR.**
+- Use Node.js 22 (`nvm use` reads the new `.nvmrc`).
+
+### Added
+
+| File | Purpose |
+| ---- | ------- |
+| `.github/workflows/ci.yml` | **CI.** On every PR and push to `dev`/`main`: backend tests against a real PostgreSQL 16 service container with the coverage gate, frontend lint + tests + build, and `npm audit` for both. |
+| `.github/workflows/release.yml` | **CD.** On push to `main` or a `v*.*.*` tag: re-runs CI, then publishes the API image to `ghcr.io/ggauravj05/campusos-api` and the built web app (attached to the GitHub Release for tags). |
+| `backend/Dockerfile`, `.dockerignore` | Production API image: multi-stage, runs as non-root, built-in health check. |
+| `.github/pull_request_template.md` | PR checklist, including tests, no secrets and the `UPDATES.md` entry. |
+| `.github/ISSUE_TEMPLATE/` | Structured bug report and feature forms; security issues redirected to `SECURITY.md`. |
+| `.github/CODEOWNERS` | Auto-requests maintainer review; `db/`, `.github/` and backend config always need it. |
+| `.github/dependabot.yml` | Weekly grouped dependency update PRs against `dev`. |
+| `CODE_OF_CONDUCT.md` | Contributor Covenant 2.1. |
+| `CONTRIBUTING.md` | Branching model, Conventional Commits, PR and code standards. |
+| `SECURITY.md` | How to report a vulnerability privately. |
+| `.editorconfig`, `.gitattributes`, `.nvmrc` | Same indentation, LF line endings and Node version for everyone, whatever their editor or OS. |
+
+### Changed
+
+- `backend/tests/globalSetup.js`: with `REQUIRE_TEST_DATABASE=1` (set in CI) an
+  unreachable test database **fails** the run instead of skipping the database
+  suites. Locally nothing changes: without a database those suites still skip.
+
+### Open questions
+
+1. **Branch protection** must be switched on by the repo owner in GitHub
+   (*Settings → Branches*): protect `main` and `dev`, require the CI checks and
+   one approving review. It is a repository setting, not a file.
+2. **Hosting target** for deployment is not chosen yet (e.g. Render / Railway
+   for the API, Vercel / Netlify for the web app). The release pipeline already
+   produces the artifacts; a deploy step is added once this is decided.
 
 ---
 

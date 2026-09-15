@@ -1,5 +1,12 @@
 # 🏫 CampusOS — Campus Club & Event Management Platform
 
+[![CI](https://github.com/GgauravJ05/campusOS/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/GgauravJ05/campusOS/actions/workflows/ci.yml)
+[![Release](https://github.com/GgauravJ05/campusOS/actions/workflows/release.yml/badge.svg)](https://github.com/GgauravJ05/campusOS/actions/workflows/release.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
+
+> **What changed recently?** See [`UPDATES.md`](UPDATES.md) — every change and build, newest first.
+
 > A unified, high-concurrency web platform designed to streamline campus club events, venue scheduling, student seat reservations, and administrative governance.
 
 ---
@@ -102,3 +109,17 @@ docs/        SRS, diagrams, workflows, weekly reports
 | Database schema       | [`db/schema.sql`](db/schema.sql)                      |
 | Backend guide         | [`backend/README.md`](backend/README.md)              |
 | Workflows             | [`docs/workflows/`](docs/workflows/)                  |
+| Change log / builds   | [`UPDATES.md`](UPDATES.md)                            |
+
+---
+
+## 🤝 Contributing
+
+Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a pull request: branch
+from `dev`, use Conventional Commits, keep CI green, and add an `UPDATES.md`
+entry. Everyone is expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+Security issues go through [`SECURITY.md`](SECURITY.md), never a public issue.
+
+## 📄 License
+
+[MIT](LICENSE) © 2026 Team A6, MMCOE.

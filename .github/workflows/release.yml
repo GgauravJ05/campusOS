@@ -1,0 +1,113 @@
+# ============================================================
+# CampusOS - Continuous Delivery
+#
+# Every push to main (i.e. every merged release PR from dev) and every
+# version tag (v1.2.3) produces deployable artifacts:
+#
+#   * the API as a container image on GitHub Container Registry
+#       ghcr.io/<owner>/campusos-api:<sha> | :latest | :v1.2.3
+#   * the web app as a static build attached to the run (and to the
+#     GitHub Release for version tags)
+#
+# CI must already be green: the workflow re-runs it first and stops on
+# failure, so a broken commit can never be published.
+#
+# Deploying those artifacts to a host is a separate step to add once the
+# hosting target is chosen (see UPDATES.md open questions).
+# ============================================================
+
+name: Release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: Verify
+    uses: ./.github/workflows/ci.yml
+
+  api-image:
+    name: Publish API image
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/campusos-api
+          tags: |
+            type=sha,format=short
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  web-build:
+    name: Build web app
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+      - run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || '/api' }}
+
+      - name: Package
+        run: tar -czf ../campusos-web-${{ github.ref_name }}.tar.gz -C dist .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: campusos-web
+          path: campusos-web-${{ github.ref_name }}.tar.gz
+
+      - name: Attach to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: campusos-web-${{ github.ref_name }}.tar.gz
+          generate_release_notes: true
