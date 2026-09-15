@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
-  CalendarDays, ChevronsUpDown, LayoutDashboard, LogOut, Menu, MapPin, ShieldCheck, UserRound, UsersRound, X,
+  CalendarCheck2, CalendarDays, ChevronsUpDown, LayoutDashboard, LogOut, Menu, MapPin, ShieldCheck, UserRound, UsersRound, X,
 } from 'lucide-react'
 import { useAuth } from '@/features/auth/authContext'
 import { useToast } from '@/components/ui/Toast'
@@ -13,7 +13,8 @@ import { cn, FACULTY_ROLES, ROLE_META } from '@/lib/utils'
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/events', label: 'Events', icon: CalendarDays, soon: true },
-  { to: '/venues', label: 'Venues', icon: MapPin, soon: true },
+  { to: '/venues', label: 'Venues', icon: MapPin },
+  { to: '/bookings', label: 'Bookings', icon: CalendarCheck2, roles: ['CLUB_HEAD', 'CLUB_MEMBER', ...FACULTY_ROLES] },
   { to: '/users', label: 'People', icon: UsersRound, roles: FACULTY_ROLES },
   { to: '/profile', label: 'Profile & security', icon: UserRound },
 ]

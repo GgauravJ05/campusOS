@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-15 | [Phase 2 — Venues & booking web app](#phase-2--venues--booking-web-app-2026-09-15) | Gaurav |
 | 2026-09-15 | [Phase 2 — Venues & scheduling engine API](#phase-2--venues--scheduling-engine-api-2026-09-15) | Gaurav |
 | 2026-09-15 | [Phase 1 — Web app redesign](#phase-1--web-app-redesign-2026-09-15) | Gaurav |
 | 2026-09-15 | [Phase 1 — Auth & RBAC API](#phase-1--auth--rbac-api-2026-09-15) | Gaurav |
@@ -16,6 +17,42 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase 2 — Venues & booking web app (2026-09-15)
+
+The screens for the Phase 2 API. Anyone signed in can browse venues and their
+calendars; club heads request venues; coordinators and the principal book
+directly and approve or reject requests.
+
+### ⚠️ What you need to do
+
+Pull and restart `npm run dev` in `frontend/`. No new packages. The database
+rebuild from the previous entry is required if you have not done it yet.
+
+### Screens
+
+| Route | Who | What |
+| ----- | --- | ---- |
+| `/venues` | everyone | Venue cards; search, building → floor, type, minimum seats, equipment chips (filters live in the URL). Faculty: **Add venue** |
+| `/venues/:id` | everyone | Details plus a **week calendar**: booked slots red, pending requests amber, your own requests outlined. Click a free time to start booking there. Managers: edit, buffer override, deactivate |
+| `/bookings/new` | club heads, faculty | 3-step wizard: **Building → Floor → Venue**, then date and time with a **live availability check** (clash details, buffer explained, one-click free-time suggestions, "N other requests pending"), then event details and a summary |
+| `/bookings` | club heads, members, faculty | Faculty open on **Needs decision** (approve, or reject with a required reason), plus Department and My bookings. Club heads see their requests, status, rejection reasons, and can cancel |
+
+If a slot is taken between the availability check and pressing **Send**, the
+wizard returns to the time step with the new clash and free alternatives, so
+nobody gets a dead-end error.
+
+Navigation: **Venues** is live, and a **Bookings** item was added for club
+heads, members and faculty. The dashboard roadmap marks Phase 2 as live.
+
+### Tests
+
+**108 frontend tests (was 80)**, covering the full wizard journey (clash →
+suggestion → validation → submit), direct faculty booking from a calendar
+click, the last-moment 409 recovery, week navigation, venue create/edit,
+approve and reject with the required reason, and cancel. Coverage 93 / 88 / 90 / 95.
 
 ---
 
