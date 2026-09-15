@@ -78,10 +78,11 @@ Seeded demo accounts all use the password `Campus@123`:
 ### Running the tests
 
 ```bash
-cd backend
-npm test              # unit + integration
-npm run test:coverage # with the coverage gate
+cd backend && npm test      # 330 tests: unit + API flows (DB suites need PostgreSQL)
+cd frontend && npm test     # 80 tests: components and user journeys
 ```
+
+Every pull request runs both suites in CI, including the database suites against a real PostgreSQL.
 
 Unit tests need no database. The SQL-backed suites read `TEST_DATABASE_URL`
 and skip themselves when it is unset, so the suite passes on a machine with
@@ -93,7 +94,7 @@ no PostgreSQL installed.
 
 ```
 backend/     Express REST API - see backend/README.md
-frontend/    React (Vite) single-page application
+frontend/    React 19 + Tailwind web app - see frontend/README.md
 db/          schema.sql, seed.sql, reset.sql
 docs/        SRS, diagrams, workflows, weekly reports
 ```
@@ -108,6 +109,7 @@ docs/        SRS, diagrams, workflows, weekly reports
 | Use case diagram      | [`docs/diagrams/use_case.png`](docs/diagrams/use_case.png) |
 | Database schema       | [`db/schema.sql`](db/schema.sql)                      |
 | Backend guide         | [`backend/README.md`](backend/README.md)              |
+| Frontend guide        | [`frontend/README.md`](frontend/README.md)            |
 | Workflows             | [`docs/workflows/`](docs/workflows/)                  |
 | Change log / builds   | [`UPDATES.md`](UPDATES.md)                            |
 
