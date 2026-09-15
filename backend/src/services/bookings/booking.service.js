@@ -29,11 +29,15 @@ const audit = require('../audit.service');
 const settings = require('../settings.service');
 const venues = require('../venues/venue.service');
 const tw = require('../scheduling/timeWindow');
+const notifications = require('../notifications/notification.service');
+const templates = require('../mail/templates');
 
 const { ROLES } = rbac;
 
 const EVENT_CATEGORIES = Object.freeze(['TECHNICAL', 'CULTURAL', 'SPORTS', 'WORKSHOP', 'SEMINAR', 'PLACEMENT', 'SOCIAL', 'OTHER']);
 const LIVE_STATUSES = Object.freeze(['PENDING', 'APPROVED', 'MODIFICATION_REQUESTED']);
+/** Requests still waiting on someone: the approver (PENDING) or the club (MODIFICATION_REQUESTED). */
+const OPEN_STATUSES = Object.freeze(['PENDING', 'MODIFICATION_REQUESTED']);
 const AUTO_REJECT_REASON = 'Another request for this venue and time was approved first.';
 
 /** Widest possible reach of a neighbouring booking: max buffer (120) + max extension (15). */
@@ -45,7 +49,12 @@ const NEIGHBOUR_REACH_MINUTES = 135;
 
 const BOOKING_SELECT = `
   SELECT b.booking_id, b.status, b.start_at, b.end_at, b.buffer_minutes, b.extension_minutes, b.is_direct,
-         b.rejection_reason, b.decided_at, b.created_at, b.requested_by, b.approved_by, b.venue_id,
+         b.rejection_reason, b.modification_note, b.revision, b.decided_at, b.created_at, b.updated_at,
+         b.requested_by, b.approved_by, b.venue_id,
+         (SELECT count(*)::int FROM bookings o
+           WHERE o.venue_id = b.venue_id AND o.booking_id <> b.booking_id
+             AND o.status IN ('PENDING', 'MODIFICATION_REQUESTED')
+             AND o.start_at < b.end_at AND o.end_at > b.start_at) AS competing_count,
          e.event_id, e.title, e.description, e.category, e.event_scope, e.max_seats, e.status AS event_status,
          e.department_id AS event_department_id, e.club_id,
          c.club_name, c.club_head_id,
@@ -80,11 +89,18 @@ async function findApprovedConflicts(client, venueId, proposed, { excludeBooking
   }));
 }
 
-/** Rejects every pending request that overlaps a newly approved booking. */
+/**
+ * Rejects every pending request that overlaps a newly approved booking.
+ * @returns {Promise<object[]>} the rejected rows, for audit and notifications
+ */
 async function rejectCompetitors(client, { venueId, approved, deciderId }) {
   const { rows } = await client.query(
-    `SELECT b.booking_id, b.event_id, b.start_at, b.end_at, b.buffer_minutes
+    `SELECT b.booking_id, b.event_id, b.start_at, b.end_at, b.buffer_minutes, b.requested_by,
+            e.title, v.venue_name, u.full_name AS requester_name, u.email AS requester_email
        FROM bookings b
+       JOIN events e ON e.event_id = b.event_id
+       JOIN venues v ON v.venue_id = b.venue_id
+       JOIN users u ON u.user_id = b.requested_by
       WHERE b.venue_id = $1 AND b.status IN ('PENDING', 'MODIFICATION_REQUESTED') AND b.booking_id <> $2
         AND b.start_at < $4::timestamptz + make_interval(mins => $5)
         AND b.end_at   > $3::timestamptz - make_interval(mins => $5)
@@ -98,17 +114,68 @@ async function rejectCompetitors(client, { venueId, approved, deciderId }) {
   ));
   if (losers.length === 0) return [];
 
-  const ids = losers.map((l) => l.booking_id);
   await client.query(
     `UPDATE bookings SET status = 'REJECTED', rejection_reason = $2, approved_by = $3, decided_at = now()
       WHERE booking_id = ANY($1)`,
-    [ids, AUTO_REJECT_REASON, deciderId],
+    [losers.map((l) => l.booking_id), AUTO_REJECT_REASON, deciderId],
   );
   await client.query(
     `UPDATE events SET status = 'REJECTED' WHERE event_id = ANY($1)`,
     [losers.map((l) => l.event_id)],
   );
-  return ids;
+  return losers;
+}
+
+// ---------------------------------------------------------------------------
+// Notifications (in-app rows inside the transaction, emails after commit)
+// ---------------------------------------------------------------------------
+
+const NOTICE_COPY = {
+  APPROVED: { category: notifications.CATEGORIES.BOOKING_APPROVED, title: (t) => `Approved: ${t}`, verb: 'was approved' },
+  REJECTED: { category: notifications.CATEGORIES.BOOKING_REJECTED, title: (t) => `Not approved: ${t}`, verb: 'was not approved' },
+  CHANGES_REQUESTED: { category: notifications.CATEGORIES.BOOKING_CHANGES_REQUESTED, title: (t) => `Changes requested: ${t}`, verb: 'needs changes' },
+  CANCELLED: { category: notifications.CATEGORIES.BOOKING_CANCELLED, title: (t) => `Cancelled: ${t}`, verb: 'was cancelled by faculty' },
+};
+
+/**
+ * Notifies the requester of a decision and queues the matching email.
+ * @param {object} row  a booking row with title, venue_name, start_at, end_at, requester_*
+ */
+async function noticeToRequester(client, outbox, row, outcome, { note = null, deciderName = null } = {}) {
+  const copy = NOTICE_COPY[outcome];
+  const start = tw.toCampusParts(row.start_at);
+  const end = tw.toCampusParts(row.end_at);
+  const when = `${start.date} ${start.time}-${end.time}`;
+  await notifications.notify(client, [{
+    userId: row.requested_by,
+    category: copy.category,
+    title: copy.title(row.title),
+    message: `Your request for ${row.venue_name} on ${when} ${copy.verb}.${note ? ` ${note}` : ''}`,
+    bookingId: row.booking_id,
+    eventId: row.event_id,
+  }]);
+  outbox.push({
+    to: row.requester_email,
+    ...templates.bookingOutcome({
+      fullName: row.requester_name, outcome, bookingId: row.booking_id, title: row.title, venueName: row.venue_name,
+      date: start.date, startTime: start.time, endTime: end.time, note, deciderName,
+    }),
+  });
+}
+
+/** Puts a new or resubmitted request in every approver's bell. */
+async function noticeToApprovers(client, { bookingId, eventId, title, venueName, window, departmentId, scope, resubmitted, requesterName }) {
+  const ids = await notifications.approverIds(client, { departmentId, scope });
+  const start = tw.toCampusParts(window.startAt);
+  const end = tw.toCampusParts(window.endAt);
+  await notifications.notify(client, ids.map((userId) => ({
+    userId,
+    category: notifications.CATEGORIES.BOOKING_REQUESTED,
+    title: `${resubmitted ? 'Updated request' : 'New request'}: ${title}`,
+    message: `${requesterName} ${resubmitted ? 'updated their request for' : 'requested'} ${venueName} on ${start.date} ${start.time}-${end.time}.`,
+    bookingId,
+    eventId,
+  })));
 }
 
 // ---------------------------------------------------------------------------
@@ -125,6 +192,11 @@ function canDecide(actor, row) {
 
 function canCancel(actor, row) {
   return row.requested_by === actor.id || row.club_head_id === actor.id || canDecide(actor, row);
+}
+
+/** The requester or the club's head may edit an open request (FR13 resubmission). Faculty never edit a club's request. */
+function canEdit(actor, row) {
+  return row.requested_by === actor.id || (row.club_head_id != null && row.club_head_id === actor.id);
 }
 
 async function isClubMember(actor, clubId) {
@@ -158,8 +230,12 @@ function toBooking(row, actor) {
     bufferMinutes: row.buffer_minutes,
     isDirect: row.is_direct,
     rejectionReason: row.rejection_reason ?? null,
+    modificationNote: row.modification_note ?? null,
+    revision: row.revision ?? 0,
+    competingRequests: row.competing_count ?? 0,
     decidedAt: row.decided_at ?? null,
     createdAt: row.created_at,
+    updatedAt: row.updated_at ?? row.created_at,
     venue: { id: row.venue_id, name: row.venue_name, building: row.building, floor: row.floor, capacity: row.capacity },
     event: {
       id: row.event_id,
@@ -175,7 +251,11 @@ function toBooking(row, actor) {
     requestedBy: { id: row.requested_by, fullName: row.requester_name, email: row.requester_email },
     decidedBy: row.approved_by ? { id: row.approved_by, fullName: row.decider_name } : null,
     permissions: {
+      // Approve and "request changes" need a request waiting on the approver.
       canDecide: row.status === 'PENDING' && upcoming && canDecide(actor, row),
+      // A request sent back to the club can still be turned down outright.
+      canReject: OPEN_STATUSES.includes(row.status) && upcoming && canDecide(actor, row),
+      canEdit: OPEN_STATUSES.includes(row.status) && upcoming && canEdit(actor, row),
       canCancel: live && upcoming && canCancel(actor, row),
     },
   };
@@ -221,7 +301,7 @@ async function checkAvailability(actor, { venueId, date, startTime, endTime }) {
 
   const { rows: [pending] } = await db.query(
     `SELECT count(*)::int AS n FROM bookings
-      WHERE venue_id = $1 AND status = 'PENDING' AND start_at < $3 AND end_at > $2`,
+      WHERE venue_id = $1 AND status IN ('PENDING', 'MODIFICATION_REQUESTED') AND start_at < $3 AND end_at > $2`,
     [venueId, proposed.startAt, proposed.endAt],
   );
 
@@ -244,6 +324,32 @@ async function checkAvailability(actor, { venueId, date, startTime, endTime }) {
       openingTime: rules.openingTime, closingTime: rules.closingTime, preferStart: startTime,
     }),
   };
+}
+
+/**
+ * Throws 409 SLOT_UNAVAILABLE, with the clashes and free alternatives, when an
+ * approved booking blocks the window. Call with the venue row already locked.
+ * @returns {Promise<object>} the proposed window
+ */
+async function assertSlotFree(client, venue, input, { bufferMinutes, rules }) {
+  const proposed = windowOf(input, bufferMinutes);
+  const conflicting = await findApprovedConflicts(client, venue.venue_id, proposed);
+  if (conflicting.length === 0) return proposed;
+
+  const busy = await busyOnDate(client, venue.venue_id, input.date);
+  throw ApiError.conflict('That slot is already booked', {
+    code: 'SLOT_UNAVAILABLE',
+    details: {
+      conflicts: conflicting.map((c) => ({
+        title: c.title, club: c.club_name ?? 'Official event',
+        startTime: tw.toCampusParts(c.start_at).time, endTime: tw.toCampusParts(c.end_at).time,
+      })),
+      suggestions: tw.suggestSlots({
+        date: input.date, durationMinutes: tw.toMinutes(input.endTime) - tw.toMinutes(input.startTime), busy,
+        bufferMinutes, openingTime: rules.openingTime, closingTime: rules.closingTime, preferStart: input.startTime,
+      }),
+    },
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -299,6 +405,7 @@ async function createBooking(actor, input, { ip } = {}) {
   const problems = tw.validateWindow(input, rules);
   if (problems.length) throw ApiError.validation('Choose a valid time slot', problems);
 
+  const outbox = [];
   const bookingId = await db.withTransaction(async (client) => {
     const organiser = await resolveOrganiser(actor, input, client);
 
@@ -314,25 +421,7 @@ async function createBooking(actor, input, { ip } = {}) {
     }
 
     const bufferMinutes = venue.buffer_minutes ?? rules.defaultBufferMinutes;
-    const proposed = windowOf(input, bufferMinutes);
-
-    const conflicting = await findApprovedConflicts(client, venue.venue_id, proposed);
-    if (conflicting.length > 0) {
-      const busy = await busyOnDate(client, venue.venue_id, input.date);
-      throw ApiError.conflict('That slot is already booked', {
-        code: 'SLOT_UNAVAILABLE',
-        details: {
-          conflicts: conflicting.map((c) => ({
-            title: c.title, club: c.club_name ?? 'Official event',
-            startTime: tw.toCampusParts(c.start_at).time, endTime: tw.toCampusParts(c.end_at).time,
-          })),
-          suggestions: tw.suggestSlots({
-            date: input.date, durationMinutes: tw.toMinutes(input.endTime) - tw.toMinutes(input.startTime), busy,
-            bufferMinutes, openingTime: rules.openingTime, closingTime: rules.closingTime, preferStart: input.startTime,
-          }),
-        },
-      });
-    }
+    const proposed = await assertSlotFree(client, venue, input, { bufferMinutes, rules });
 
     const { rows: [event] } = await client.query(
       `INSERT INTO events (club_id, department_id, created_by, title, description, category, event_scope,
@@ -363,24 +452,34 @@ async function createBooking(actor, input, { ip } = {}) {
         approved: { bookingId: booking.booking_id, ...proposed },
         deciderId: actor.id,
       });
+      for (const loser of rejected) {
+        await noticeToRequester(client, outbox, loser, 'REJECTED', { note: AUTO_REJECT_REASON, deciderName: actor.fullName });
+      }
       await audit.record({
         adminId: actor.id, action: 'BOOKING_DIRECT', bookingId: booking.booking_id, targetType: 'BOOKING',
-        targetId: booking.booking_id, ip, details: { venueId: venue.venue_id, autoRejected: rejected },
+        targetId: booking.booking_id, ip, details: { venueId: venue.venue_id, autoRejected: rejected.map((l) => l.booking_id) },
       }, client);
+    } else {
+      await noticeToApprovers(client, {
+        bookingId: booking.booking_id, eventId: event.event_id, title: input.title.trim(), venueName: venue.venue_name,
+        window: proposed, departmentId: organiser.departmentId, scope: organiser.scope, resubmitted: false,
+        requesterName: actor.fullName,
+      });
     }
 
     return booking.booking_id;
   });
 
+  notifications.flush(outbox);
   return loadBooking(actor, bookingId);
 }
 
 // ---------------------------------------------------------------------------
-// Decisions
+// Decisions (FR13 inbox: approve, reject, request modification)
 // ---------------------------------------------------------------------------
 
 /** Locks venue then booking, in that order, and returns the booking row. */
-async function lockBookingForDecision(client, bookingId) {
+async function lockBooking(client, bookingId) {
   const { rows: [ref] } = await client.query('SELECT venue_id FROM bookings WHERE booking_id = $1', [bookingId]);
   if (!ref) return null;
   await client.query('SELECT venue_id FROM venues WHERE venue_id = $1 FOR UPDATE', [ref.venue_id]);
@@ -388,22 +487,29 @@ async function lockBookingForDecision(client, bookingId) {
   return row;
 }
 
+/** Locks a booking the actor is about to decide, or explains why they cannot. */
+async function lockForDecision(client, actor, bookingId, allowedStatuses) {
+  const row = await lockBooking(client, bookingId);
+  if (!row || !canDecide(actor, row)) {
+    if (row && (await canView(actor, row))) throw ApiError.forbidden('This request is decided by another approver');
+    throw ApiError.notFound('Booking not found');
+  }
+  if (!allowedStatuses.includes(row.status)) {
+    throw ApiError.conflict(`This request is already ${row.status.toLowerCase().replace('_', ' ')}`, { code: 'BOOKING_NOT_PENDING' });
+  }
+  if (new Date(row.start_at).getTime() <= Date.now()) {
+    throw ApiError.conflict('This request is for a time that has passed', { code: 'BOOKING_EXPIRED' });
+  }
+  return row;
+}
+
 /**
  * First-approved-wins (FR12) under the venue lock (FR10).
  */
 async function approveBooking(actor, bookingId, { ip } = {}) {
+  const outbox = [];
   await db.withTransaction(async (client) => {
-    const row = await lockBookingForDecision(client, bookingId);
-    if (!row || !canDecide(actor, row)) {
-      if (row && (await canView(actor, row))) throw ApiError.forbidden('This request is decided by another approver');
-      throw ApiError.notFound('Booking not found');
-    }
-    if (row.status !== 'PENDING') {
-      throw ApiError.conflict(`This request is already ${row.status.toLowerCase().replace('_', ' ')}`, { code: 'BOOKING_NOT_PENDING' });
-    }
-    if (new Date(row.start_at).getTime() <= Date.now()) {
-      throw ApiError.conflict('This request is for a time that has passed', { code: 'BOOKING_EXPIRED' });
-    }
+    const row = await lockForDecision(client, actor, bookingId, ['PENDING']);
 
     const window = { startAt: row.start_at, endAt: row.end_at, bufferMinutes: row.buffer_minutes };
     const conflicting = await findApprovedConflicts(client, row.venue_id, window, { excludeBookingId: row.booking_id });
@@ -423,36 +529,153 @@ async function approveBooking(actor, bookingId, { ip } = {}) {
       deciderId: actor.id,
     });
 
+    await noticeToRequester(client, outbox, row, 'APPROVED', { deciderName: actor.fullName });
+    for (const loser of rejected) {
+      await noticeToRequester(client, outbox, loser, 'REJECTED', { note: AUTO_REJECT_REASON, deciderName: actor.fullName });
+    }
+
     await audit.record({
       adminId: actor.id, action: 'BOOKING_APPROVED', bookingId: row.booking_id, targetType: 'BOOKING',
-      targetId: row.booking_id, ip, details: { autoRejected: rejected },
+      targetId: row.booking_id, ip, details: { autoRejected: rejected.map((l) => l.booking_id) },
     }, client);
   });
 
+  notifications.flush(outbox);
   return loadBooking(actor, bookingId);
 }
 
+/** FR13: a rejection always records its reason. Works on a request sent back for changes too. */
 async function rejectBooking(actor, bookingId, { reason }, { ip } = {}) {
+  const outbox = [];
+  const note = reason.trim();
   await db.withTransaction(async (client) => {
-    const row = await lockBookingForDecision(client, bookingId);
-    if (!row || !canDecide(actor, row)) {
-      if (row && (await canView(actor, row))) throw ApiError.forbidden('This request is decided by another approver');
-      throw ApiError.notFound('Booking not found');
-    }
-    if (row.status !== 'PENDING') {
-      throw ApiError.conflict(`This request is already ${row.status.toLowerCase().replace('_', ' ')}`, { code: 'BOOKING_NOT_PENDING' });
-    }
+    const row = await lockForDecision(client, actor, bookingId, OPEN_STATUSES);
 
     await client.query(
       `UPDATE bookings SET status = 'REJECTED', rejection_reason = $2, approved_by = $3, decided_at = now()
         WHERE booking_id = $1`,
-      [row.booking_id, reason.trim(), actor.id],
+      [row.booking_id, note, actor.id],
     );
     await client.query(`UPDATE events SET status = 'REJECTED' WHERE event_id = $1`, [row.event_id]);
+    await noticeToRequester(client, outbox, row, 'REJECTED', { note, deciderName: actor.fullName });
     await audit.record({
       adminId: actor.id, action: 'BOOKING_REJECTED', bookingId: row.booking_id, targetType: 'BOOKING',
-      targetId: row.booking_id, ip, details: { reason: reason.trim() },
+      targetId: row.booking_id, ip, details: { reason: note },
     }, client);
+  });
+
+  notifications.flush(outbox);
+  return loadBooking(actor, bookingId);
+}
+
+/**
+ * FR13 "Request Modification": sends the request back to the club with a
+ * note. The slot is not held - competing requests stay possible, and an
+ * approval of another request still auto-rejects this one.
+ */
+async function requestChanges(actor, bookingId, { note }, { ip } = {}) {
+  const outbox = [];
+  const text = note.trim();
+  await db.withTransaction(async (client) => {
+    const row = await lockForDecision(client, actor, bookingId, ['PENDING']);
+
+    await client.query(
+      `UPDATE bookings SET status = 'MODIFICATION_REQUESTED', modification_note = $2, approved_by = $3, decided_at = now()
+        WHERE booking_id = $1`,
+      [row.booking_id, text, actor.id],
+    );
+    await noticeToRequester(client, outbox, row, 'CHANGES_REQUESTED', { note: text, deciderName: actor.fullName });
+    await audit.record({
+      adminId: actor.id, action: 'BOOKING_MODIFICATION_REQUESTED', bookingId: row.booking_id, targetType: 'BOOKING',
+      targetId: row.booking_id, ip, details: { note: text },
+    }, client);
+  });
+
+  notifications.flush(outbox);
+  return loadBooking(actor, bookingId);
+}
+
+/**
+ * Edits an open request and puts it back in the approver's inbox as PENDING.
+ * The club itself (club, scope) cannot change - that is a new request.
+ *
+ * Moving to another venue locks both venues in id order before the booking,
+ * so two edits moving between the same pair of venues cannot deadlock.
+ *
+ * @param {{ venueId?, date?, startTime?, endTime?, title?, description?, category?, expectedAttendance? }} changes
+ */
+async function updateRequest(actor, bookingId, changes) {
+  const rules = await settings.getSchedulingRules();
+
+  await db.withTransaction(async (client) => {
+    const { rows: [ref] } = await client.query('SELECT venue_id FROM bookings WHERE booking_id = $1', [bookingId]);
+    if (!ref) throw ApiError.notFound('Booking not found');
+
+    const targetVenueId = changes.venueId ?? ref.venue_id;
+    for (const id of [...new Set([ref.venue_id, targetVenueId])].sort((a, b) => a - b)) {
+      await client.query('SELECT venue_id FROM venues WHERE venue_id = $1 FOR UPDATE', [id]);
+    }
+    const { rows: [row] } = await client.query(`${BOOKING_SELECT} WHERE b.booking_id = $1 FOR UPDATE OF b`, [bookingId]);
+
+    if (!row || !(await canView(actor, row))) throw ApiError.notFound('Booking not found');
+    if (row.venue_id !== ref.venue_id) {
+      throw ApiError.conflict('This request was changed a moment ago. Reload it and try again', { code: 'BOOKING_CHANGED' });
+    }
+    if (!canEdit(actor, row)) throw ApiError.forbidden('Only the requester or the club head can edit this request');
+    if (!OPEN_STATUSES.includes(row.status)) {
+      throw ApiError.conflict(`This request is already ${row.status.toLowerCase()} and can no longer be edited`, { code: 'BOOKING_NOT_EDITABLE' });
+    }
+    if (new Date(row.start_at).getTime() <= Date.now()) {
+      throw ApiError.conflict('This request is for a time that has passed', { code: 'BOOKING_EXPIRED' });
+    }
+
+    const start = tw.toCampusParts(row.start_at);
+    const end = tw.toCampusParts(row.end_at);
+    const next = {
+      venueId: targetVenueId,
+      date: changes.date ?? start.date,
+      startTime: changes.startTime ?? start.time,
+      endTime: changes.endTime ?? end.time,
+      title: changes.title === undefined ? row.title : changes.title.trim(),
+      description: changes.description === undefined ? row.description : (changes.description?.trim() || null),
+      category: changes.category ?? row.category,
+      expectedAttendance: changes.expectedAttendance ?? row.max_seats,
+    };
+
+    const problems = tw.validateWindow(next, rules);
+    if (problems.length) throw ApiError.validation('Choose a valid time slot', problems);
+
+    const venue = await venues.findVenueRow(next.venueId, client);
+    if (!venue || !venue.is_active) {
+      throw ApiError.validation('Choose a valid venue', [{ field: 'venueId', message: 'Unknown or inactive venue' }]);
+    }
+    if (next.expectedAttendance > venue.capacity) {
+      throw ApiError.validation('Too many people for this venue', [
+        { field: 'expectedAttendance', message: `${venue.venue_name} holds ${venue.capacity}` },
+      ]);
+    }
+
+    // A resubmission is a new request moment: the venue's current buffer applies.
+    const bufferMinutes = venue.buffer_minutes ?? rules.defaultBufferMinutes;
+    const proposed = await assertSlotFree(client, venue, next, { bufferMinutes, rules });
+
+    await client.query(
+      `UPDATE events SET title = $2, description = $3, category = $4, event_date = $5, start_time = $6, end_time = $7,
+                         max_seats = $8, status = 'PENDING_APPROVAL'
+        WHERE event_id = $1`,
+      [row.event_id, next.title, next.description, next.category, next.date, next.startTime, next.endTime, next.expectedAttendance],
+    );
+    await client.query(
+      `UPDATE bookings SET venue_id = $2, start_at = $3, end_at = $4, buffer_minutes = $5, status = 'PENDING',
+                           approved_by = NULL, decided_at = NULL, revision = revision + 1
+        WHERE booking_id = $1`,
+      [row.booking_id, venue.venue_id, proposed.startAt, proposed.endAt, bufferMinutes],
+    );
+
+    await noticeToApprovers(client, {
+      bookingId: row.booking_id, eventId: row.event_id, title: next.title, venueName: venue.venue_name, window: proposed,
+      departmentId: row.event_department_id, scope: row.event_scope, resubmitted: true, requesterName: actor.fullName,
+    });
   });
 
   return loadBooking(actor, bookingId);
@@ -460,8 +683,9 @@ async function rejectBooking(actor, bookingId, { reason }, { ip } = {}) {
 
 /** Releases the slot. Requester, the club head, or the deciding faculty. */
 async function cancelBooking(actor, bookingId, { ip } = {}) {
+  const outbox = [];
   await db.withTransaction(async (client) => {
-    const row = await lockBookingForDecision(client, bookingId);
+    const row = await lockBooking(client, bookingId);
     if (!row || !(await canView(actor, row))) throw ApiError.notFound('Booking not found');
     if (!canCancel(actor, row)) throw ApiError.forbidden('You cannot cancel this booking');
     if (!LIVE_STATUSES.includes(row.status)) {
@@ -475,6 +699,7 @@ async function cancelBooking(actor, bookingId, { ip } = {}) {
     await client.query(`UPDATE events SET status = 'CANCELLED' WHERE event_id = $1`, [row.event_id]);
 
     if (rbac.isFaculty(actor.role) && row.requested_by !== actor.id) {
+      await noticeToRequester(client, outbox, row, 'CANCELLED', { deciderName: actor.fullName });
       await audit.record({
         adminId: actor.id, action: 'BOOKING_CANCELLED', bookingId: row.booking_id, targetType: 'BOOKING',
         targetId: row.booking_id, ip,
@@ -482,6 +707,7 @@ async function cancelBooking(actor, bookingId, { ip } = {}) {
     }
   });
 
+  notifications.flush(outbox);
   return loadBooking(actor, bookingId);
 }
 
@@ -492,7 +718,8 @@ async function cancelBooking(actor, bookingId, { ip } = {}) {
 /**
  * @param {{ view?: 'mine'|'decisions'|'all', status?, venueId?, from?, to?, page?, pageSize? }} filters
  *   mine       bookings the user requested or their clubs made
- *   decisions  pending requests this user may decide (faculty)
+ *   decisions  open requests this user may decide (faculty): PENDING by
+ *              default, or MODIFICATION_REQUESTED for "waiting on the club"
  *   all        everything the user may see
  */
 async function listBookings(actor, { view = 'mine', status, venueId, from, to, page = 1, pageSize = 20 } = {}) {
@@ -512,20 +739,23 @@ async function listBookings(actor, { view = 'mine', status, venueId, from, to, p
 
   if (view === 'decisions') {
     if (!rbac.isFaculty(actor.role)) throw ApiError.forbidden();
-    where.push(`b.status = 'PENDING'`, 'b.start_at > now()');
+    add('b.status = ?', OPEN_STATUSES.includes(status) ? status : 'PENDING');
+    where.push('b.start_at > now()');
     if (actor.role === ROLES.DEPT_COORDINATOR) {
       add(`e.department_id = ? AND e.event_scope <> 'COLLEGE'`, actor.departmentId);
     }
-  } else if (view === 'all' && actor.role === ROLES.SUPER_ADMIN) {
-    // everything
-  } else if (view === 'all' && actor.role === ROLES.DEPT_COORDINATOR) {
-    const own = mine();
-    add(`(${own} OR e.department_id = ?)`, actor.departmentId);
   } else {
-    where.push(mine());
+    if (view === 'all' && actor.role === ROLES.SUPER_ADMIN) {
+      // everything
+    } else if (view === 'all' && actor.role === ROLES.DEPT_COORDINATOR) {
+      const own = mine();
+      add(`(${own} OR e.department_id = ?)`, actor.departmentId);
+    } else {
+      where.push(mine());
+    }
+    if (status) add('b.status = ?', status);
   }
 
-  if (status) add('b.status = ?', status);
   if (venueId) add('b.venue_id = ?', Number(venueId));
   if (from && tw.isValidDate(from)) add('b.start_at >= ?', tw.toInstant(from, '00:00'));
   if (to && tw.isValidDate(to)) add('b.start_at < ?', tw.toInstant(tw.addDays(to, 1), '00:00'));
@@ -548,18 +778,51 @@ async function listBookings(actor, { view = 'mine', status, venueId, from, to, p
   };
 }
 
+/**
+ * Counts for the navigation badges: requests waiting on this approver, the
+ * user's requests sent back for changes, and unread notifications.
+ */
+async function getSummary(actor) {
+  const { rows: [counts] } = await db.query(
+    `SELECT count(*) FILTER (WHERE b.status = 'MODIFICATION_REQUESTED')::int AS changes_requested,
+            count(*) FILTER (WHERE b.status = 'PENDING')::int AS awaiting_approval
+       FROM bookings b
+       JOIN events e ON e.event_id = b.event_id
+       LEFT JOIN clubs c ON c.club_id = e.club_id
+      WHERE b.start_at > now() AND (b.requested_by = $1 OR c.club_head_id = $1)`,
+    [actor.id],
+  );
+
+  let awaitingDecision = 0;
+  if (rbac.isFaculty(actor.role)) {
+    ({ meta: { total: awaitingDecision } } = await listBookings(actor, { view: 'decisions', pageSize: 1 }));
+  }
+
+  return {
+    awaitingDecision,
+    myChangesRequested: counts.changes_requested,
+    myAwaitingApproval: counts.awaiting_approval,
+    unreadNotifications: await notifications.unreadCount(actor.id),
+  };
+}
+
 module.exports = {
   EVENT_CATEGORIES,
   LIVE_STATUSES,
+  OPEN_STATUSES,
   AUTO_REJECT_REASON,
   canDecide,
   canCancel,
+  canEdit,
   checkAvailability,
   createBooking,
   approveBooking,
   rejectBooking,
+  requestChanges,
+  updateRequest,
   cancelBooking,
   listBookings,
+  getSummary,
   getBooking: loadBooking,
   findApprovedConflicts,
 };

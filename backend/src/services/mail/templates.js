@@ -104,7 +104,52 @@ function accountLocked({ fullName, minutes }) {
   };
 }
 
+const BOOKING_OUTCOMES = Object.freeze({
+  APPROVED: { subject: 'approved', heading: 'Your venue request was approved', lead: 'Good news - your venue request was approved and the slot is now booked for you.' },
+  REJECTED: { subject: 'not approved', heading: 'Your venue request was not approved', lead: 'Your venue request was not approved.', noteLabel: 'Reason' },
+  CHANGES_REQUESTED: { subject: 'needs changes', heading: 'Changes requested on your venue request', lead: 'The approver asked for changes before they can decide. Edit the request and send it again.', noteLabel: 'What to change' },
+  CANCELLED: { subject: 'cancelled', heading: 'Your venue booking was cancelled', lead: 'Faculty cancelled your venue booking, and the slot has been released.' },
+});
+
+/**
+ * Tells a requester what happened to their venue request (FR13).
+ * @param {{ fullName, outcome: keyof BOOKING_OUTCOMES, bookingId, title, venueName, date, startTime, endTime, note?, deciderName? }} input
+ */
+function bookingOutcome({ fullName, outcome, bookingId, title, venueName, date, startTime, endTime, note = null, deciderName = null }) {
+  const copy = BOOKING_OUTCOMES[outcome];
+  const url = `${config.appUrl}/bookings?focus=${bookingId}`;
+  const when = `${date}, ${startTime}-${endTime}`;
+  const showNote = Boolean(note && copy.noteLabel);
+  const by = deciderName ? ` (by ${deciderName})` : '';
+  return {
+    subject: `"${title}" ${copy.subject}`,
+    text: `Hi ${fullName},\n\n${copy.lead}${by}\n\n${title}\n${venueName}\n${when}\n${showNote ? `\n${copy.noteLabel}: ${note}\n` : ''}\nOpen it: ${url}`,
+    html: layout({
+      heading: copy.heading,
+      bodyHtml: `<p>Hi ${escapeHtml(fullName)},</p><p>${copy.lead}${escapeHtml(by)}</p>`
+        + `<div style="background:#f4f5f7;border-radius:8px;padding:16px;margin:16px 0"><strong>${escapeHtml(title)}</strong><br>${escapeHtml(venueName)}<br>${escapeHtml(when)}</div>`
+        + (showNote ? `<p><strong>${copy.noteLabel}:</strong> ${escapeHtml(note)}</p>` : '')
+        + `<p><a href="${escapeHtml(url)}" style="color:#4f46e5">Open the request</a></p>`,
+    }),
+  };
+}
+
+function addedToClub({ fullName, clubName, position, addedBy }) {
+  const url = `${config.appUrl}/clubs`;
+  const role = position.toLowerCase().replace(/_/g, ' ');
+  return {
+    subject: `You were added to ${clubName}`,
+    text: `Hi ${fullName},\n\n${addedBy} added you to ${clubName} as ${role}.\n\nSee your clubs: ${url}`,
+    html: layout({
+      heading: `Welcome to ${escapeHtml(clubName)}`,
+      bodyHtml: `<p>Hi ${escapeHtml(fullName)},</p><p>${escapeHtml(addedBy)} added you to <strong>${escapeHtml(clubName)}</strong> as ${escapeHtml(role)}.</p><p><a href="${escapeHtml(url)}" style="color:#4f46e5">See your clubs</a></p>`,
+    }),
+  };
+}
+
 module.exports = {
+  bookingOutcome,
+  addedToClub,
   escapeHtml,
   verificationCode,
   passwordResetCode,

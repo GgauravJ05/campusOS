@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-15 | [Phase 3 — Approval workflow & club management API](#phase-3--approval-workflow--club-management-api-2026-09-15) | Gaurav |
 | 2026-09-15 | [Phase 2 — Venues & booking web app](#phase-2--venues--booking-web-app-2026-09-15) | Gaurav |
 | 2026-09-15 | [Phase 2 — Venues & scheduling engine API](#phase-2--venues--scheduling-engine-api-2026-09-15) | Gaurav |
 | 2026-09-15 | [Phase 1 — Web app redesign](#phase-1--web-app-redesign-2026-09-15) | Gaurav |
@@ -17,6 +18,72 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase 3 — Approval workflow & club management API (2026-09-15)
+
+The backend of Phase 3 (FR11, FR13): approvers can now **send a request back
+for changes**, clubs can **edit and resubmit** it, everyone involved gets
+**notified** (in-app and by email), and faculty and club heads can **manage
+clubs and their teams**. **The web pages for this are the next entry**; until
+then use Postman against the endpoints below.
+
+### ⚠️ What you need to do
+
+**Rebuild your database** — `bookings` and `notifications` changed:
+`psql -d campusos -f db/reset.sql -f db/schema.sql -f db/seed.sql`
+(or `docker compose down -v && docker compose up -d`). No new packages.
+
+### What was added
+
+| Feature | Requirement | Endpoint |
+| ------- | ----------- | -------- |
+| "Request modification" with a required note | FR13 | `POST /api/bookings/:id/request-changes { note }` |
+| Edit and resubmit an open request (time, venue, details) | FR13 | `PATCH /api/bookings/:id` |
+| Inbox split: waiting on me / waiting on the club | FR13 | `GET /api/bookings?view=decisions[&status=MODIFICATION_REQUESTED]` |
+| Badge counts for the navigation | FR13 | `GET /api/bookings/summary` |
+| Notification bell (list, mark read) | FR13, groundwork for FR19 | `/api/notifications` |
+| Emails to the requester on every decision | FR13 | approved · not approved · changes requested · cancelled by faculty |
+| Create, rename, disable, re-enable clubs | FR11 | `POST /api/clubs`, `PATCH /api/clubs/:id` |
+| Club heads edit their club and run their team | FR11 | `/api/clubs/:id/members` |
+
+Full tables are in [`backend/README.md`](backend/README.md#bookings-apibookings--phases-2--3).
+
+### Decisions taken
+
+| Question | Decision |
+| -------- | -------- |
+| Does "changes requested" hold the slot? | **No.** Competing requests stay possible (FR12), and approving one of them auto-rejects the request that was sent back. |
+| Who can edit a request? | The requester or the club's current head. Faculty never edit a club's request — they send it back. The organising club cannot change; that is a new request. |
+| What does a resubmission do? | Re-checks the slot against approved bookings, applies the venue's current buffer, returns it to `PENDING`, counts a `revision`, and notifies the approvers again. The approver's note is kept so they can see what they asked for. |
+| Can a sent-back request still be rejected? | Yes, e.g. when the club never responds. It cannot be approved until it is resubmitted. |
+| Who administers clubs? | Principal / HOD: any club, including college-level ones. Coordinator: their own department's clubs only. |
+| What can a club head change? | Name, description and the team. Not the department, and not whether the club is active. |
+| Is joining a team a promotion? | **No.** Team membership (`club_members`) is separate from roles; promotions stay faculty-only in user management, which is also where heads are appointed. |
+| What happens when a club is disabled? | Its open venue requests are withdrawn (requesters notified); approved bookings stand so faculty can decide on each; it disappears from the student directory. |
+
+### Database (`db/schema.sql`)
+
+- `bookings.modification_note` (required while `MODIFICATION_REQUESTED`, by CHECK) and `bookings.revision`.
+- `notifications.category` allows `BOOKING_REQUESTED`, `BOOKING_CHANGES_REQUESTED`, `BOOKING_CANCELLED`, `CLUB_MEMBERSHIP`.
+
+### Tests
+
+**472 backend tests (was 420).** New: 20 end-to-end approval tests (send back →
+edit → resubmit → inbox; routing; moving to a full or busy venue; the slot not
+being held; every notification and email, including HTML escaping), 16 end-to-end
+club tests (scopes, duplicates, disabling with open and approved bookings, team
+rules), and 16 unit tests of the new policies, templates and notification helpers.
+Coverage 98.1 / 89.9 / 99.2 / 99.2.
+
+### Open questions
+
+1. **Team members vs the `CLUB_MEMBER` role**: a student added to a team keeps the
+   `STUDENT` role, and someone removed from every team keeps `CLUB_MEMBER`. Confirm
+   with the mentor whether club heads should be able to grant the role too.
+2. **Should coordinators administer college-level clubs?** Currently only the
+   Principal / HOD can (a coordinator can still appoint their head, as in Phase 1).
 
 ---
 
@@ -542,11 +609,11 @@ for all data — Phase 1 and Phase 2 replace those.
 | Phase | Scope | Requirements | Status |
 | ----- | ----- | ------------ | ------ |
 | 0 | Schema, backend skeleton, test harness | — | ✅ Done |
-| 1 | Auth & RBAC | FR1–FR5 | Next |
-| 2 | Venues & scheduling engine | FR6–FR10 | |
-| 3 | Approval workflow | FR11–FR13 | |
+| 1 | Auth & RBAC | FR1–FR5 | ✅ Done |
+| 2 | Venues & scheduling engine | FR6–FR10 | ✅ Done |
+| 3 | Approval workflow & club management | FR11–FR13 | 🟡 API done, web app next |
 | 4 | Events & RSVP | FR14–FR17 | |
-| 5 | Notifications | FR19 | |
+| 5 | Notifications (scheduled reminders) | FR19 | |
 | 6 | Governance & analytics | FR18, FR20, FR21 | |
 
 Phase 2 is the heart of the project and deserves the most time. Build each

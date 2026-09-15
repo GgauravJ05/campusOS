@@ -30,4 +30,16 @@ const cancel = asyncHandler(async (req, res) => {
   sendSuccess(res, 200, await bookings.cancelBooking(req.user, req.params.id, { ip: req.ip }));
 });
 
-module.exports = { list, getOne, create, approve, reject, cancel };
+const requestChanges = asyncHandler(async (req, res) => {
+  sendSuccess(res, 200, await bookings.requestChanges(req.user, req.params.id, { note: req.body.note }, { ip: req.ip }));
+});
+
+const update = asyncHandler(async (req, res) => {
+  sendSuccess(res, 200, await bookings.updateRequest(req.user, req.params.id, matchedData(req, { locations: ['body'] })));
+});
+
+const summary = asyncHandler(async (req, res) => {
+  sendSuccess(res, 200, await bookings.getSummary(req.user));
+});
+
+module.exports = { list, getOne, create, approve, reject, cancel, requestChanges, update, summary };
