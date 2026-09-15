@@ -75,7 +75,13 @@ describe('loadConfig', () => {
 
   describe('production hardening', () => {
     const prodEnv = (overrides) =>
-      baseEnv({ NODE_ENV: 'production', DB_PASSWORD: 'realpassword', ...overrides });
+      baseEnv({ NODE_ENV: 'production', DB_PASSWORD: 'realpassword', SMTP_HOST: 'smtp.test', ...overrides });
+
+    it('requires SMTP, since sign-up and password reset depend on email', () => {
+      const env = prodEnv();
+      delete env.SMTP_HOST;
+      expect(() => loadConfig(env)).toThrow(/SMTP_HOST is required in production/);
+    });
 
     it('rejects a short JWT_SECRET', () => {
       expect(() => loadConfig(prodEnv({ JWT_SECRET: 'short' }))).toThrow(
@@ -122,6 +128,50 @@ describe('loadConfig', () => {
         expect(Boolean(loadConfig(baseEnv({ DB_SSL: raw })).database.ssl)).toBe(expected);
       },
     );
+  });
+
+  describe('durations', () => {
+    it('converts token lifetimes into milliseconds', () => {
+      const config = loadConfig(baseEnv({ JWT_ACCESS_TTL: '30s', JWT_REFRESH_TTL: '12h' }));
+      expect(config.jwt.accessTokenTtl).toBe('30s');
+      expect(config.jwt.accessTokenTtlMs).toBe(30_000);
+      expect(config.jwt.refreshTokenTtlMs).toBe(12 * 60 * 60 * 1000);
+    });
+
+    it.each(['15', '0m', 'ten minutes', '5w'])('rejects the malformed duration "%s"', (raw) => {
+      expect(() => loadConfig(baseEnv({ JWT_REFRESH_TTL: raw }))).toThrow(/JWT_REFRESH_TTL must be a duration/);
+    });
+  });
+
+  describe('auth settings', () => {
+    it('defaults to the college domain and conservative limits', () => {
+      const { auth, appUrl } = loadConfig(baseEnv());
+      expect(auth.allowedEmailDomains).toEqual(['mmcoe.edu.in']);
+      expect(auth).toMatchObject({ otpTtlMinutes: 10, otpMaxAttempts: 5, maxFailedLogins: 5, lockoutMinutes: 15 });
+      expect(appUrl).toBe('http://localhost:5173');
+    });
+
+    it('lower-cases allowed domains and strips a trailing slash from APP_URL', () => {
+      const config = loadConfig(baseEnv({ ALLOWED_EMAIL_DOMAINS: 'MMCOE.edu.in, Example.org', APP_URL: 'https://campus.test/' }));
+      expect(config.auth.allowedEmailDomains).toEqual(['mmcoe.edu.in', 'example.org']);
+      expect(config.appUrl).toBe('https://campus.test');
+    });
+
+    it.each([
+      ['OTP_TTL_MINUTES', '0'],
+      ['OTP_TTL_MINUTES', '61'],
+      ['OTP_MAX_ATTEMPTS', '11'],
+      ['OTP_MAX_PER_HOUR', '0'],
+      ['OTP_RESEND_COOLDOWN_SECONDS', '-1'],
+      ['LOGIN_MAX_FAILED_ATTEMPTS', '0'],
+      ['LOGIN_LOCKOUT_MINUTES', '0'],
+    ])('rejects %s=%s', (key, value) => {
+      expect(() => loadConfig(baseEnv({ [key]: value }))).toThrow(new RegExp(key));
+    });
+
+    it('does not require SMTP outside production', () => {
+      expect(loadConfig(baseEnv()).mail.host).toBe('');
+    });
   });
 
   it('silences logging by default under NODE_ENV=test', () => {

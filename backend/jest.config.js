@@ -18,7 +18,7 @@ module.exports = {
   // The gate ratchets upward as each phase lands, never downward. A pull
   // request that drops coverage below these numbers fails CI.
   coverageThreshold: {
-    global: { statements: 95, branches: 88, functions: 95, lines: 95 },
+    global: { statements: 97, branches: 89, functions: 97, lines: 98 },
   },
   clearMocks: true,
   restoreMocks: true,

@@ -1,7 +1,7 @@
 # CampusOS API
 
 REST API for the CampusOS Smart Campus Management Platform.
-Node.js 20+ / Express 5 / PostgreSQL 16.
+Node.js 24 LTS / Express 5 / PostgreSQL 16.
 
 ## Quick start
 
@@ -77,9 +77,17 @@ src/
     notFound.js           404 for unmatched routes
     rateLimiter.js        global and auth-endpoint limits
     validate.js           express-validator results -> 422 with field details
+    authenticate.js       bearer-token auth + requireRole(...)
   routes/                 route table, mounted under /api
-  controllers/            request handling
-  services/               business logic (from Phase 1 onward)
+  validators/             express-validator chains per router
+  controllers/            HTTP in/out only
+  services/
+    rbac.js               role hierarchy and promotion rules - pure, unit tested
+    audit.service.js      the only writer to the immutable admin_logs
+    directory.service.js  departments, roles, clubs
+    auth/                 auth.service, sessions, one-time codes, passwords, JWT
+    users/                user management + the single row-to-JSON mapping
+    mail/                 nodemailer transport and email templates
   utils/
     ApiError.js           errors that carry an HTTP status
     ApiResponse.js        the success/failure envelope
@@ -110,11 +118,83 @@ validation chain, then `validate`, then the controller; business logic in
 
 ## Endpoints
 
-| Method | Path                  | Purpose                                          |
-| ------ | --------------------- | ------------------------------------------------ |
-| GET    | `/api/health`         | Liveness. Does not touch the database.            |
-| GET    | `/api/health/ready`   | Readiness. `503` when the database is unreachable.|
-| GET    | `/api/health/metrics` | Process metrics. Disabled in production.          |
+🔓 public · 🔑 signed in · 🎓 faculty (`SUPER_ADMIN`, `DEPT_COORDINATOR`) · ⏱ strict rate limit
+
+### Health
+
+| Method | Path                  | Access | Purpose |
+| ------ | --------------------- | ------ | ------- |
+| GET    | `/api/health`         | 🔓 | Liveness. Does not touch the database. |
+| GET    | `/api/health/ready`   | 🔓 | Readiness. `503` when the database is unreachable. |
+| GET    | `/api/health/metrics` | 🔓 dev / super admin in production | Process metrics. |
+
+### Authentication (`/api/auth`)
+
+| Method | Path | Access | Body | Result |
+| ------ | ---- | ------ | ---- | ------ |
+| POST | `/register` | 🔓⏱ | `fullName, email, password, departmentId, academicYear` | `202` - code emailed. Same answer whether or not the email exists. |
+| POST | `/verify-email` | 🔓⏱ | `email, code` | `200` session: signs the user in. |
+| POST | `/resend-verification` | 🔓⏱ | `email` | `202` |
+| POST | `/login` | 🔓⏱ | `email, password` | `200` session. `401 INVALID_CREDENTIALS`, `403 EMAIL_NOT_VERIFIED`, `403 ACCOUNT_DISABLED` |
+| POST | `/refresh` | 🍪 cookie | - | `200` session, rotated cookie. `401 SESSION_STALE` means retry once. |
+| POST | `/logout` | 🍪 cookie | - | `204`, cookie cleared, access token dead immediately |
+| POST | `/logout-all` | 🔑 | - | `204`, every device signed out |
+| POST | `/forgot-password` | 🔓⏱ | `email` | `202` - code emailed if the account exists |
+| POST | `/reset-password` | 🔓⏱ | `email, code, newPassword` | `200`, every session ended |
+| POST | `/change-password` | 🔑⏱ | `currentPassword, newPassword` | `200` new session; other devices signed out |
+| GET  | `/me` | 🔑 | - | profile with role and clubs |
+
+A *session* response is `{ accessToken, accessTokenExpiresIn, user }`. The
+refresh token is **never** in the body: it is set as an `httpOnly`,
+`SameSite=Strict` cookie scoped to `/api/auth`. Keep the access token in
+memory (not `localStorage`) and send it as `Authorization: Bearer <token>`.
+
+### Users (`/api/users`)
+
+| Method | Path | Access | Purpose |
+| ------ | ---- | ------ | ------- |
+| PATCH | `/me` | 🔑 | Edit own `fullName`, `phone`, `academicYear` |
+| GET | `/` | 🎓 | Directory. Query: `q, role, departmentId, status (active/inactive/unverified), page, pageSize`. Coordinators see only their department. |
+| GET | `/:id` | 🎓 | One user, with `permissions.canManage` and `assignableRoles` |
+| PATCH | `/:id/role` | 🎓 | `{ role, clubId? }` - promotion / demotion, audited |
+| PATCH | `/:id/status` | 🎓 | `{ isActive }` - deactivation signs the user out everywhere, audited |
+
+### Directory (`/api/directory`)
+
+| Method | Path | Access | Purpose |
+| ------ | ---- | ------ | ------- |
+| GET | `/departments` | 🔓 | For the sign-up form |
+| GET | `/roles` | 🔑 | Roles in rank order |
+| GET | `/clubs?appointable=true` | 🔑 | Active clubs; `appointable` narrows to clubs the caller may appoint for |
+
+## Roles and promotion rules
+
+| Role | Scope | Can promote |
+| ---- | ----- | ----------- |
+| `SUPER_ADMIN` (Principal & HOD) | whole college | anyone below them, to any role except super admin |
+| `DEPT_COORDINATOR` | own department | own-department users, to club head / member / student, for own-department or college-level clubs |
+| `CLUB_HEAD` | one club - college-wide if the club has no department | - |
+| `CLUB_MEMBER` | one club | - |
+| `STUDENT` | self | - |
+
+Nobody can change their own role or act on an equal or higher rank. Role and
+account status are read from the database on every request, so a change takes
+effect on the user's next request. The rules are pure functions in
+`src/services/rbac.js` with their own unit tests.
+
+## Security design (Phase 1)
+
+| Threat | Defence |
+| ------ | ------- |
+| Password database leak | bcrypt (cost 12). Refresh tokens stored as SHA-256; codes as HMAC-SHA256 keyed by a server secret. |
+| Online password guessing | Per-IP rate limit on auth routes, plus per-account lockout (5 failures → 15 min) with an email to the owner. The lock answers exactly like a wrong password, so it cannot be used as an oracle. |
+| Account enumeration | Register, resend and forgot-password give identical responses and send mail in the background; login compares against a dummy hash for unknown emails. |
+| Code brute force | 6-digit codes, 10-minute expiry, 5 attempts then burned, 60 s resend cooldown, 5 per hour. Codes bind to email and purpose. |
+| Stolen refresh token | Rotation on every use; replaying a rotated token revokes the whole session family. |
+| XSS stealing sessions | Refresh token only in an `httpOnly` cookie; access token short-lived and kept in memory. |
+| CSRF | Cookie is `SameSite=Strict` and path-scoped; all state changes need a bearer token. |
+| Weak passwords | 8-72 bytes, three character classes, common-password block list, must not contain name or email. |
+| Stale permissions | Role and status re-read every request; deactivation and password changes revoke sessions immediately. |
 
 ## Environment
 

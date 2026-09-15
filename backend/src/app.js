@@ -12,6 +12,7 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const compression = require('compression');
+const cookieParser = require('cookie-parser');
 const pinoHttp = require('pino-http');
 
 const config = require('./config');
@@ -70,6 +71,8 @@ function createApp() {
   app.use(compression());
   app.use(express.json({ limit: BODY_LIMIT }));
   app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT }));
+  // Only the refresh-token cookie is read; it is httpOnly and SameSite=Strict.
+  app.use(cookieParser());
 
   app.use('/api', apiLimiter, routes);
 
