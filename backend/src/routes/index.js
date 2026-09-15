@@ -3,8 +3,9 @@
 /**
  * API route table.
  *
- * Phase 0 mounts health only. Subsequent phases mount their routers here:
- *   Phase 1  /auth, /users
+ * Each phase mounts its routers here:
+ *   Phase 0  /health
+ *   Phase 1  /auth, /users, /directory
  *   Phase 2  /venues, /bookings
  *   Phase 3  /approvals
  *   Phase 4  /events, /registrations
@@ -14,9 +15,15 @@
 
 const { Router } = require('express');
 const healthRoutes = require('./health.routes');
+const authRoutes = require('./auth.routes');
+const usersRoutes = require('./users.routes');
+const directoryRoutes = require('./directory.routes');
 
 const router = Router();
 
 router.use('/health', healthRoutes);
+router.use('/auth', authRoutes);
+router.use('/users', usersRoutes);
+router.use('/directory', directoryRoutes);
 
 module.exports = router;

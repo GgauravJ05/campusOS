@@ -9,10 +9,91 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-15 | [Phase 1 — Auth & RBAC API](#phase-1--auth--rbac-api-2026-09-15) | Gaurav |
 | 2026-09-15 | [Repository standards & CI/CD](#repository-standards--cicd-2026-09-15) | Gaurav |
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase 1 — Auth & RBAC API (2026-09-15)
+
+The backend half of Phase 1 (FR1–FR5): students can sign up with their
+college email, verify it with a 6-digit code, sign in, stay signed in securely,
+reset a forgotten password, and faculty can promote users and deactivate
+accounts. **The frontend still uses the old fake login** — the redesigned web
+app that uses this API is the next entry.
+
+### ⚠️ What you need to do
+
+1. **Rebuild your database** — `users`, `refresh_tokens` and an index changed:
+   `psql -d campusos -f db/reset.sql -f db/schema.sql -f db/seed.sql`
+   (or `docker compose down -v && docker compose up -d`). This wipes local data.
+2. `cd backend && npm install` — new packages `cookie-parser`, `nodemailer`.
+3. Copy the new keys from `backend/.env.example` into your `backend/.env`
+   (auth limits and SMTP). With `SMTP_HOST` empty, **emails and their codes are
+   printed in the API terminal** — that is how you sign up locally.
+
+Seeded accounts still use `Campus@123`.
+
+### Decisions taken
+
+| Question | Decision |
+| -------- | -------- |
+| Sign-in method | Email + password now. Gmail OAuth decided later (schema already supports it). |
+| Who can sign up | Students self-register, only with `@mmcoe.edu.in` (`ALLOWED_EMAIL_DOMAINS`). Every new account is `STUDENT`. |
+| Email verification | Required before first sign-in, by a 6-digit emailed code. |
+| Session storage | 15-minute access token kept in memory + 7-day refresh token in an `httpOnly`, `SameSite=Strict` cookie, rotated on every use. |
+| Who promotes | Faculty only. Principal: anyone, any role but super admin. Coordinator: own department only, to club head / club member / student. |
+| Club head scope | Tied to a specific club. A club with no department is college-level, and its head is college-wide (`scope: "COLLEGE"` in the API). |
+| Forgot password | Emailed 6-digit code; resetting signs out every device. |
+
+### Added
+
+- **17 endpoints** under `/api/auth`, `/api/users`, `/api/directory`, fully
+  documented with access levels in [`backend/README.md`](backend/README.md#endpoints).
+- **`authenticate` / `requireRole(...)` middleware** for every later phase:
+  `router.post('/venues', authenticate, requireRole('SUPER_ADMIN'), ...)`.
+- **`src/services/rbac.js`** — the whole role hierarchy and promotion rulebook as
+  pure functions.
+- **Audit trail**: every role change and (de)activation writes `admin_logs`.
+- **Email** via nodemailer, with templates for verification, reset, password
+  changed, account locked and "you already have an account".
+
+### Security measures
+
+The full threat → defence table is in
+[`backend/README.md`](backend/README.md#security-design-phase-1). Highlights:
+account lockout after 5 failed sign-ins, no way to tell which emails are
+registered, codes limited to 5 guesses and 10 minutes, refresh-token theft
+detection, and a promotion or deactivation applies on the user's very next
+request.
+
+### Database (`db/schema.sql`)
+
+- `users`: `failed_login_attempts`, `locked_until`, `password_changed_at`.
+- `refresh_tokens`: `family_id` (theft detection) + index.
+- `otps`: index now covers `created_at` for the resend-limit query; codes are
+  stored as keyed HMACs.
+
+### Tests
+
+**330 tests (was 159), 21 suites.** 98.2% statements, 89.4% branches. The
+coverage gate is raised to 97 / 89 / 97 / 98. The 88 database-backed
+tests drive the real HTTP API against PostgreSQL, including: code
+brute-force limits, a code accepted exactly once under 5 concurrent
+submissions, refresh-token replay revoking the session family, lockout,
+identical responses for registered and unregistered emails, and every
+promotion rule including club-head replacement.
+
+### Open questions
+
+1. **College-level club heads**: currently *any* coordinator (or the principal)
+   can appoint the head of a college-level club, but only from their own
+   department. Confirm with the mentor, or restrict it to the principal.
+2. **SMTP account** for the deployed app (a college Google Workspace mailbox
+   with an app password is the simplest).
 
 ---
 
