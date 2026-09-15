@@ -9,12 +9,71 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-15 | [Phase 2 — Venues & scheduling engine API](#phase-2--venues--scheduling-engine-api-2026-09-15) | Gaurav |
 | 2026-09-15 | [Phase 1 — Web app redesign](#phase-1--web-app-redesign-2026-09-15) | Gaurav |
 | 2026-09-15 | [Phase 1 — Auth & RBAC API](#phase-1--auth--rbac-api-2026-09-15) | Gaurav |
 | 2026-09-15 | [Repository standards & CI/CD](#repository-standards--cicd-2026-09-15) | Gaurav |
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase 2 — Venues & scheduling engine API (2026-09-15)
+
+The backend of Phase 2 (FR6–FR10) plus the slot rules of FR12: a searchable
+venue directory, live availability checking, and the booking engine that
+guarantees no venue is ever double-booked. **The web pages for this are the
+next entry**; until then use Postman against the endpoints below.
+
+### ⚠️ What you need to do
+
+**Rebuild your database** — `events`, `bookings` and the seed changed:
+`psql -d campusos -f db/reset.sql -f db/schema.sql -f db/seed.sql`
+(or `docker compose down -v && docker compose up -d`). No new packages.
+
+### What the engine does
+
+| Rule | Requirement | How |
+| ---- | ----------- | --- |
+| Search venues by building, floor, capacity, type, equipment | FR6 | `GET /api/venues`, plus `GET /api/venues/meta` for the Building → Floor → Venue picker |
+| "Is this slot free?" with alternatives | FR7 | `POST /api/venues/check-availability` suggests the nearest free windows |
+| Overlap formula | FR8 | `Start_new < End_existing + Buffer ∧ End_new + Buffer > Start_existing` |
+| 15-minute setup/teardown buffer, per-venue override | FR9 | `venue.default_buffer_minutes` setting or `venues.buffer_minutes` |
+| Zero double bookings under concurrent load | FR10 | Venue row `SELECT … FOR UPDATE` in every booking transaction |
+| Competing pending requests; first approval wins, others auto-rejected | FR12 | Same transaction as the approval, reason recorded |
+| College-level events decided by Principal / HOD only | FR12 | Routing on the event's department |
+| Faculty book directly, no pending step | FR12 | `POST /api/bookings` as a coordinator or principal |
+| Rejection needs a reason | FR13 | `POST /api/bookings/:id/reject { reason }` |
+| Operating hours, no past bookings, ≤ 90 days ahead | C7 | New `system_settings` rows |
+
+Full endpoint tables and the engine design are in
+[`backend/README.md`](backend/README.md#the-scheduling-engine-fr8fr10-fr12).
+
+### Database
+
+- `events.club_id` is now **nullable** (a faculty department event has no club),
+  with a CHECK that club-scope events still name one. New `events.department_id`
+  drives approval routing.
+- `bookings.buffer_minutes` (the buffer in force, frozen per booking) and
+  `bookings.is_direct`.
+- Unique index: one live booking per event.
+- Seed: operating hours and booking duration limits.
+
+### Tests
+
+**420 backend tests (was 330).** New: 34 unit tests of the scheduling arithmetic
+(overlap edges, buffers on both sides, overruns, IST conversion, suggestions),
+policy unit tests, and 46 end-to-end tests. Highlights: **20 competing requests
+approved at the same instant → exactly one approved, 19 rejected, zero
+errors**; a direct faculty booking racing an approval → exactly one wins; buffer
+blocks 12:10 but allows 12:15; routing to the right coordinator.
+
+### Open for Phase 3
+
+The approval inbox page, "Request modification", notifications to the
+requester, and editing a pending request are Phase 3. The approve/reject
+endpoints already exist because FR10's locking needs a real approval to prove.
 
 ---
 

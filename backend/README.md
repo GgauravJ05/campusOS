@@ -167,6 +167,58 @@ memory (not `localStorage`) and send it as `Authorization: Bearer <token>`.
 | GET | `/roles` | 🔑 | Roles in rank order |
 | GET | `/clubs?appointable=true` | 🔑 | Active clubs; `appointable` narrows to clubs the caller may appoint for |
 
+### Venues (`/api/venues`) — Phase 2
+
+| Method | Path | Access | Purpose |
+| ------ | ---- | ------ | ------- |
+| GET | `/` | 🔑 | Search (FR6). Query: `q, building, floor, type, minCapacity, equipment=a,b, departmentId, includeInactive (faculty), page, pageSize` |
+| GET | `/meta` | 🔑 | Building → Floor → Venue tree, venue types, equipment list, scheduling rules |
+| POST | `/check-availability` | 🔑 | `{ venueId, date, startTime, endTime }` → `available`, `conflicts`, `competingRequests`, `suggestions` (FR7) |
+| GET | `/:id` | 🔑 | One venue with its effective buffer |
+| GET | `/:id/availability?from&to` | 🔑 | Calendar blocks, ≤ 31 days: `BOOKED` (red) and `PENDING` (yellow) |
+| POST | `/` | 🎓 | Add venue (coordinators: always in their own department) |
+| PATCH | `/:id` | 🎓 | Edit, set `bufferMinutes` override, or `isActive: false` |
+
+### Bookings (`/api/bookings`) — Phase 2
+
+| Method | Path | Access | Purpose |
+| ------ | ---- | ------ | ------- |
+| POST | `/` | club head, 🎓 | `{ venueId, date, startTime, endTime, title, category, expectedAttendance, description?, clubId?, scope? }`. Club heads create a `PENDING` request; faculty book directly (`APPROVED`). `409 SLOT_UNAVAILABLE` carries `conflicts` and `suggestions`. |
+| GET | `/` | 🔑 | `view=mine` (default) · `decisions` (pending requests you may decide, 🎓) · `all`. Filters: `status, venueId, from, to, page, pageSize` |
+| GET | `/:id` | 🔑 | One booking with `permissions.canDecide / canCancel` |
+| POST | `/:id/approve` | 🎓 | First approval wins; overlapping pending requests are auto-rejected |
+| POST | `/:id/reject` | 🎓 | `{ reason }` — required (FR13) |
+| POST | `/:id/cancel` | requester, club head, deciding faculty | Frees the slot |
+
+Dates and times are **campus local time** (`Asia/Kolkata`); the API stores UTC.
+
+## The scheduling engine (FR8–FR10, FR12)
+
+```
+conflict  ⇔  Start_new < End_existing + Buffer  ∧  End_new + Buffer > Start_existing
+```
+
+- **Buffer (FR9)** — `venues.buffer_minutes`, else the `venue.default_buffer_minutes`
+  setting (15). Frozen onto each booking; the larger of two bookings' buffers
+  applies. Approved overruns (`extension_minutes`) count as part of a booking.
+- **Locking (FR10)** — every request, direct booking, approval and cancellation
+  runs in one transaction that starts with `SELECT … FROM venues … FOR UPDATE`.
+  Writers for a venue queue; each conflict check sees everything committed
+  before it. Locks are always venue → booking, so no deadlocks. The
+  `excl_bookings_no_overlap` constraint is the backstop.
+- **Slot lifecycle (FR12)** — pending requests may compete for one window.
+  The first approval wins and, in the same transaction, rejects every
+  overlapping pending request with a recorded reason.
+- **Routing** — a club's request goes to its department's coordinator; a
+  college-level club or event (no department) goes to the Principal / HOD.
+  Faculty bookings skip the pending step.
+- **Rules** — operating hours (`venue.opening_time` / `closing_time`), 30 min
+  to 12 h long, not in the past, at most `booking.max_advance_days` (90) ahead.
+
+Pure logic lives in `src/services/scheduling/timeWindow.js` (unit tested);
+`tests/integration/bookings.flow.test.js` proves it end to end, including
+20 approvals of competing requests fired at once → exactly one wins.
+
 ## Roles and promotion rules
 
 | Role | Scope | Can promote |

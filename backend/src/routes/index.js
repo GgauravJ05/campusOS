@@ -18,6 +18,8 @@ const healthRoutes = require('./health.routes');
 const authRoutes = require('./auth.routes');
 const usersRoutes = require('./users.routes');
 const directoryRoutes = require('./directory.routes');
+const venuesRoutes = require('./venues.routes');
+const bookingsRoutes = require('./bookings.routes');
 
 const router = Router();
 
@@ -25,5 +27,7 @@ router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
 router.use('/users', usersRoutes);
 router.use('/directory', directoryRoutes);
+router.use('/venues', venuesRoutes);
+router.use('/bookings', bookingsRoutes);
 
 module.exports = router;

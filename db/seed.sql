@@ -69,7 +69,11 @@ INSERT INTO system_settings (setting_key, setting_value, description) VALUES
     ('booking.max_advance_days',     '90',  'How far ahead a venue may be requested.'),
     ('reminder.first_offset_hours',  '48',  'First automated reminder, hours before event start (FR19).'),
     ('reminder.second_offset_hours', '2',   'Second automated reminder, hours before event start (FR19).'),
-    ('rsvp.allow_waitlist',          'false', 'Whether RSVP beyond capacity joins a waitlist instead of being refused.')
+    ('rsvp.allow_waitlist',          'false', 'Whether RSVP beyond capacity joins a waitlist instead of being refused.'),
+    ('venue.opening_time',           '07:00', 'Earliest time a venue booking may start (C7 permitted operating hours).'),
+    ('venue.closing_time',           '21:00', 'Latest time a venue booking may end (C7 permitted operating hours).'),
+    ('booking.min_duration_minutes', '30',  'Shortest bookable window.'),
+    ('booking.max_duration_minutes', '720', 'Longest bookable window on one day.')
 ON CONFLICT (setting_key) DO NOTHING;
 
 -- ------------------------------------------------------------
