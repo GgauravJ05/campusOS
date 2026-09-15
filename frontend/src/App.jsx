@@ -8,6 +8,7 @@ import { FullPageLoader } from '@/components/ui/Spinner'
 import { AuthLayout } from '@/components/layout/AuthLayout'
 import { AppShell } from '@/components/layout/AppShell'
 import { FACULTY_ROLES } from '@/lib/utils'
+import { BOOKING_ROLES } from '@/features/bookings/bookingsApi'
 
 // Route-level code splitting: a student never downloads the admin screens.
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
@@ -20,6 +21,10 @@ const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
 const UsersPage = lazy(() => import('@/pages/users/UsersPage'))
 const UserDetailPage = lazy(() => import('@/pages/users/UserDetailPage'))
 const ModulePreviewPage = lazy(() => import('@/pages/ModulePreviewPage'))
+const VenuesPage = lazy(() => import('@/pages/venues/VenuesPage'))
+const VenueDetailPage = lazy(() => import('@/pages/venues/VenueDetailPage'))
+const NewBookingPage = lazy(() => import('@/pages/bookings/NewBookingPage'))
+const BookingsPage = lazy(() => import('@/pages/bookings/BookingsPage'))
 const StatusPage = lazy(() => import('@/pages/StatusPage'))
 
 export function AppRoutes() {
@@ -42,7 +47,12 @@ export function AppRoutes() {
           <Route element={<AppShell />}>
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="profile" element={<ProfilePage />} />
-            <Route path="venues" element={<ModulePreviewPage module="venues" />} />
+            <Route path="venues" element={<VenuesPage />} />
+            <Route path="venues/:id" element={<VenueDetailPage />} />
+            <Route path="bookings" element={<BookingsPage />} />
+            <Route element={<RequireAuth roles={BOOKING_ROLES} />}>
+              <Route path="bookings/new" element={<NewBookingPage />} />
+            </Route>
             <Route path="events" element={<ModulePreviewPage module="events" />} />
             <Route element={<RequireAuth roles={FACULTY_ROLES} />}>
               <Route path="users" element={<UsersPage />} />

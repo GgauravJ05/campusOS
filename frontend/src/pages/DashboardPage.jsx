@@ -11,7 +11,7 @@ import { useDocumentTitle } from '@/lib/hooks'
 /** What is live today and what each upcoming phase adds - honest, no placeholder data. */
 const ROADMAP = [
   { phase: 1, title: 'Accounts & roles', icon: CheckCircle2, text: 'Sign-up, verification, secure sessions, promotions.', live: true },
-  { phase: 2, title: 'Venues & scheduling', icon: MapPin, text: 'Find rooms by building, floor and equipment. Zero double bookings.' },
+  { phase: 2, title: 'Venues & scheduling', icon: MapPin, text: 'Find rooms by building, floor and equipment. Zero double bookings.', live: true },
   { phase: 3, title: 'Approvals', icon: ClipboardCheck, text: 'Coordinator inbox with recorded reasons for every decision.' },
   { phase: 4, title: 'Events & RSVP', icon: CalendarDays, text: 'Discover events by category and reserve your seat.' },
   { phase: 5, title: 'Reminders', icon: BellRing, text: 'Automatic notifications two days and two hours before.' },

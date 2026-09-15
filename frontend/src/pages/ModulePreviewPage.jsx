@@ -1,28 +1,16 @@
 import { Link } from 'react-router-dom'
-import { ArrowLeft, CalendarDays, Check, MapPin } from 'lucide-react'
+import { ArrowLeft, CalendarDays, Check } from 'lucide-react'
 import { PageHeader } from '@/components/layout/AppShell'
 import { Card } from '@/components/ui/Surface'
 import { buttonClasses } from '@/components/ui/buttonClasses'
 import { useDocumentTitle } from '@/lib/hooks'
 
 /**
- * Venues and Events arrive in Phases 2 and 4. Until their APIs exist these
+ * Events arrive in Phase 4. Until their APIs exist these
  * pages describe what is coming rather than showing invented data - the UI
  * is built against the real API, never against mocks.
  */
 const MODULES = {
-  venues: {
-    icon: MapPin,
-    title: 'Venues',
-    phase: 2,
-    tagline: 'Find the right room and book it without clashes.',
-    features: [
-      'Browse by building, floor, capacity and equipment',
-      'Live availability calendar for every seminar hall and lab',
-      'Automatic conflict detection with setup and teardown buffers',
-      'Guaranteed zero double bookings, even under simultaneous requests',
-    ],
-  },
   events: {
     icon: CalendarDays,
     title: 'Events',
@@ -54,7 +42,7 @@ export default function ModulePreviewPage({ module }) {
             </span>
             <h2 className="mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">{title} is on its way</h2>
             <p className="mt-3 text-zinc-500 dark:text-zinc-400">
-              Accounts and roles are live today. This module is next on the build plan, and it will appear right here when it ships.
+              Accounts, roles and venue booking are live today. This module is next on the build plan, and it will appear right here when it ships.
             </p>
             <ul className="mt-6 space-y-3">
               {features.map((feature) => (

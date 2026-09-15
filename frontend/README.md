@@ -47,6 +47,8 @@ src/
   features/
     auth/                   AuthProvider, useAuth, route guards, authApi
     users/usersApi.js
+    venues/venuesApi.js     venue directory, calendar, availability check
+    bookings/bookingsApi.js requests, decisions, status labels
     theme/ThemeProvider.jsx light / dark / system
   components/
     ui/                     Button, Field/Input/Select/PasswordInput, OtpInput,
@@ -68,8 +70,10 @@ src/
   `fieldErrors` (`{ fieldName: message }`) — map `fieldErrors` onto form fields.
 - **Reuse `components/ui`** before writing new markup. Every input goes in a
   `<Field>` so the label, hint, error and ARIA wiring are always right.
+- **Campus time.** Dates and times are campus-local (`Asia/Kolkata`) strings,
+  like the API. Use `lib/campusTime.js`, never `new Date().toLocaleDateString()`.
 - **Build against the real API.** Pages for modules whose backend does not
-  exist yet (Venues, Events) describe what is coming — they never show invented data.
+  exist yet (Events) describe what is coming — they never show invented data.
 - **Test user journeys, not implementation.** Tests render the real routes and
   talk to an MSW fake of the API (`src/test/server.js`) using the backend's
   exact response envelope. Query by role and label, the way a user finds things.

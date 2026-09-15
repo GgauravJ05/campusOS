@@ -54,6 +54,10 @@ export const Input = forwardRef(function Input({ className, error, icon: Icon, .
   )
 })
 
+export const Textarea = forwardRef(function Textarea({ className, error, rows = 4, ...props }, ref) {
+  return <textarea ref={ref} rows={rows} className={cn(controlBase, controlState(error), 'resize-y py-2.5 leading-relaxed', className)} {...props} />
+})
+
 export const Select = forwardRef(function Select({ className, error, children, ...props }, ref) {
   return (
     <div className="relative">

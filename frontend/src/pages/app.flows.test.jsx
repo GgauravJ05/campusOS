@@ -63,9 +63,9 @@ describe('dashboard and shell', () => {
   })
 
   it('describes upcoming modules honestly instead of showing fake data', async () => {
-    renderApp('/venues', { user: makeUser() })
-    expect(await screen.findByRole('heading', { name: 'Venues is on its way' })).toBeInTheDocument()
-    expect(screen.getByText(/Phase 2/)).toBeInTheDocument()
+    renderApp('/events', { user: makeUser() })
+    expect(await screen.findByRole('heading', { name: 'Events is on its way' })).toBeInTheDocument()
+    expect(screen.getByText(/Phase 4/)).toBeInTheDocument()
   })
 })
 
