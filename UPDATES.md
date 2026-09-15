@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-15 | [Phase 3 — Approvals, clubs & notifications web app](#phase-3--approvals-clubs--notifications-web-app-2026-09-15) | Gaurav |
 | 2026-09-15 | [Phase 3 — Approval workflow & club management API](#phase-3--approval-workflow--club-management-api-2026-09-15) | Gaurav |
 | 2026-09-15 | [Phase 2 — Venues & booking web app](#phase-2--venues--booking-web-app-2026-09-15) | Gaurav |
 | 2026-09-15 | [Phase 2 — Venues & scheduling engine API](#phase-2--venues--scheduling-engine-api-2026-09-15) | Gaurav |
@@ -18,6 +19,42 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase 3 — Approvals, clubs & notifications web app (2026-09-15)
+
+The screens for the Phase 3 API. **Phase 3 (FR11–FR13) is now complete.**
+
+### ⚠️ What you need to do
+
+Pull and restart `npm run dev` in `frontend/`. No new packages. The database
+rebuild from the previous entry is required if you have not done it yet.
+
+### Screens
+
+| Route | Who | What |
+| ----- | --- | ---- |
+| `/bookings` | faculty | Tabs **Needs decision · Waiting on club · Department · My bookings**. Each request can be **approved**, **sent back with a note** ("Request changes"), or **rejected** with a reason. Cards show how many requests compete for the same time and whether it was resubmitted, with the note you sent earlier. |
+| `/bookings` | club heads | A sent-back request shows the approver's note and an **Edit & resubmit** button; open requests can be edited too. `?focus=ID` (used by emails and notifications) highlights one request. |
+| `/bookings/:id/edit` | requester, club head | The booking wizard, prefilled and opening at the time step. Change venue, time or details and resubmit. The club is locked, and the request is not counted as its own competitor. |
+| `/clubs` | everyone | Club directory: search, **My clubs**, your position on each team. Faculty: **New club** and **Show disabled**. |
+| `/clubs/:id` | everyone | Club head, department, team. Club head and faculty: edit details, add members by email, change positions, remove members. Faculty: disable / re-enable. Members: leave the club. The Principal can move a club to another department or make it college-level. |
+| header bell | everyone | Unread count, latest notifications, click to open the related request, **Mark all read**. |
+
+The **Bookings** menu item shows a count: requests waiting for a decision
+(faculty) or requests that need changes (club heads). Counts refresh on every
+page change, after a decision, and once a minute. The dashboard roadmap marks
+Phase 3 as live.
+
+### Tests
+
+**128 frontend tests (was 108)**: sending back with a required note, the
+waiting-on-club tab, rejecting a sent-back request, the full edit → resubmit
+journey (including moving venues and a slot taken at the last moment),
+non-editable and missing requests, menu badges, the notification bell, and
+every club screen for students, club heads, members, coordinators and the
+Principal. Coverage 94.2 / 89.7 / 91.7 / 95.9.
 
 ---
 
@@ -611,7 +648,7 @@ for all data — Phase 1 and Phase 2 replace those.
 | 0 | Schema, backend skeleton, test harness | — | ✅ Done |
 | 1 | Auth & RBAC | FR1–FR5 | ✅ Done |
 | 2 | Venues & scheduling engine | FR6–FR10 | ✅ Done |
-| 3 | Approval workflow & club management | FR11–FR13 | 🟡 API done, web app next |
+| 3 | Approval workflow & club management | FR11–FR13 | ✅ Done |
 | 4 | Events & RSVP | FR14–FR17 | |
 | 5 | Notifications (scheduled reminders) | FR19 | |
 | 6 | Governance & analytics | FR18, FR20, FR21 | |

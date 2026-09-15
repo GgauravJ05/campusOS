@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  AlertTriangle, ArrowLeft, ArrowRight, Building2, CalendarClock, Check, CheckCircle2, ClipboardList, Clock, Info, Layers, Loader2, MapPin, Users2,
+  AlertTriangle, ArrowLeft, ArrowRight, Building2, CalendarClock, Check, CheckCircle2, ClipboardList, Clock, Flag, Info, Layers, Loader2, MapPin, MessageSquareWarning, Users2,
 } from 'lucide-react'
 import { useAuth } from '@/features/auth/authContext'
 import { venuesApi, floorLabel, VENUE_TYPE_LABELS } from '@/features/venues/venuesApi'
@@ -15,6 +15,7 @@ import { VenueIcon } from '@/components/venues/VenueVisual'
 import { addDays, campusToday, durationLabel, formatLongDate, formatTimeRange, timeOptions, toMinutes } from '@/lib/campusTime'
 import { cn, isFaculty } from '@/lib/utils'
 import { useDebouncedValue, useDocumentTitle } from '@/lib/hooks'
+import { markSummaryStale } from '@/lib/summary'
 
 const STEPS = [
   { id: 'venue', label: 'Venue', icon: Building2 },
@@ -271,7 +272,7 @@ function TimeStep({ venue, rules, slot, onChange, status }) {
 // Step 3: event details + review
 // ---------------------------------------------------------------------------
 
-function DetailsStep({ user, venue, slot, details, onChange, clubs, errors }) {
+function DetailsStep({ user, venue, slot, details, onChange, clubs, errors, existing }) {
   const faculty = isFaculty(user)
   const set = (key) => (e) => onChange({ [key]: e.target.value })
 
@@ -298,16 +299,27 @@ function DetailsStep({ user, venue, slot, details, onChange, clubs, errors }) {
           </Field>
         </div>
 
-        <Field label={faculty ? 'Organising club' : 'Your club'} error={errors.clubId} optional={faculty}>
-          {(p) => (
-            <Select {...p} value={details.clubId} onChange={set('clubId')} error={errors.clubId}>
-              {faculty ? <option value="">No club — official event</option> : <option value="" disabled>Choose your club</option>}
-              {clubs.map((c) => <option key={c.id} value={c.id}>{c.name}{c.scope === 'COLLEGE' ? ' (college-level)' : ''}</option>)}
-            </Select>
-          )}
-        </Field>
+        {existing ? (
+          <div>
+            <p className="mb-1.5 text-sm font-medium text-zinc-700 dark:text-zinc-300">Organising club</p>
+            <p className="flex items-center gap-2 rounded-lg bg-zinc-50 px-3 py-2.5 text-sm dark:bg-zinc-800/60">
+              <Flag className="size-4 text-zinc-400" aria-hidden />
+              {existing.event.club?.name ?? 'Official event'}
+              <span className="ml-auto text-xs text-zinc-500">Can&apos;t be changed</span>
+            </p>
+          </div>
+        ) : (
+          <Field label={faculty ? 'Organising club' : 'Your club'} error={errors.clubId} optional={faculty}>
+            {(p) => (
+              <Select {...p} value={details.clubId} onChange={set('clubId')} error={errors.clubId}>
+                {faculty ? <option value="">No club — official event</option> : <option value="" disabled>Choose your club</option>}
+                {clubs.map((c) => <option key={c.id} value={c.id}>{c.name}{c.scope === 'COLLEGE' ? ' (college-level)' : ''}</option>)}
+              </Select>
+            )}
+          </Field>
+        )}
 
-        {user.role.key === 'SUPER_ADMIN' && !details.clubId && (
+        {!existing && user.role.key === 'SUPER_ADMIN' && !details.clubId && (
           <fieldset>
             <legend className="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">Event level</legend>
             <div className="grid grid-cols-2 gap-2">
@@ -333,9 +345,11 @@ function DetailsStep({ user, venue, slot, details, onChange, clubs, errors }) {
           <div className="flex gap-3"><Users2 className="size-4 shrink-0 text-zinc-400" aria-hidden /><dd>{details.expectedAttendance || '—'} expected</dd></div>
         </dl>
         <div className="mt-5 rounded-lg bg-zinc-50 p-3 text-xs leading-relaxed text-zinc-600 dark:bg-zinc-800/60 dark:text-zinc-400">
-          {faculty
-            ? 'As faculty, this is booked immediately. Any pending requests that overlap it will be declined automatically.'
-            : 'This goes to your department coordinator for approval. The slot shows as pending until then, and another club may request the same time.'}
+          {existing
+            ? 'Resubmitting sends this back to the approver as a new version. Until they decide, another club may still request the same time.'
+            : faculty
+              ? 'As faculty, this is booked immediately. Any pending requests that overlap it will be declined automatically.'
+              : 'This goes to your department coordinator for approval. The slot shows as pending until then, and another club may request the same time.'}
         </div>
       </Card>
     </div>
@@ -358,20 +372,46 @@ function findVenue(meta, venueId) {
 // Page
 // ---------------------------------------------------------------------------
 
+/** True when two same-day HH:MM windows overlap. */
+function overlaps(a, b) {
+  return toMinutes(a.startTime) < toMinutes(b.endTime) && toMinutes(b.startTime) < toMinutes(a.endTime)
+}
+
 export default function NewBookingPage() {
   useDocumentTitle('Book a venue')
+  return <BookingWizard />
+}
+
+/**
+ * The three-step booking flow. With `existing`, it edits an open request
+ * instead (FR13 resubmission): prefilled, starting at the time step, with
+ * the organising club locked.
+ */
+export function BookingWizard({ existing = null }) {
   const { user } = useAuth()
   const toast = useToast()
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const faculty = isFaculty(user)
+  const editing = Boolean(existing)
 
   const [meta, setMeta] = useState(null)
   const [metaError, setMetaError] = useState(null)
-  const [step, setStep] = useState(0)
-  const [selection, setSelection] = useState({ building: null, floor: null, venueId: params.get('venueId') ? Number(params.get('venueId')) : null })
-  const [slot, setSlot] = useState({ date: params.get('date') || '', startTime: params.get('start') || '', endTime: '' })
-  const [details, setDetails] = useState({ title: '', category: '', expectedAttendance: '', clubId: '', description: '', scope: 'COLLEGE' })
+  const [step, setStep] = useState(editing ? 1 : 0)
+  const [selection, setSelection] = useState({
+    building: null,
+    floor: null,
+    venueId: existing?.venue.id ?? (params.get('venueId') ? Number(params.get('venueId')) : null),
+  })
+  const [slot, setSlot] = useState(existing
+    ? { date: existing.date, startTime: existing.startTime, endTime: existing.endTime }
+    : { date: params.get('date') || '', startTime: params.get('start') || '', endTime: '' })
+  const [details, setDetails] = useState(existing
+    ? {
+      title: existing.event.title, category: existing.event.category, expectedAttendance: String(existing.event.expectedAttendance ?? ''),
+      clubId: existing.event.club?.id ?? '', description: existing.event.description ?? '', scope: existing.event.scope,
+    }
+    : { title: '', category: '', expectedAttendance: '', clubId: '', description: '', scope: 'COLLEGE' })
   const [facultyClubs, setFacultyClubs] = useState([])
   const [errors, setErrors] = useState({})
   const [submitError, setSubmitError] = useState(null)
@@ -379,8 +419,8 @@ export default function NewBookingPage() {
 
   useEffect(() => {
     venuesApi.meta().then(setMeta).catch(setMetaError)
-    if (faculty) bookingsApi.appointableClubs().then(setFacultyClubs).catch(() => {})
-  }, [faculty])
+    if (faculty && !editing) bookingsApi.appointableClubs().then(setFacultyClubs).catch(() => {})
+  }, [faculty, editing])
 
   // Resolve a venue id from the URL into its building and floor.
   const venue = findVenue(meta, selection.venueId)
@@ -415,7 +455,13 @@ export default function NewBookingPage() {
     return () => controller.abort()
   }, [debouncedKey])
 
-  const status = !slotKey ? { state: 'idle' } : check.key === slotKey ? check : { state: 'checking' }
+  const rawStatus = !slotKey ? { state: 'idle' } : check.key === slotKey ? check : { state: 'checking' }
+  // The request being edited is itself pending, so it would count as its own competitor.
+  const selfCompeting = editing && rawStatus.state === 'done' && venue?.id === existing.venue.id
+    && effectiveSlot.date === existing.date && overlaps(effectiveSlot, existing)
+  const status = selfCompeting
+    ? { ...rawStatus, result: { ...rawStatus.result, competingRequests: Math.max(rawStatus.result.competingRequests - 1, 0) } }
+    : rawStatus
   const slotOk = status.state === 'done' && status.result.available
 
   function validateDetails() {
@@ -425,7 +471,7 @@ export default function NewBookingPage() {
     const n = Number(details.expectedAttendance)
     if (!Number.isInteger(n) || n < 1) found.expectedAttendance = 'Enter how many people you expect'
     else if (n > venue.capacity) found.expectedAttendance = `${venue.name} holds ${venue.capacity}`
-    if (!faculty && !details.clubId) found.clubId = 'Choose the club organising this'
+    if (!faculty && !editing && !details.clubId) found.clubId = 'Choose the club organising this'
     return found
   }
 
@@ -436,6 +482,20 @@ export default function NewBookingPage() {
     setSubmitError(null)
     setSubmitting(true)
     try {
+      if (editing) {
+        await bookingsApi.update(existing.id, {
+          venueId: venue.id,
+          ...effectiveSlot,
+          title: details.title.trim(),
+          category: details.category,
+          expectedAttendance: Number(details.expectedAttendance),
+          description: details.description.trim(),
+        })
+        toast.success('Request resubmitted', 'It is back with the approver.')
+        markSummaryStale()
+        navigate(`/bookings?focus=${existing.id}`, { replace: true })
+        return
+      }
       const booking = await bookingsApi.create({
         venueId: venue.id,
         ...effectiveSlot,
@@ -469,13 +529,25 @@ export default function NewBookingPage() {
 
   return (
     <>
-      <Link to="/venues" className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100">
-        <ArrowLeft className="size-4" aria-hidden /> Venues
+      <Link to={editing ? '/bookings' : '/venues'} className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100">
+        <ArrowLeft className="size-4" aria-hidden /> {editing ? 'Bookings' : 'Venues'}
       </Link>
       <PageHeader
-        title="Book a venue"
-        description={faculty ? 'Faculty bookings are confirmed immediately.' : 'Your request goes to your department coordinator for approval.'}
+        title={editing ? 'Edit request' : 'Book a venue'}
+        description={editing
+          ? 'Change the venue, time or details, then resubmit it for approval.'
+          : faculty ? 'Faculty bookings are confirmed immediately.' : 'Your request goes to your department coordinator for approval.'}
       />
+
+      {existing?.status === 'MODIFICATION_REQUESTED' && existing.modificationNote && (
+        <div className="mb-6 flex gap-3 rounded-xl border border-sky-200 bg-sky-50 p-4 text-sky-900 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200" role="status">
+          <MessageSquareWarning className="mt-0.5 size-5 shrink-0" aria-hidden />
+          <div>
+            <p className="font-semibold">{existing.decidedBy?.fullName ?? 'The approver'} asked for changes</p>
+            <p className="text-sm opacity-90">{existing.modificationNote}</p>
+          </div>
+        </div>
+      )}
 
       <Stepper step={step} />
 
@@ -489,7 +561,7 @@ export default function NewBookingPage() {
         ) : (
           <>
             {submitError && <Alert tone="error" className="mb-6">{submitError.message}</Alert>}
-            <DetailsStep user={user} venue={venue} slot={effectiveSlot} details={details} onChange={(c) => setDetails({ ...details, ...c })} clubs={clubs} errors={errors} />
+            <DetailsStep user={user} venue={venue} slot={effectiveSlot} details={details} onChange={(c) => setDetails({ ...details, ...c })} clubs={clubs} errors={errors} existing={existing} />
           </>
         )}
 
@@ -504,7 +576,7 @@ export default function NewBookingPage() {
               </Button>
             ) : (
               <Button onClick={submit} loading={submitting}>
-                {faculty ? 'Book venue' : 'Send request'}
+                {editing ? 'Resubmit request' : faculty ? 'Book venue' : 'Send request'}
               </Button>
             )}
           </div>

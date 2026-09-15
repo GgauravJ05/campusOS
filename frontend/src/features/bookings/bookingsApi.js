@@ -8,6 +8,9 @@ export const bookingsApi = {
   approve: (id) => api.post(`/bookings/${id}/approve`).then((r) => r.data),
   reject: (id, reason) => api.post(`/bookings/${id}/reject`, { reason }).then((r) => r.data),
   cancel: (id) => api.post(`/bookings/${id}/cancel`).then((r) => r.data),
+  requestChanges: (id, note) => api.post(`/bookings/${id}/request-changes`, { note }).then((r) => r.data),
+  update: (id, changes) => api.patch(`/bookings/${id}`, changes).then((r) => r.data),
+  summary: ({ signal } = {}) => api.get('/bookings/summary', { signal }).then((r) => r.data),
   appointableClubs: () => api.get('/directory/clubs', { query: { appointable: true } }).then((r) => r.data),
 }
 
