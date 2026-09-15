@@ -4,7 +4,6 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/features/auth/authContext'
 import { Card, CardHeader, EmptyState } from '@/components/ui/Surface'
-import { buttonClasses } from '@/components/ui/buttonClasses'
 import { RoleBadge, ScopeBadge } from '@/components/RoleBadge'
 import { academicYearLabel, firstName, formatRelative, greeting, isFaculty, ROLE_META } from '@/lib/utils'
 import { useDocumentTitle } from '@/lib/hooks'
@@ -56,7 +55,10 @@ export default function DashboardPage() {
             </p>
           </div>
           {faculty && (
-            <Link to="/users" className={buttonClasses({ variant: 'secondary', className: 'border-0 bg-white/95 text-brand-700 ring-0 hover:bg-white dark:bg-white dark:text-brand-700' })}>
+            <Link
+              to="/users"
+              className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-brand-700 shadow-sm transition-colors hover:bg-brand-50"
+            >
               <UsersRound className="size-4" aria-hidden /> Manage people
             </Link>
           )}

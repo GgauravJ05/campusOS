@@ -225,10 +225,10 @@ export default function UserDetailPage() {
 
       <Card className="overflow-hidden">
         <div className="h-24 bg-gradient-to-r from-brand-500/15 via-violet-500/10 to-transparent dark:from-brand-500/20" aria-hidden />
-        <div className="-mt-10 flex flex-wrap items-end justify-between gap-4 px-5 pb-6 sm:px-8">
-          <div className="flex items-end gap-4">
-            <Avatar name={person.fullName} src={person.avatarUrl} size="xl" className="ring-4 ring-white dark:ring-zinc-900" />
-            <div className="min-w-0 pb-1">
+        <div className="flex flex-wrap items-start justify-between gap-4 px-5 pb-6 sm:px-8">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:gap-5">
+            <Avatar name={person.fullName} src={person.avatarUrl} size="xl" className="-mt-10 ring-4 ring-white dark:ring-zinc-900" />
+            <div className="min-w-0 sm:pt-3">
               <h1 className="text-2xl font-semibold tracking-tight">{person.fullName}</h1>
               <p className="text-sm text-zinc-500">{person.email}</p>
               <div className="mt-2 flex flex-wrap gap-1.5"><RoleBadge role={person.role} /><StatusBadge user={person} /></div>
@@ -236,7 +236,7 @@ export default function UserDetailPage() {
           </div>
 
           {canManage ? (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 sm:pt-4">
               <Button variant="secondary" onClick={() => setDialog('role')} disabled={!person.isActive || !person.isVerified}>
                 <UserCog className="size-4" aria-hidden /> Change role
               </Button>
@@ -247,7 +247,7 @@ export default function UserDetailPage() {
               )}
             </div>
           ) : (
-            <p className="flex items-center gap-1.5 text-sm text-zinc-500"><Lock className="size-4" aria-hidden /> View only</p>
+            <p className="flex items-center gap-1.5 text-sm text-zinc-500 sm:pt-6"><Lock className="size-4" aria-hidden /> View only</p>
           )}
         </div>
 
