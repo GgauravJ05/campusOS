@@ -10,7 +10,7 @@ describe('route guards', () => {
   it('sends a guest to sign in, remembering where they were going', async () => {
     const { user } = renderApp('/users/7')
     expect(await screen.findByRole('heading', { name: 'Welcome back' })).toBeInTheDocument()
-    expect(currentPath()).toBe('/login')
+    await waitFor(() => expect(currentPath()).toBe('/login'))
 
     server.use(http.post(`${API}/auth/login`, () => ok(session(makeUser({ role: { key: 'DEPT_COORDINATOR', name: 'C', rank: 2 } })))))
     server.use(http.get(`${API}/users/7`, () => fail(404, 'NOT_FOUND', 'User not found')))
@@ -56,7 +56,7 @@ describe('sign in', () => {
     await user.click(screen.getByRole('button', { name: /Sign in/ }))
 
     expect(await screen.findByText('Welcome back, Asha')).toBeInTheDocument()
-    expect(currentPath()).toBe('/dashboard')
+    await waitFor(() => expect(currentPath()).toBe('/dashboard'))
     expect(body).toEqual({ email: 'asha.kulkarni@mmcoe.edu.in', password: 'Violet-Lantern-42' })
   })
 
@@ -69,7 +69,7 @@ describe('sign in', () => {
     await user.click(screen.getByRole('button', { name: /Sign in/ }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Incorrect email or password.')
-    expect(currentPath()).toBe('/login')
+    await waitFor(() => expect(currentPath()).toBe('/login'))
   })
 
   it('sends an unverified user to verification with a fresh code', async () => {
@@ -142,7 +142,7 @@ describe('registration and verification', () => {
     await user.click(screen.getByLabelText('Digit 1 of 6'))
     await user.paste('482913')
     expect(await screen.findByText("You're in, Asha!")).toBeInTheDocument()
-    expect(currentPath()).toBe('/dashboard')
+    await waitFor(() => expect(currentPath()).toBe('/dashboard'))
   })
 
   it('shows server field errors from registration', async () => {
@@ -206,7 +206,7 @@ describe('password reset', () => {
     await user.click(submit)
 
     expect(await screen.findByText('Password updated')).toBeInTheDocument()
-    expect(currentPath()).toBe('/login')
+    await waitFor(() => expect(currentPath()).toBe('/login'))
     expect(reset).toEqual({ email: 'asha@mmcoe.edu.in', code: '246810', newPassword: 'Copper-Kettle-58' })
     expect(screen.getByLabelText('College email')).toHaveValue('asha@mmcoe.edu.in')
   })
