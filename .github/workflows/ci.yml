@@ -1,0 +1,148 @@
+# ============================================================
+# CampusOS - Continuous Integration
+#
+# Runs on every pull request and every push to dev / main.
+# A pull request cannot be merged until every job here is green
+# (enable "Require status checks" in branch protection).
+#
+#   backend   lint-free Jest run: unit + integration against a REAL
+#             PostgreSQL service container, with the coverage gate
+#   frontend  ESLint, Vitest, production build
+#   audit     npm audit for known vulnerable dependencies
+# ============================================================
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [dev, main]
+  workflow_dispatch:
+  # Lets release.yml run this exact pipeline as its gate.
+  workflow_call:
+
+# A newer push to the same branch cancels the run it supersedes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  backend:
+    name: Backend - tests & coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: campusos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d campusos_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/campusos_test
+      PGPASSWORD: postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply schema and seed
+        run: |
+          psql -h localhost -U postgres -d campusos_test -v ON_ERROR_STOP=1 -f ../db/schema.sql
+          psql -h localhost -U postgres -d campusos_test -v ON_ERROR_STOP=1 -f ../db/seed.sql
+
+      # REQUIRE_TEST_DATABASE turns "database unreachable, skipping" into a hard
+      # failure - a skipped suite in CI would be a silent false green.
+      - name: Run tests with coverage gate
+        run: npm run test:ci
+        env:
+          REQUIRE_TEST_DATABASE: '1'
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage
+          retention-days: 7
+
+  frontend:
+    name: Frontend - lint, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test:ci --if-present
+
+      - name: Production build
+        run: npm run build
+
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 7
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: npm audit (production dependencies, high and above)
+        working-directory: ${{ matrix.package }}
+        run: npm audit --omit=dev --audit-level=high

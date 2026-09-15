@@ -36,6 +36,10 @@ module.exports = async function globalSetup() {
     const reason = err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT'
       ? 'no server is listening'
       : err.message;
+    // CI sets this: there, skipping the database suites is a false green.
+    if (process.env.REQUIRE_TEST_DATABASE === '1') {
+      throw new Error(`Test database required but unavailable: ${reason}`);
+    }
     console.warn(
       `\n  Skipping database-backed tests: ${reason}.` +
       '\n  Run `docker compose up -d` from the repository root to include them.\n',
