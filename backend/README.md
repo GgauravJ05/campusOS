@@ -179,16 +179,44 @@ memory (not `localStorage`) and send it as `Authorization: Bearer <token>`.
 | POST | `/` | 🎓 | Add venue (coordinators: always in their own department) |
 | PATCH | `/:id` | 🎓 | Edit, set `bufferMinutes` override, or `isActive: false` |
 
-### Bookings (`/api/bookings`) — Phase 2
+### Bookings (`/api/bookings`) — Phases 2 & 3
 
 | Method | Path | Access | Purpose |
 | ------ | ---- | ------ | ------- |
-| POST | `/` | club head, 🎓 | `{ venueId, date, startTime, endTime, title, category, expectedAttendance, description?, clubId?, scope? }`. Club heads create a `PENDING` request; faculty book directly (`APPROVED`). `409 SLOT_UNAVAILABLE` carries `conflicts` and `suggestions`. |
-| GET | `/` | 🔑 | `view=mine` (default) · `decisions` (pending requests you may decide, 🎓) · `all`. Filters: `status, venueId, from, to, page, pageSize` |
-| GET | `/:id` | 🔑 | One booking with `permissions.canDecide / canCancel` |
-| POST | `/:id/approve` | 🎓 | First approval wins; overlapping pending requests are auto-rejected |
-| POST | `/:id/reject` | 🎓 | `{ reason }` — required (FR13) |
-| POST | `/:id/cancel` | requester, club head, deciding faculty | Frees the slot |
+| POST | `/` | club head, 🎓 | `{ venueId, date, startTime, endTime, title, category, expectedAttendance, description?, clubId?, scope? }`. Club heads create a `PENDING` request (approvers are notified); faculty book directly (`APPROVED`). `409 SLOT_UNAVAILABLE` carries `conflicts` and `suggestions`. |
+| GET | `/` | 🔑 | `view=mine` (default) · `decisions` (🎓: `PENDING` requests you decide, or `status=MODIFICATION_REQUESTED` for those waiting on the club) · `all`. Filters: `status, venueId, from, to, page, pageSize` |
+| GET | `/summary` | 🔑 | Badge counts: `awaitingDecision`, `myChangesRequested`, `myAwaitingApproval`, `unreadNotifications` |
+| GET | `/:id` | 🔑 | One booking with `modificationNote`, `revision`, `competingRequests` and `permissions.canDecide / canReject / canEdit / canCancel` |
+| PATCH | `/:id` | requester, club head | Edit an open request (`PENDING` or `MODIFICATION_REQUESTED`) — any of `venueId, date, startTime, endTime, title, description, category, expectedAttendance`. Re-checks the slot, returns it to `PENDING`, bumps `revision`, notifies approvers. The club cannot change. |
+| POST | `/:id/approve` | 🎓 | First approval wins; overlapping open requests are auto-rejected. Requesters are notified and emailed. |
+| POST | `/:id/reject` | 🎓 | `{ reason }` — required (FR13). Also works on a request sent back for changes. |
+| POST | `/:id/request-changes` | 🎓 | `{ note }` — FR13 "Request Modification". Status becomes `MODIFICATION_REQUESTED`; the slot is **not** held. |
+| POST | `/:id/cancel` | requester, club head, deciding faculty | Frees the slot. The requester is notified when faculty cancel. |
+
+### Clubs (`/api/clubs`) — Phase 3 (FR11)
+
+| Method | Path | Access | Purpose |
+| ------ | ---- | ------ | ------- |
+| GET | `/` | 🔑 | Active clubs with `myPosition` and `permissions`. Filters: `q, departmentId, mine, includeInactive` (🎓 only) |
+| GET | `/:id` | 🔑 | A club and its team. Member emails only for the club head and administrators. Disabled clubs: faculty and the club's own people only. |
+| POST | `/` | 🎓 | `{ name, description?, departmentId? }`. A coordinator's club is always in their department; only the Principal / HOD creates a college-level club (`departmentId: null`). |
+| PATCH | `/:id` | club head, 🎓 | `name`, `description` (head or administrator) · `isActive` (administrator) · `departmentId` (Principal / HOD). Disabling withdraws the club's open venue requests; approved bookings stand. |
+| POST | `/:id/members` | club head, 🎓 | `{ email, position }` — adds a verified student to the team. **Not a promotion**: roles still change only in user management. |
+| PATCH | `/:id/members/:userId` | club head, 🎓 | `{ position }` — the head's own position is always `PRESIDENT` |
+| DELETE | `/:id/members/:userId` | club head, 🎓, or the member themselves | Removes (or leaves) the team |
+
+Positions: `VICE_PRESIDENT, SECRETARY, TREASURER, TECHNICAL_LEAD, EVENT_LEAD, DESIGN_LEAD, MARKETING_LEAD, VOLUNTEER, MEMBER`.
+Administrators are the Principal / HOD (any club) and a coordinator (their department's clubs).
+
+### Notifications (`/api/notifications`) — Phase 3
+
+| Method | Path | Access | Purpose |
+| ------ | ---- | ------ | ------- |
+| GET | `/` | 🔑 | Your notifications, newest first. `unread, page, pageSize (≤ 50)`; `meta.unread` is the badge count |
+| POST | `/:id/read` | 🔑 | Mark one read (someone else's is a 404) |
+| POST | `/read-all` | 🔑 | Mark all read |
+
+Written for: new and updated requests (to approvers), approved / not approved / changes requested / cancelled by faculty (to the requester, also emailed), and being added to a club team (also emailed). Rows commit with the change they describe; emails are sent only after commit.
 
 Dates and times are **campus local time** (`Asia/Kolkata`); the API stores UTC.
 

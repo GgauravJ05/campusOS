@@ -139,6 +139,33 @@ function clubHeadScope(club) {
   return club.departmentId === null ? 'COLLEGE' : 'DEPARTMENT';
 }
 
+/**
+ * FR11 administration: create, rename, move, disable. SUPER_ADMIN for any
+ * club; a coordinator only for their own department's clubs. College-level
+ * clubs (no department) are administered by the Principal / HOD alone.
+ *
+ * @param {Actor} actor
+ * @param {{ departmentId: number | null }} club  the club, or the proposed one when creating
+ */
+function canManageClub(actor, club) {
+  if (actor.role === ROLES.SUPER_ADMIN) return true;
+  return actor.role === ROLES.DEPT_COORDINATOR
+    && actor.departmentId !== null
+    && club.departmentId !== null
+    && club.departmentId === actor.departmentId;
+}
+
+/**
+ * FR11 "Club Heads shall manage their specific club details and organizing
+ * team members": the club's own head, plus anyone who administers the club.
+ *
+ * @param {Actor} actor
+ * @param {{ departmentId: number | null, headId: number | null }} club
+ */
+function canRunClub(actor, club) {
+  return (club.headId !== null && club.headId === actor.id) || canManageClub(actor, club);
+}
+
 module.exports = {
   ROLES,
   ROLE_RANK,
@@ -151,4 +178,6 @@ module.exports = {
   canAppointForClub,
   checkRoleChange,
   clubHeadScope,
+  canManageClub,
+  canRunClub,
 };

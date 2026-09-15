@@ -40,4 +40,28 @@ const reject = [
   body('reason').isString().trim().isLength({ min: 5, max: 500 }).withMessage('Give a reason of at least 5 characters (FR13)'),
 ];
 
-module.exports = { check, create, list, getOne: [bookingId], decide: [bookingId], reject };
+const requestChanges = [
+  bookingId,
+  body('note').isString().trim().isLength({ min: 5, max: 1000 }).withMessage('Say what should change, in at least 5 characters'),
+];
+
+const EDITABLE = ['venueId', 'date', 'startTime', 'endTime', 'title', 'description', 'category', 'expectedAttendance'];
+
+const update = [
+  bookingId,
+  body('venueId').optional().isInt({ min: 1 }).withMessage('Choose a venue').toInt(),
+  body('date').optional().isString().matches(/^\d{4}-\d{2}-\d{2}$/).withMessage('Choose a date'),
+  body('startTime').optional().isString().matches(/^\d{2}:\d{2}$/).withMessage('Choose a start time'),
+  body('endTime').optional().isString().matches(/^\d{2}:\d{2}$/).withMessage('Choose an end time'),
+  body('title').optional().isString().trim().isLength({ min: 3, max: 200 }).withMessage('Title must be 3-200 characters'),
+  body('description').optional({ values: 'null' }).isString().trim().isLength({ max: 2000 }),
+  body('category').optional().isIn(EVENT_CATEGORIES).withMessage('Choose a category'),
+  body('expectedAttendance').optional().isInt({ min: 1, max: 20000 }).withMessage('Enter expected attendance').toInt(),
+  body().custom((value) => {
+    if (!value || !EDITABLE.some((key) => value[key] !== undefined)) throw new Error('Change at least one detail');
+    if (value.clubId !== undefined || value.scope !== undefined) throw new Error('The organising club cannot be changed - make a new request');
+    return true;
+  }),
+];
+
+module.exports = { check, create, list, update, requestChanges, getOne: [bookingId], decide: [bookingId], reject };

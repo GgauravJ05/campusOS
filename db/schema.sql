@@ -407,6 +407,11 @@ CREATE TABLE bookings (
     is_direct           BOOLEAN      NOT NULL DEFAULT FALSE,
     status              VARCHAR(24)  NOT NULL DEFAULT 'PENDING',
     rejection_reason    TEXT,
+    -- FR13 "Request Modification": what the approver asked the club to change.
+    -- Kept after the club resubmits so the approver can see what they asked for.
+    modification_note   TEXT,
+    -- How many times the requester has edited and resubmitted this request.
+    revision            SMALLINT     NOT NULL DEFAULT 0,
     decided_at          TIMESTAMPTZ,
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -439,6 +444,13 @@ CREATE TABLE bookings (
     CONSTRAINT chk_bookings_rejection_reason CHECK (
         status <> 'REJECTED' OR (rejection_reason IS NOT NULL AND length(btrim(rejection_reason)) > 0)
     ),
+
+    -- FR13: sending a request back must say what to change.
+    CONSTRAINT chk_bookings_modification_note CHECK (
+        status <> 'MODIFICATION_REQUESTED' OR (modification_note IS NOT NULL AND length(btrim(modification_note)) > 0)
+    ),
+
+    CONSTRAINT chk_bookings_revision CHECK (revision >= 0),
 
     -- Any decided booking records who decided it and when.
     CONSTRAINT chk_bookings_decision_audit CHECK (
@@ -598,7 +610,8 @@ CREATE TABLE notifications (
 
     CONSTRAINT chk_notifications_category CHECK (category IN (
         'GENERAL', 'EVENT_PUBLISHED', 'EVENT_REMINDER', 'EVENT_CANCELLED',
-        'BOOKING_APPROVED', 'BOOKING_REJECTED', 'REGISTRATION_CONFIRMED', 'ANNOUNCEMENT'
+        'BOOKING_APPROVED', 'BOOKING_REJECTED', 'REGISTRATION_CONFIRMED', 'ANNOUNCEMENT',
+        'BOOKING_REQUESTED', 'BOOKING_CHANGES_REQUESTED', 'BOOKING_CANCELLED', 'CLUB_MEMBERSHIP'
     ))
 );
 
