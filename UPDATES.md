@@ -88,6 +88,15 @@ Writing them caught a real bug before it shipped: after signing in from a
 protected link, the guest-page guard sent users to the dashboard instead of the
 page they had asked for.
 
+### Follow-up fixes (same day)
+
+- **Visual check of the running app** (API + database + web app, screenshots in
+  desktop, mobile, light and dark) found two layout issues, both fixed: the
+  person-detail name overlapped the header band, and the dashboard's "Manage
+  people" button turned dark in dark mode.
+- Two auth-flow tests passed locally but failed in CI's slower runners: they
+  checked the URL before the redirect finished. They now wait for it.
+
 ---
 
 ## Phase 1 — Auth & RBAC API (2026-09-15)
