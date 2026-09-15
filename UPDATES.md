@@ -29,7 +29,7 @@ behaviour changed.**
   format, and the PR rules are now the team standard.
 - Open pull requests against `dev` and fill in the template. **Add an entry to
   this file in every PR.**
-- Use Node.js 22 (`nvm use` reads the new `.nvmrc`).
+- Use Node.js 24 LTS (`nvm use` reads the new `.nvmrc`). CI, Docker and local now match; Node 22's npm 10 rejected our lock file.
 
 ### Added
 

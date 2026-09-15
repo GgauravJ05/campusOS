@@ -33,7 +33,7 @@ Colleges currently manage campus clubs, special interest groups (SIGs), venue al
 
 ## 🚀 Getting Started
 
-**Prerequisites:** Node.js 20+, and Docker (or a local PostgreSQL 15+).
+**Prerequisites:** Node.js 24 LTS, and Docker (or a local PostgreSQL 15+).
 
 ```bash
 git clone https://github.com/GgauravJ05/campusOS.git
