@@ -29,7 +29,8 @@ behaviour changed.**
   format, and the PR rules are now the team standard.
 - Open pull requests against `dev` and fill in the template. **Add an entry to
   this file in every PR.**
-- Use Node.js 24 LTS (`nvm use` reads the new `.nvmrc`). CI, Docker and local now match; Node 22's npm 10 rejected our lock file.
+- Use Node.js 24 LTS (`nvm use` reads the new `.nvmrc`). CI and Docker use the same version.
+- In `backend/`, run `npm install` once: `package-lock.json` was regenerated (see *Fixed*).
 
 ### Added
 
@@ -52,6 +53,15 @@ behaviour changed.**
 - `backend/tests/globalSetup.js`: with `REQUIRE_TEST_DATABASE=1` (set in CI) an
   unreachable test database **fails** the run instead of skipping the database
   suites. Locally nothing changes: without a database those suites still skip.
+
+### Fixed
+
+- **`backend/package-lock.json` was broken for clean installs.** The first CI
+  run caught it: `npm ci` on Linux failed with
+  `Missing: @emnapi/core@1.11.3 from lock file`. Those are peer dependencies of
+  an optional Jest package that the old lock file never recorded, and npm on
+  macOS doesn't complain about it. The lock file was regenerated; any teammate
+  on Linux or Windows running `npm ci` would have hit the same error.
 
 ### Open questions
 
