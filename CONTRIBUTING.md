@@ -9,7 +9,7 @@ By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## 1. Setup
 
-Follow **Getting Started** in the [README](README.md). Node.js 22 (see `.nvmrc`)
+Follow **Getting Started** in the [README](README.md). Node.js 24 LTS (see `.nvmrc`)
 is the supported version.
 
 ## 2. Branching model
