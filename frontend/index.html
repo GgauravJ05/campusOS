@@ -4,7 +4,19 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <meta name="description" content="CampusOS - MMCOE Smart Campus Management Platform: clubs, venues, events and approvals in one place." />
+    <meta name="theme-color" content="#4f46e5" />
+    <title>CampusOS</title>
+    <script>
+      // Apply the saved theme before first paint, so dark mode never flashes white.
+      (function () {
+        try {
+          var saved = localStorage.getItem('campusos-theme') || 'system';
+          var dark = saved === 'dark' || (saved === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

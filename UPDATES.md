@@ -9,11 +9,84 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-15 | [Phase 1 — Web app redesign](#phase-1--web-app-redesign-2026-09-15) | Gaurav |
 | 2026-09-15 | [Phase 1 — Auth & RBAC API](#phase-1--auth--rbac-api-2026-09-15) | Gaurav |
 | 2026-09-15 | [Repository standards & CI/CD](#repository-standards--cicd-2026-09-15) | Gaurav |
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase 1 — Web app redesign (2026-09-15)
+
+The frontend was rebuilt from scratch on top of the Phase 1 API. **The fake
+login is gone**: signing in, signing up, email verification, password reset,
+profile and people management all work against the real backend.
+
+### ⚠️ What you need to do
+
+```bash
+cd frontend
+npm install          # new: tailwindcss, vitest, testing-library, msw, lucide-react; axios removed
+npm run dev          # the API must be running too
+```
+
+- The dev server now **proxies `/api` to `localhost:5000`**. If your API uses
+  another port, put `VITE_API_PROXY_TARGET=http://localhost:<port>` in
+  `frontend/.env.local`. Delete any old `frontend/.env` that sets
+  `VITE_API_BASE_URL=http://localhost:5000/api`.
+- The old `src/pages/*.jsx` + `.css` files were deleted. Their layouts are
+  replaced, not ported: anything built on them needs to use the new
+  components in `src/components/ui`.
+- Read [`frontend/README.md`](frontend/README.md) for the conventions.
+
+### Screens
+
+| Route | Who | What |
+| ----- | --- | ---- |
+| `/login` | guests | Sign in; demo-account buttons in development |
+| `/register` | guests | Student sign-up with live password-strength checklist |
+| `/verify-email` | guests | 6-digit code boxes (paste / autofill), resend countdown |
+| `/forgot-password`, `/reset-password` | guests | Reset by emailed code |
+| `/dashboard` | everyone | Greeting, role, department, clubs with scope, honest roadmap |
+| `/profile` | everyone | Edit details, change password, sign out of all devices |
+| `/users` | faculty | Directory: search, role / status / department filters, pagination (filters live in the URL) |
+| `/users/:id` | faculty | Profile, clubs, **change role** dialog (club picker, replaced-head warning, college-wide notice), deactivate / reactivate |
+| `/venues`, `/events` | everyone | "In development" pages for Phases 2 and 4 — no fake data |
+
+### Design
+
+- Tailwind CSS 4 with a small token set in `src/index.css`: indigo-violet brand
+  scale, soft shadows, motion that respects reduced-motion.
+- **Light, dark and system themes**, no flash of the wrong theme on load.
+- Split-screen sign-in pages; app shell with sidebar on desktop and a
+  slide-over drawer on mobile.
+- Accessible by default: every control labelled, focus-trapped dialogs,
+  announced toasts, skip link, keyboard-complete code input.
+- Each page is lazy-loaded (a student never downloads the admin screens).
+
+### How sessions work in the browser
+
+The access token is kept **in memory only**, never in `localStorage`. On reload
+the app asks `/api/auth/refresh`, and the browser sends the httpOnly cookie.
+`src/lib/api.js` refreshes an expiring token automatically. Concurrent requests
+share one refresh, and tabs coordinate through the Web Locks API so they never
+race each other's token rotation.
+
+### Tests
+
+**80 tests** (Vitest + Testing Library + MSW), now run in CI. They render the
+real routes against a fake API that uses the backend's exact response format,
+and cover full journeys: sign-up → wrong code → right code → dashboard;
+forgot → reset → sign in; route guards and redirect-back; token refresh,
+including single-flight and stale-tab retry; filters reaching the API;
+promotion with the replaced-head warning; deactivation; focus trapping.
+Coverage 92% statements / 86% branches, gated at 90 / 84 / 85 / 92.
+
+Writing them caught a real bug before it shipped: after signing in from a
+protected link, the guest-page guard sent users to the dashboard instead of the
+page they had asked for.
 
 ---
 

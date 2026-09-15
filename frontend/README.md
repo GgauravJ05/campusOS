@@ -1,16 +1,78 @@
-# React + Vite
+# CampusOS Web App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 19 · Vite 8 · React Router 7 · Tailwind CSS 4 · Vitest + Testing Library + MSW.
 
-Currently, two official plugins are available:
+## Quick start
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+cd frontend
+npm install
+npm run dev          # http://localhost:5173
+```
 
-## React Compiler
+The dev server proxies `/api` to the backend on `http://localhost:5000`, so the
+API must be running (see `backend/README.md`). If your API runs on another port
+(macOS users often move off 5000), create `frontend/.env.local`:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+VITE_API_PROXY_TARGET=http://localhost:5050
+```
 
-## Expanding the ESLint configuration
+In development the sign-in page shows **demo account** buttons for the seeded
+users (password `Campus@123`). They are stripped from production builds.
+Sign-up codes are printed in the **API terminal** when `SMTP_HOST` is empty.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Scripts
+
+| Command | What it does |
+| ------- | ------------ |
+| `npm run dev` | Dev server with hot reload |
+| `npm run build` | Production build into `dist/` |
+| `npm run lint` | ESLint (React hooks rules included) |
+| `npm test` | All tests once |
+| `npm run test:watch` | Tests in watch mode |
+| `npm run test:coverage` | Tests with the coverage gate (90 / 84 / 85 / 92) |
+
+## Layout
+
+```
+src/
+  App.jsx                   providers + route table (lazy-loaded pages)
+  index.css                 Tailwind, design tokens (brand colours, shadows, motion)
+  lib/
+    api.js                  THE HTTP client: envelope parsing, token refresh
+    utils.js                role labels, formatting, cn()
+    password.js             mirror of the backend password policy, for live feedback
+    hooks.js                useCountdown, useDebouncedValue, useDocumentTitle
+  features/
+    auth/                   AuthProvider, useAuth, route guards, authApi
+    users/usersApi.js
+    theme/ThemeProvider.jsx light / dark / system
+  components/
+    ui/                     Button, Field/Input/Select/PasswordInput, OtpInput,
+                            Dialog, Toast, Card, Badge, Avatar, Alert, Skeleton…
+    layout/                 AuthLayout (split screen), AppShell (sidebar + drawer)
+  pages/                    one file per screen; *.test.jsx next to them
+  test/                     MSW fake API, render helper, setup
+```
+
+## Conventions
+
+- **Never call `fetch` in a component.** Add a function to the feature's
+  `*Api.js`, which uses `lib/api.js`.
+- **Tokens.** The access token lives in memory only; the refresh token is an
+  httpOnly cookie the browser handles. Nothing auth-related goes in
+  `localStorage`. `lib/api.js` refreshes expired tokens automatically, once,
+  shared across concurrent requests and across tabs.
+- **Errors.** API failures throw `ApiError` with `code`, `message` and
+  `fieldErrors` (`{ fieldName: message }`) — map `fieldErrors` onto form fields.
+- **Reuse `components/ui`** before writing new markup. Every input goes in a
+  `<Field>` so the label, hint, error and ARIA wiring are always right.
+- **Build against the real API.** Pages for modules whose backend does not
+  exist yet (Venues, Events) describe what is coming — they never show invented data.
+- **Test user journeys, not implementation.** Tests render the real routes and
+  talk to an MSW fake of the API (`src/test/server.js`) using the backend's
+  exact response envelope. Query by role and label, the way a user finds things.
+- **Accessible by default:** labelled controls, keyboard reachable, visible
+  focus, dialogs trap focus, toasts are announced, motion respects
+  `prefers-reduced-motion`.
