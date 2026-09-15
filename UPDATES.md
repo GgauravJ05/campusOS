@@ -30,7 +30,7 @@ app that uses this API is the next entry.
 1. **Rebuild your database** — `users`, `refresh_tokens` and an index changed:
    `psql -d campusos -f db/reset.sql -f db/schema.sql -f db/seed.sql`
    (or `docker compose down -v && docker compose up -d`). This wipes local data.
-2. `cd backend && npm install` — new packages `cookie-parser`, `nodemailer`.
+2. `cd backend && npm install` — new packages `cookie-parser`, `nodemailer` (v10).
 3. Copy the new keys from `backend/.env.example` into your `backend/.env`
    (auth limits and SMTP). With `SMTP_HOST` empty, **emails and their codes are
    printed in the API terminal** — that is how you sign up locally.
@@ -86,6 +86,15 @@ brute-force limits, a code accepted exactly once under 5 concurrent
 submissions, refresh-token replay revoking the session family, lockout,
 identical responses for registered and unregistered emails, and every
 promotion rule including club-head replacement.
+
+### Fixed after the first CI run
+
+- CI's `npm audit` caught that `nodemailer` 8 (first installed) has **high-severity
+  advisories**. Upgraded to 10.0.10; `npm audit` is clean again.
+- The backend lock file lost its Linux-only optional entries again during an
+  incremental install on macOS. Both lock files were rebuilt from scratch, a
+  `npm run lock:rebuild` script was added to both packages, and CI now prints
+  that exact fix when `npm ci` rejects a lock file (see CONTRIBUTING → Dependencies).
 
 ### Open questions
 

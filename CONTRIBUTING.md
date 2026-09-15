@@ -91,6 +91,16 @@ A PR without an `UPDATES.md` entry will not be merged.
 - The coverage threshold in `backend/jest.config.js` only ever goes **up**.
 - Never commit `.only`, or skip a test to make CI pass.
 
+### Dependencies
+
+- Add packages with `npm install <pkg>` and commit `package.json` **and**
+  `package-lock.json` together.
+- Check `npm audit --omit=dev` is clean before pushing, and install the current
+  major version of a new package, not an old one.
+- If CI says *package-lock.json is out of sync* (npm on macOS sometimes drops
+  Linux-only optional packages), run `npm run lock:rebuild` in that folder and
+  commit the regenerated lock file.
+
 ### Database
 
 - Schema changes go in `db/schema.sql`, with matching updates to `db/reset.sql`
