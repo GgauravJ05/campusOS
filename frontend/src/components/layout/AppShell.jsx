@@ -1,28 +1,45 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
-  CalendarCheck2, CalendarDays, ChevronsUpDown, LayoutDashboard, LogOut, Menu, MapPin, ShieldCheck, UserRound, UsersRound, X,
+  CalendarCheck2, CalendarDays, ChevronsUpDown, Flag, LayoutDashboard, LogOut, Menu, MapPin, ShieldCheck, UserRound, UsersRound, X,
 } from 'lucide-react'
 import { useAuth } from '@/features/auth/authContext'
+import { bookingsApi } from '@/features/bookings/bookingsApi'
 import { useToast } from '@/components/ui/Toast'
 import { Wordmark } from '@/components/ui/Logo'
 import { Avatar, Badge } from '@/components/ui/Surface'
 import { ThemeToggle } from './ThemeToggle'
+import { NotificationBell } from './NotificationBell'
 import { cn, FACULTY_ROLES, ROLE_META } from '@/lib/utils'
+import { SUMMARY_STALE_EVENT } from '@/lib/summary'
 
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/events', label: 'Events', icon: CalendarDays, soon: true },
   { to: '/venues', label: 'Venues', icon: MapPin },
-  { to: '/bookings', label: 'Bookings', icon: CalendarCheck2, roles: ['CLUB_HEAD', 'CLUB_MEMBER', ...FACULTY_ROLES] },
+  { to: '/bookings', label: 'Bookings', icon: CalendarCheck2, roles: ['CLUB_HEAD', 'CLUB_MEMBER', ...FACULTY_ROLES], badge: 'bookings' },
+  { to: '/clubs', label: 'Clubs', icon: Flag },
   { to: '/users', label: 'People', icon: UsersRound, roles: FACULTY_ROLES },
   { to: '/profile', label: 'Profile & security', icon: UserRound },
 ]
 
-function NavItems({ role, onNavigate }) {
+/** What needs the user's attention on the Bookings page: decisions for faculty, sent-back requests for clubs. */
+function bookingsBadge(role, summary) {
+  if (!summary) return { count: 0, label: '' }
+  if (FACULTY_ROLES.includes(role)) {
+    const n = summary.awaitingDecision
+    return { count: n, label: `${n} ${n === 1 ? 'request' : 'requests'} waiting for your decision` }
+  }
+  const n = summary.myChangesRequested
+  return { count: n, label: `${n} ${n === 1 ? 'request needs' : 'requests need'} changes` }
+}
+
+function NavItems({ role, summary, onNavigate }) {
   return (
     <nav aria-label="Main" className="space-y-1">
-      {NAV_ITEMS.filter((item) => !item.roles || item.roles.includes(role)).map(({ to, label, icon: Icon, soon }) => (
+      {NAV_ITEMS.filter((item) => !item.roles || item.roles.includes(role)).map(({ to, label, icon: Icon, soon, badge }) => {
+        const attention = badge ? bookingsBadge(role, summary) : { count: 0 }
+        return (
         <NavLink
           key={to}
           to={to}
@@ -41,10 +58,17 @@ function NavItems({ role, onNavigate }) {
               <Icon className={cn('size-[18px]', isActive ? 'text-brand-600 dark:text-brand-400' : 'text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300')} aria-hidden />
               <span className="flex-1">{label}</span>
               {soon && <span className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-zinc-500 uppercase dark:bg-zinc-800">Soon</span>}
+              {attention.count > 0 && (
+                <>
+                  <span className="rounded-full bg-brand-600 px-1.5 py-0.5 text-[11px] leading-none font-semibold text-white tabular-nums" aria-hidden>{attention.count}</span>
+                  <span className="sr-only">, {attention.label}</span>
+                </>
+              )}
             </>
           )}
         </NavLink>
-      ))}
+        )
+      })}
     </nav>
   )
 }
@@ -111,14 +135,14 @@ function UserMenu({ user }) {
   )
 }
 
-function SidebarContent({ user, onNavigate }) {
+function SidebarContent({ user, summary, onNavigate }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center px-5">
         <Link to="/dashboard" onClick={onNavigate}><Wordmark /></Link>
       </div>
       <div className="flex-1 overflow-y-auto px-3 py-4">
-        <NavItems role={user.role.key} onNavigate={onNavigate} />
+        <NavItems role={user.role.key} summary={summary} onNavigate={onNavigate} />
       </div>
       <div className="border-t border-zinc-200/80 p-3 dark:border-zinc-800">
         <UserMenu user={user} />
@@ -132,6 +156,25 @@ export function AppShell() {
   const { user } = useAuth()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const location = useLocation()
+  const [summary, setSummary] = useState(null)
+  const [summaryVersion, setSummaryVersion] = useState(0)
+
+  // Badge counts refresh on every navigation, after an in-page decision, and once a minute.
+  useEffect(() => {
+    const controller = new AbortController()
+    bookingsApi.summary({ signal: controller.signal }).then(setSummary).catch(() => {})
+    return () => controller.abort()
+  }, [location.pathname, location.search, summaryVersion])
+
+  useEffect(() => {
+    const refresh = () => setSummaryVersion((v) => v + 1)
+    const timer = setInterval(refresh, 60_000)
+    window.addEventListener(SUMMARY_STALE_EVENT, refresh)
+    return () => {
+      clearInterval(timer)
+      window.removeEventListener(SUMMARY_STALE_EVENT, refresh)
+    }
+  }, [])
 
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? 'hidden' : ''
@@ -145,7 +188,7 @@ export function AppShell() {
       </a>
 
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-zinc-200/80 bg-white/80 backdrop-blur lg:block dark:border-zinc-800 dark:bg-zinc-950/80">
-        <SidebarContent user={user} />
+        <SidebarContent user={user} summary={summary} />
       </aside>
 
       {drawerOpen && (
@@ -155,7 +198,7 @@ export function AppShell() {
             <button type="button" onClick={() => setDrawerOpen(false)} className="absolute top-4 right-3 rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800" aria-label="Close navigation">
               <X className="size-5" />
             </button>
-            <SidebarContent user={user} onNavigate={() => setDrawerOpen(false)} />
+            <SidebarContent user={user} summary={summary} onNavigate={() => setDrawerOpen(false)} />
           </div>
         </div>
       )}
@@ -168,6 +211,7 @@ export function AppShell() {
           <Link to="/dashboard" className="lg:hidden"><Wordmark /></Link>
           <div className="flex-1" />
           {!user.isVerified && <Badge tone="amber">Email not verified</Badge>}
+          <NotificationBell unread={summary?.unreadNotifications ?? 0} onChange={() => setSummaryVersion((v) => v + 1)} />
           <ThemeToggle />
         </header>
 
@@ -191,3 +235,4 @@ export function PageHeader({ title, description, actions, eyebrow }) {
     </div>
   )
 }
+

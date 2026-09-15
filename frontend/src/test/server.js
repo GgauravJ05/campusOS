@@ -45,6 +45,8 @@ export const coordinator = makeUser({
   role: { key: 'DEPT_COORDINATOR', name: 'Department Event Coordinator', rank: 2 },
 })
 
+export const emptySummary = { awaitingDecision: 0, myChangesRequested: 0, myAwaitingApproval: 0, unreadNotifications: 0 }
+
 export const session = (user) => ({ accessToken: `token-for-${user.id}`, accessTokenExpiresIn: 900, user })
 
 /** Current signed-in user for the refresh endpoint; null = no session cookie. */
@@ -56,6 +58,9 @@ export const handlers = [
   http.post(`${API}/auth/logout`, () => new HttpResponse(null, { status: 204 })),
   http.get(`${API}/directory/departments`, () => ok(departments)),
   http.get(`${API}/auth/me`, () => (state.sessionUser ? ok(state.sessionUser) : fail(401, 'AUTH_REQUIRED', 'Sign in'))),
+  // The app shell asks for badge counts on every page; tests override these when they care.
+  http.get(`${API}/bookings/summary`, () => ok(emptySummary)),
+  http.get(`${API}/notifications`, () => ok([], { page: 1, pageSize: 8, total: 0, totalPages: 0, unread: 0 })),
 ]
 
 export const server = setupServer(...handlers)

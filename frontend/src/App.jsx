@@ -25,6 +25,9 @@ const VenuesPage = lazy(() => import('@/pages/venues/VenuesPage'))
 const VenueDetailPage = lazy(() => import('@/pages/venues/VenueDetailPage'))
 const NewBookingPage = lazy(() => import('@/pages/bookings/NewBookingPage'))
 const BookingsPage = lazy(() => import('@/pages/bookings/BookingsPage'))
+const EditBookingPage = lazy(() => import('@/pages/bookings/EditBookingPage'))
+const ClubsPage = lazy(() => import('@/pages/clubs/ClubsPage'))
+const ClubDetailPage = lazy(() => import('@/pages/clubs/ClubDetailPage'))
 const StatusPage = lazy(() => import('@/pages/StatusPage'))
 
 export function AppRoutes() {
@@ -50,6 +53,9 @@ export function AppRoutes() {
             <Route path="venues" element={<VenuesPage />} />
             <Route path="venues/:id" element={<VenueDetailPage />} />
             <Route path="bookings" element={<BookingsPage />} />
+            <Route path="bookings/:id/edit" element={<EditBookingPage />} />
+            <Route path="clubs" element={<ClubsPage />} />
+            <Route path="clubs/:id" element={<ClubDetailPage />} />
             <Route element={<RequireAuth roles={BOOKING_ROLES} />}>
               <Route path="bookings/new" element={<NewBookingPage />} />
             </Route>
