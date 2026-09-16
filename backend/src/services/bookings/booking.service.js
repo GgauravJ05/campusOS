@@ -31,6 +31,7 @@ const venues = require('../venues/venue.service');
 const tw = require('../scheduling/timeWindow');
 const notifications = require('../notifications/notification.service');
 const templates = require('../mail/templates');
+const events = require('../events/event.service');
 
 const { ROLES } = rbac;
 
@@ -697,6 +698,15 @@ async function cancelBooking(actor, bookingId, { ip } = {}) {
 
     await client.query(`UPDATE bookings SET status = 'CANCELLED' WHERE booking_id = $1`, [row.booking_id]);
     await client.query(`UPDATE events SET status = 'CANCELLED' WHERE event_id = $1`, [row.event_id]);
+
+    // Phase 4: anyone holding a seat learns in the same transaction, and
+    // their seats are released - a cancelled event holds no reservations.
+    await events.notifyRegistrantsOfCancellation(client, {
+      eventId: row.event_id,
+      title: row.title,
+      bookingId: row.booking_id,
+      reason: rbac.isFaculty(actor.role) && row.requested_by !== actor.id ? 'It was cancelled by faculty.' : null,
+    });
 
     if (rbac.isFaculty(actor.role) && row.requested_by !== actor.id) {
       await noticeToRequester(client, outbox, row, 'CANCELLED', { deciderName: actor.fullName });

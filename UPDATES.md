@@ -9,6 +9,8 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-16 | [Phase 4 — Events, discovery & RSVP API](#phase-4--events-discovery--rsvp-api-2026-09-16) | Gaurav |
+| 2026-09-16 | [Dev setup fix — API port and a database that actually exists](#dev-setup-fix--api-port-and-a-database-that-actually-exists-2026-09-16) | Gaurav |
 | 2026-09-15 | [Phase 3 — Approvals, clubs & notifications web app](#phase-3--approvals-clubs--notifications-web-app-2026-09-15) | Gaurav |
 | 2026-09-15 | [Phase 3 — Approval workflow & club management API](#phase-3--approval-workflow--club-management-api-2026-09-15) | Gaurav |
 | 2026-09-15 | [Phase 2 — Venues & booking web app](#phase-2--venues--booking-web-app-2026-09-15) | Gaurav |
@@ -19,6 +21,123 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase 4 — Events, discovery & RSVP API (2026-09-16)
+
+The layer above the booking engine: an approved booking becomes a **published
+event** students can find and reserve a seat at. **FR14–FR17 are now complete**
+on the API; the screens come next.
+
+### ⚠️ What you need to do
+
+Pull, then `npm install` is *not* needed (no new packages). Rebuild your
+database only if you are still on a pre-Phase-3 schema — Phase 4 adds **no
+schema changes**; `events`, `event_registrations` and the `rsvp.allow_waitlist`
+setting were all created in Phase 0.
+
+### Endpoints
+
+| Method | Route | Who | What |
+| ------ | ----- | --- | ---- |
+| `GET` | `/api/events` | anyone signed in | **FR14** discovery feed. Filters: `q`, `category`, `clubId`, `venueId`, `departmentId`, `scope`, `status`, `from`, `to`, `upcoming`, `mine`, paged. Students see published events; organisers and faculty also see their own unpublished ones. |
+| `GET` | `/api/events/recommended` | anyone signed in | **FR17** category-based recommendations, scored against the student's registration history. |
+| `GET` | `/api/events/:id` | anyone who may see it | One event, with seats left, eligibility and what the viewer may do. |
+| `POST` | `/api/events/:id/publish` | organiser, faculty | Opens an **approved** event to students: seat cap, eligibility (departments / years), banner. Broadcasts to every eligible student (**FR19** publish alert). |
+| `PATCH` | `/api/events/:id` | organiser, faculty | Edits the RSVP-facing details. The schedule and venue are *not* editable here — those belong to the booking, where a change re-runs conflict detection. |
+| `POST` | `/api/events/:id/registrations` | students | **FR15** reserve 1–5 seats, after an eligibility check. |
+| `DELETE` | `/api/events/:id/registrations/me` | students | **FR16** back out; seats are returned atomically and the waitlist moves up. |
+| `GET` | `/api/events/:id/registrations` | organiser, faculty | The roster: who is coming, how many seats, who is waitlisted. |
+
+### How a seat is kept safe
+
+Exactly like a venue slot in Phase 2. Every write that touches `booked_seats`
+runs in one transaction that takes `SELECT ... FOR UPDATE` on the event row
+first, so simultaneous RSVPs queue behind each other and each one reads a
+committed count. `chk_events_booked_within_capacity` is the database's backstop
+behind that, the same role `excl_bookings_no_overlap` plays for bookings.
+
+`tests/integration/rsvp.concurrency.test.js` proves it: **20 students going for
+1 seat at the same time produce exactly 1 reservation**, and 20 going for 5
+seats produce exactly 5.
+
+### Decisions made here
+
+- **Publishing is a separate step.** A booking being approved means the room is
+  yours; it does not mean students should see the event. Publishing is where the
+  seat cap and eligibility are set, which is also why an event cannot be
+  published without a confirmed venue booking.
+- **Waitlist is off by default**, controlled by the existing
+  `rsvp.allow_waitlist` setting. On: a full event waitlists instead of refusing,
+  and cancellations promote waiters FIFO in the same transaction that frees the
+  seat. A party too large for the freed seats is skipped rather than blocking
+  the queue behind it.
+- **A cancelled event releases every seat** and tells everyone holding one
+  (`EVENT_CANCELLED`), in the same transaction as the cancellation.
+- **Recommendations are scored, not learned**: category history (capped so one
+  habit cannot dominate) + a club you have attended + your department, over the
+  soonest 100 upcoming events you are eligible for.
+- **FR17 is recommendations, not attendance.** The `attendance`, `certificates`
+  and `event_materials` tables remain unused and unmentioned by the SRS — see
+  the open question below.
+
+### Tests
+
+**560 backend tests**, all green, coverage gate raised to 89% branches.
+New: `tests/unit/event.policy.test.js` (38, pure policy),
+`tests/integration/events.flow.test.js` (43, the full API),
+`tests/integration/rsvp.concurrency.test.js` (4, the seat race).
+
+Two things the tests caught, both fixed:
+
+- **Suites raced each other through the shared test database.** They ran in
+  parallel workers against one PostgreSQL while changing global state
+  (`system_settings`, venues, seat counters), so a waitlist test could flip a
+  setting out from under another suite. Jest now runs them one at a time
+  (`maxWorkers: 1`), which is what CI already did via `--runInBand`.
+- **Two Phase 2 venue assertions only passed on a pristine database** — they
+  picked a venue out of a paged list and asserted an exact floor list. Both now
+  search for what they mean.
+
+### Still open
+
+1. `certificates`, `event_materials` and `attendance` are in the schema but in
+   no SRS requirement. Phase 4 was the natural home for all three and did not
+   need them. **Decide before the final review:** add them to SRS section 10, or
+   drop the tables.
+2. Should a club head be able to publish an event their *club* owns but a
+   coordinator created? Today the creator, the club head and the routing faculty
+   can all publish, which is the widest sensible reading of FR11.
+
+---
+
+## Dev setup fix — API port and a database that actually exists (2026-09-16)
+
+The seeded demo accounts "did not work". Neither the password nor the seed was
+wrong — two setup problems were:
+
+1. **No database.** There was no PostgreSQL running at all (no Docker, nothing
+   on 55432), so every login failed at the database.
+2. **The web app was talking to the wrong port.** `backend/.env` sets
+   `PORT=5050` (macOS AirPlay Receiver squats on 5000 and answers `403` to
+   everything), but the Vite dev proxy still defaulted to `http://localhost:5000`
+   with no `frontend/.env.local` to correct it. Every API call from the browser
+   hit AirPlay and got a `403` — indistinguishable, in the UI, from a rejected
+   password.
+
+### What changed
+
+- **5050 is now the default everywhere**: `config/env.js`, `backend/.env.example`,
+  the Vite proxy fallback, and all three READMEs. Changing it means changing
+  `PORT` and `VITE_API_PROXY_TARGET` together — the READMEs now say so.
+- **README gained a no-Docker setup path** (Homebrew PostgreSQL 16 on port
+  55432, matching what CI runs), because not everyone on the team runs Docker.
+- `frontend/.env.local` (git-ignored) is what makes an individual machine's
+  proxy point at a non-default port.
+
+Demo accounts are unchanged and all use `Campus@123`; `principal@mmcoe.edu.in`
+is the super admin.
 
 ---
 
@@ -649,7 +768,7 @@ for all data — Phase 1 and Phase 2 replace those.
 | 1 | Auth & RBAC | FR1–FR5 | ✅ Done |
 | 2 | Venues & scheduling engine | FR6–FR10 | ✅ Done |
 | 3 | Approval workflow & club management | FR11–FR13 | ✅ Done |
-| 4 | Events & RSVP | FR14–FR17 | |
+| 4 | Events & RSVP | FR14–FR17 | ✅ API done |
 | 5 | Notifications (scheduled reminders) | FR19 | |
 | 6 | Governance & analytics | FR18, FR20, FR21 | |
 

@@ -60,6 +60,7 @@ describe('authenticate', () => {
     expect(users.findForRequest).toHaveBeenCalledWith(7, 'fam');
     expect(req.user).toEqual({
       id: 7, email: 'asha@mmcoe.edu.in', fullName: 'Asha', role: 'DEPT_COORDINATOR', rank: 2, departmentId: 1,
+      academicYear: null,
     });
     expect(req.auth).toEqual({ familyId: 'fam' });
   });
