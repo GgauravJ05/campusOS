@@ -16,6 +16,7 @@ const ApiError = require('../../utils/ApiError');
 const users = require('../users/user.repository');
 const otp = require('./otp.service');
 const sessions = require('./session.service');
+const audit = require('../audit.service');
 const mailer = require('../mail/mailer');
 const templates = require('../mail/templates');
 const { signAccessToken } = require('./tokens');
@@ -215,6 +216,8 @@ async function login({ email: rawEmail, password }, context) {
         WHERE user_id = $1`,
       [user.user_id],
     );
+    // FR20 records user logins. It cannot fail the sign-in - see recordLogin.
+    await audit.recordLogin({ userId: user.user_id, ip: context?.ip, userAgent: context?.userAgent }, client);
     return issueSession(user, context, client);
   });
 

@@ -51,7 +51,10 @@ const MAX_BROADCAST = 500;
  */
 const EVENT_SELECT = `
   SELECT e.event_id, e.title, e.description, e.category, e.event_scope, e.status,
-         e.event_date, e.start_time, e.end_time, e.max_seats, e.booked_seats,
+         -- As text: the display fallback below parses it as YYYY-MM-DD, and a
+         -- Date object from pg would silently become an Invalid Date.
+         to_char(e.event_date, 'YYYY-MM-DD') AS event_date,
+         e.start_time, e.end_time, e.max_seats, e.booked_seats,
          e.eligible_departments, e.eligible_years, e.banner_url,
          e.club_id, e.department_id, e.created_by, e.created_at, e.updated_at,
          c.club_name, c.club_head_id,

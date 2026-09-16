@@ -62,14 +62,20 @@ describe('dashboard and shell', () => {
     expect(document.documentElement).toHaveClass('dark')
   })
 
-  it('marks shipped phases live on the roadmap and the rest as upcoming', async () => {
+  it('shows real metrics from the API rather than static placeholder content', async () => {
+    server.use(http.get(`${API}/dashboard`, () => ok({
+      role: 'STUDENT',
+      scope: 'DEPARTMENT',
+      metrics: [{ key: 'reserved', label: 'Seats reserved', value: 3, href: '/events?view=going' }],
+      schedule: { title: 'Your next events', items: [] },
+    })))
     renderApp('/dashboard', { user: makeUser() })
 
-    // Events shipped in Phase 4; reminders and analytics have not.
-    const events = (await screen.findByText('Events & RSVP')).closest('p')
-    expect(within(events).getByText('Live')).toBeInTheDocument()
-    const reminders = screen.getByText('Reminders').closest('p')
-    expect(within(reminders).getByText('Phase 5')).toBeInTheDocument()
+    // The roadmap card that stood in for unbuilt modules is gone: every
+    // phase has shipped, so the dashboard shows the real thing.
+    expect(await screen.findByText('Seats reserved')).toBeInTheDocument()
+    expect(screen.getByText('3')).toBeInTheDocument()
+    expect(screen.queryByText("What's coming to CampusOS")).not.toBeInTheDocument()
   })
 })
 

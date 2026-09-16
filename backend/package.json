@@ -33,6 +33,7 @@
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^10.0.10",
+    "pdfkit": "^0.20.2",
     "pg": "^8.23.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0"

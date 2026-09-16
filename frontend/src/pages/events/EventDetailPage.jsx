@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, CalendarDays, Clock, Flag, MapPin, Pencil, Send, Ticket, Users2 } from 'lucide-react'
+import { ArrowLeft, CalendarDays, ClipboardCheck, Clock, Flag, MapPin, Pencil, Send, Ticket, Users2 } from 'lucide-react'
 import { useAuth } from '@/features/auth/authContext'
 import { CATEGORY_LABELS } from '@/features/bookings/bookingsApi'
 import {
@@ -8,6 +8,7 @@ import {
 } from '@/features/events/eventsApi'
 import { usersApi } from '@/features/users/usersApi'
 import { EventFormDialog } from '@/components/events/EventFormDialog'
+import { AttendanceDialog } from '@/components/events/AttendanceDialog'
 import { SeatMeter } from '@/components/events/EventCard'
 import { Button } from '@/components/ui/Button'
 import { Dialog } from '@/components/ui/Dialog'
@@ -153,7 +154,7 @@ function RsvpPanel({ event, onChanged }) {
 }
 
 /** The organiser's roster: who is coming, who is waiting (FR15/FR16). */
-function Roster({ eventId, version }) {
+function Roster({ eventId, version, past, onMarkAttendance }) {
   // Keyed on the version so an RSVP refetches the roster, the same way the
   // venue calendar refetches after a booking changes.
   const key = `${eventId}:${version}`
@@ -175,8 +176,13 @@ function Roster({ eventId, version }) {
   return (
     <Card>
       <CardHeader
-        title="Who's coming"
+        title={past ? 'Who came' : "Who's coming"}
         description={`${meta.reserved} ${meta.reserved === 1 ? 'seat' : 'seats'} reserved${meta.waitlisted ? ` · ${meta.waitlisted} waitlisted` : ''}`}
+        action={past && onMarkAttendance && (
+          <Button size="sm" variant="secondary" onClick={onMarkAttendance}>
+            <ClipboardCheck className="size-4" aria-hidden /> Mark attendance
+          </Button>
+        )}
       />
       {items.length === 0 ? (
         <EmptyState icon={Users2} title="No registrations yet" description="They will appear here as students reserve seats." />
@@ -212,6 +218,7 @@ export default function EventDetailPage() {
   const [error, setError] = useState(null)
   const [dialog, setDialog] = useState(null)
   const [version, setVersion] = useState(0)
+  const [mountedAt] = useState(() => Date.now())
   // Eligibility comes back as department ids; these turn them into codes.
   const [departmentNames, setDepartmentNames] = useState({})
   useDocumentTitle(event?.title || 'Event')
@@ -253,6 +260,10 @@ export default function EventDetailPage() {
 
   const status = EVENT_STATUS_META[event.status]
   const { canPublish, canEdit, canViewRoster } = event.permissions
+  // Attendance is a record of what happened, so it waits until it has.
+  // The clock is read once, when the page mounts: reading it during every
+  // render is impure, and a page that flips mid-render helps nobody.
+  const hasHappened = new Date(event.startAt).getTime() <= mountedAt && event.status !== 'CANCELLED'
 
   return (
     <>
@@ -309,7 +320,14 @@ export default function EventDetailPage() {
             </div>
           </Card>
 
-          {canViewRoster && <Roster eventId={event.id} version={version} />}
+          {canViewRoster && (
+            <Roster
+              eventId={event.id}
+              version={version}
+              past={hasHappened}
+              onMarkAttendance={() => setDialog('attendance')}
+            />
+          )}
         </div>
 
         <div className="space-y-6">
@@ -341,12 +359,20 @@ export default function EventDetailPage() {
         </div>
       </div>
 
-      {dialog && (
+      {(dialog === 'publish' || dialog === 'edit') && (
         <EventFormDialog
           event={event}
           mode={dialog}
           onClose={() => setDialog(null)}
           onSaved={(saved) => { setDialog(null); applyUpdate(saved) }}
+        />
+      )}
+
+      {dialog === 'attendance' && (
+        <AttendanceDialog
+          event={event}
+          onClose={() => setDialog(null)}
+          onSaved={() => { setDialog(null); setVersion((v) => v + 1) }}
         />
       )}
     </>

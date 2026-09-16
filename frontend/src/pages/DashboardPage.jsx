@@ -1,37 +1,65 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  ArrowUpRight, BarChart3, BellRing, Building2, CalendarDays, CheckCircle2, ClipboardCheck, Crown, GraduationCap, MapPin, UsersRound,
-} from 'lucide-react'
+import { ArrowUpRight, BarChart3, CalendarDays, UsersRound } from 'lucide-react'
 import { useAuth } from '@/features/auth/authContext'
-import { Card, CardHeader, EmptyState } from '@/components/ui/Surface'
+import { dashboardApi } from '@/features/reports/reportsApi'
+import { Alert, Card, CardHeader, EmptyState, Skeleton } from '@/components/ui/Surface'
 import { RoleBadge, ScopeBadge } from '@/components/RoleBadge'
-import { academicYearLabel, firstName, formatRelative, greeting, isFaculty, ROLE_META } from '@/lib/utils'
+import { DateChip } from '@/components/events/EventCard'
+import { firstName, formatRelative, greeting, isFaculty, ROLE_META } from '@/lib/utils'
+import { formatTimeRange } from '@/lib/campusTime'
 import { useDocumentTitle } from '@/lib/hooks'
 
-/** What is live today and what each upcoming phase adds - honest, no placeholder data. */
-const ROADMAP = [
-  { phase: 1, title: 'Accounts & roles', icon: CheckCircle2, text: 'Sign-up, verification, secure sessions, promotions.', live: true },
-  { phase: 2, title: 'Venues & scheduling', icon: MapPin, text: 'Find rooms by building, floor and equipment. Zero double bookings.', live: true },
-  { phase: 3, title: 'Approvals & clubs', icon: ClipboardCheck, text: 'Approve, reject or send back requests. Clubs run their own teams.', live: true },
-  { phase: 4, title: 'Events & RSVP', icon: CalendarDays, text: 'Discover events by category and reserve your seat.', live: true },
-  { phase: 5, title: 'Reminders', icon: BellRing, text: 'Automatic notifications two days and two hours before.' },
-  { phase: 6, title: 'Analytics & audit', icon: BarChart3, text: 'Attendance insights and an immutable audit trail.' },
-]
+/**
+ * FR18: a dedicated, role-tailored dashboard.
+ *
+ * The metrics and the schedule come from the API, which decides what each
+ * role should see. This screen renders whatever it is handed rather than
+ * deciding for itself, so adding a metric never means releasing both sides.
+ */
 
-function StatTile({ icon: Icon, label, value, hint }) {
+function MetricTile({ metric }) {
+  const body = (
+    <>
+      <p className="text-xs font-medium tracking-wide text-zinc-500 uppercase">{metric.label}</p>
+      <p className="mt-1 text-2xl font-semibold tabular-nums">{metric.value}</p>
+    </>
+  )
+  const base = 'block h-full rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-soft dark:border-zinc-800 dark:bg-zinc-900/60'
+
+  if (!metric.href) return <li className={base}>{body}</li>
   return (
-    <Card className="p-5">
-      <div className="flex items-center gap-3">
-        <span className="grid size-10 place-items-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
-          <Icon className="size-5" aria-hidden />
+    <li>
+      <Link to={metric.href} className={`${base} transition-all hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lift dark:hover:border-zinc-700`}>
+        {body}
+        <span className="mt-2 flex items-center gap-1 text-xs font-medium text-brand-600 dark:text-brand-400">
+          Open <ArrowUpRight className="size-3" aria-hidden />
         </span>
-        <div className="min-w-0">
-          <p className="text-xs font-medium tracking-wide text-zinc-500 uppercase">{label}</p>
-          <p className="truncate text-base font-semibold">{value}</p>
+      </Link>
+    </li>
+  )
+}
+
+function ScheduleRow({ item }) {
+  return (
+    <li>
+      <Link
+        to={`/events/${item.eventId}`}
+        className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-zinc-50 sm:px-6 dark:hover:bg-zinc-800/60"
+      >
+        <DateChip date={item.date} />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium">{item.title}</p>
+          <p className="truncate text-xs text-zinc-500">
+            {formatTimeRange(item.startTime, item.endTime)} · {item.venue}
+            {item.club && ` · ${item.club}`}
+          </p>
         </div>
-      </div>
-      {hint && <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">{hint}</p>}
-    </Card>
+        {item.seatsLeft !== null && (
+          <span className="shrink-0 text-xs text-zinc-500 tabular-nums">{item.seatsLeft} left</span>
+        )}
+      </Link>
+    </li>
   )
 }
 
@@ -40,6 +68,17 @@ export default function DashboardPage() {
   const { user } = useAuth()
   const faculty = isFaculty(user)
   const headed = user.clubs?.filter((c) => c.isHead) ?? []
+  const [state, setState] = useState({ loaded: false, data: null, error: null })
+
+  useEffect(() => {
+    const controller = new AbortController()
+    dashboardApi.get({ signal: controller.signal })
+      .then((data) => setState({ loaded: true, data, error: null }))
+      .catch((err) => err.name !== 'AbortError' && setState({ loaded: true, data: null, error: err }))
+    return () => controller.abort()
+  }, [])
+
+  const { data } = state
 
   return (
     <div className="space-y-8">
@@ -50,29 +89,54 @@ export default function DashboardPage() {
           <div>
             <p className="text-sm font-medium text-brand-100">{greeting()}</p>
             <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">{firstName(user.fullName)} 👋</h1>
-            <p className="mt-2 max-w-xl text-brand-100">
-              {ROLE_META[user.role.key]?.description}
-            </p>
+            <p className="mt-2 max-w-xl text-brand-100">{ROLE_META[user.role.key]?.description}</p>
           </div>
           {faculty && (
             <Link
-              to="/users"
+              to="/reports"
               className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-brand-700 shadow-sm transition-colors hover:bg-brand-50"
             >
-              <UsersRound className="size-4" aria-hidden /> Manage people
+              <BarChart3 className="size-4" aria-hidden /> Reports
             </Link>
           )}
         </div>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile icon={Crown} label="Role" value={ROLE_META[user.role.key]?.short} />
-        <StatTile icon={Building2} label="Department" value={user.department?.code ?? 'College'} />
-        <StatTile icon={GraduationCap} label="Year" value={user.academicYear ? academicYearLabel(user.academicYear).split(' (')[0] : '—'} />
-        <StatTile icon={UsersRound} label="Clubs" value={user.clubs?.length ?? 0} />
-      </div>
+      {state.error && <Alert tone="error" title="Could not load your dashboard">{state.error.message}</Alert>}
+
+      {!state.loaded ? (
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Loading metrics">
+          {[1, 2, 3, 4].map((i) => <li key={i}><Skeleton className="h-28 rounded-2xl" /></li>)}
+        </ul>
+      ) : data ? (
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {data.metrics.map((metric) => <MetricTile key={metric.key} metric={metric} />)}
+        </ul>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-5">
+        <Card className="lg:col-span-3">
+          <CardHeader
+            title={data?.schedule.title ?? 'What is next'}
+            description="Times are campus time."
+            action={<Link to="/events" className="text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">All events</Link>}
+          />
+          {!state.loaded ? (
+            <div className="space-y-3 p-5"><Skeleton className="h-12" /><Skeleton className="h-12" /></div>
+          ) : data?.schedule.items.length ? (
+            <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+              {data.schedule.items.map((item) => <ScheduleRow key={item.eventId} item={item} />)}
+            </ul>
+          ) : (
+            <EmptyState
+              icon={CalendarDays}
+              title="Nothing scheduled yet"
+              description={faculty ? 'Events appear here once a venue is booked.' : 'Reserve a seat and your events show up here.'}
+              className="py-10"
+            />
+          )}
+        </Card>
+
         <Card className="lg:col-span-2">
           <CardHeader title="Your clubs" description={headed.length ? `You lead ${headed.length} club${headed.length > 1 ? 's' : ''}.` : 'Clubs you belong to.'} />
           {user.clubs?.length ? (
@@ -98,31 +162,6 @@ export default function DashboardPage() {
               className="py-10"
             />
           )}
-        </Card>
-
-        <Card className="lg:col-span-3">
-          <CardHeader title="What's coming to CampusOS" description="Built in phases. Each goes live here as soon as it ships." />
-          <ol className="grid gap-px overflow-hidden rounded-b-2xl bg-zinc-100 sm:grid-cols-2 dark:bg-zinc-800">
-            {ROADMAP.map(({ phase, title, icon: Icon, text, live }) => (
-              <li key={phase} className="flex gap-3 bg-white p-5 dark:bg-zinc-900">
-                <span className={live
-                  ? 'grid size-9 shrink-0 place-items-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
-                  : 'grid size-9 shrink-0 place-items-center rounded-lg bg-zinc-100 text-zinc-500 dark:bg-zinc-800'}
-                >
-                  <Icon className="size-[18px]" aria-hidden />
-                </span>
-                <div className="min-w-0">
-                  <p className="flex items-center gap-2 text-sm font-semibold">
-                    {title}
-                    <span className={live ? 'text-[11px] font-medium text-emerald-600 dark:text-emerald-400' : 'text-[11px] font-medium text-zinc-400'}>
-                      {live ? 'Live' : `Phase ${phase}`}
-                    </span>
-                  </p>
-                  <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">{text}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
         </Card>
       </div>
 
