@@ -477,6 +477,60 @@ describe('organising an event', () => {
   })
 })
 
+describe('event notifications (FR19)', () => {
+  const notification = (overrides = {}) => ({
+    id: 1, category: 'EVENT_REMINDER', title: 'Starting in 2 days: Hack Night',
+    message: 'Hack Night starts in 2 days at Seminar Hall A.',
+    eventId: 1, bookingId: 9, isRead: false, createdAt: new Date().toISOString(), readAt: null,
+    ...overrides,
+  })
+
+  const bellHandlers = (items) => [
+    http.get(`${API}/notifications`, () => ok(items, { page: 1, pageSize: 8, total: items.length, totalPages: 1, unread: items.filter((n) => !n.isRead).length })),
+    http.get(`${API}/bookings/summary`, () => ok({ awaitingDecision: 0, myChangesRequested: 0, myAwaitingApproval: 0, unreadNotifications: items.filter((n) => !n.isRead).length })),
+    http.post(`${API}/notifications/1/read`, () => ok({ id: 1, isRead: true })),
+  ]
+
+  it('opens the event from a reminder, not the booking behind it', async () => {
+    server.use(...bellHandlers([notification()]), ...listHandlers(), http.get(`${API}/events/1`, () => ok(event())))
+    const { user } = renderApp('/events', { user: student })
+
+    await user.click(await screen.findByRole('button', { name: 'Notifications, 1 unread' }))
+    const panel = await screen.findByRole('region', { name: 'Notifications' })
+    await user.click(within(panel).getByRole('button', { name: /Starting in 2 days/ }))
+
+    // An event notification carries a bookingId too; a student sent to
+    // /bookings would land on a page they cannot use.
+    await waitFor(() => expect(currentPath()).toBe('/events/1'))
+  })
+
+  it('routes every event notification category to the event', async () => {
+    for (const category of ['EVENT_PUBLISHED', 'REGISTRATION_CONFIRMED', 'EVENT_CANCELLED']) {
+      server.use(...bellHandlers([notification({ category, title: `Test ${category}` })]), ...listHandlers(), http.get(`${API}/events/1`, () => ok(event())))
+      const { user, unmount } = renderApp('/dashboard', { user: student })
+
+      await user.click(await screen.findByRole('button', { name: 'Notifications, 1 unread' }))
+      const panel = await screen.findByRole('region', { name: 'Notifications' })
+      // eslint-disable-next-line no-await-in-loop
+      await user.click(within(panel).getByRole('button', { name: new RegExp(`Test ${category}`) }))
+      // eslint-disable-next-line no-await-in-loop
+      await waitFor(() => expect(currentPath()).toBe('/events/1'))
+      unmount()
+    }
+  })
+
+  it('still sends a booking notification to the bookings page', async () => {
+    server.use(...bellHandlers([notification({ category: 'BOOKING_APPROVED', title: 'Approved: Hack Night', eventId: 1, bookingId: 9 })]))
+    const { user } = renderApp('/dashboard', { user: coordinator })
+
+    await user.click(await screen.findByRole('button', { name: 'Notifications, 1 unread' }))
+    const panel = await screen.findByRole('region', { name: 'Notifications' })
+    await user.click(within(panel).getByRole('button', { name: /Approved: Hack Night/ }))
+
+    await waitFor(() => expect(currentPath()).toBe('/bookings'))
+  })
+})
+
 describe('navigation', () => {
   it('reaches an event from the feed', async () => {
     server.use(...listHandlers(), http.get(`${API}/events/1`, () => ok(event())))

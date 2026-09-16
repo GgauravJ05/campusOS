@@ -25,6 +25,7 @@ try {
 const createApp = require('./src/app');
 const db = require('./src/config/db');
 const { createShutdownHandler, registerProcessHandlers } = require('./src/lifecycle');
+const { createReminderWorker } = require('./src/services/reminders/worker');
 
 const app = createApp();
 
@@ -35,10 +36,16 @@ const server = app.listen(config.port, () => {
   );
 });
 
+// FR19: the 2-day / 2-hour reminder loop. It lives with the API because the
+// sweep is idempotent and reads everything it needs from the database.
+const reminderWorker = createReminderWorker({ intervalMs: config.reminders.intervalMs });
+if (config.reminders.enabled) reminderWorker.start();
+
 const shutdown = createShutdownHandler({
   server,
   db,
   logger,
+  worker: reminderWorker,
   timeoutMs: config.shutdownTimeoutMs,
 });
 

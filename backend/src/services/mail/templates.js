@@ -162,6 +162,27 @@ function registrationOutcome({ fullName, outcome, title, venueName, date, startT
   };
 }
 
+/**
+ * The automated 2-day / 2-hour reminder (FR19). `lead` is the phrase the
+ * scheduler produced - "in 2 days", "in about 2 hours" - so the subject line
+ * and the body always agree about how soon the event is.
+ */
+function eventReminder({ fullName, title, lead, venueName, date, startTime, endTime, seats = 1 }) {
+  const url = `${config.appUrl}/events`;
+  const when = `${date}, ${startTime}-${endTime}`;
+  const seatLine = seats > 1 ? `${seats} seats reserved` : 'Seat reserved';
+  return {
+    subject: `Reminder: "${title}" starts ${lead}`,
+    text: `Hi ${fullName},\n\n${title} starts ${lead}.\n\n${venueName}\n${when}\n${seatLine}\n\nSee your events: ${url}`,
+    html: layout({
+      heading: `${escapeHtml(title)} starts ${escapeHtml(lead)}`,
+      bodyHtml: `<p>Hi ${escapeHtml(fullName)},</p><p>A quick reminder that <strong>${escapeHtml(title)}</strong> starts ${escapeHtml(lead)}.</p>`
+        + `<div style="background:#f4f5f7;border-radius:8px;padding:16px;margin:16px 0">${escapeHtml(venueName)}<br>${escapeHtml(when)}<br>${escapeHtml(seatLine)}</div>`
+        + `<p><a href="${escapeHtml(url)}" style="color:#4f46e5">See your events</a></p>`,
+    }),
+  };
+}
+
 function addedToClub({ fullName, clubName, position, addedBy }) {
   const url = `${config.appUrl}/clubs`;
   const role = position.toLowerCase().replace(/_/g, ' ');
@@ -178,6 +199,7 @@ function addedToClub({ fullName, clubName, position, addedBy }) {
 module.exports = {
   bookingOutcome,
   registrationOutcome,
+  eventReminder,
   addedToClub,
   escapeHtml,
   verificationCode,

@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-16 | [Phase 5 — Automated reminders](#phase-5--automated-reminders-2026-09-16) | Gaurav |
 | 2026-09-16 | [Phase 4 — Events & RSVP web app](#phase-4--events--rsvp-web-app-2026-09-16) | Gaurav |
 | 2026-09-16 | [Phase 4 — Events, discovery & RSVP API](#phase-4--events-discovery--rsvp-api-2026-09-16) | Gaurav |
 | 2026-09-16 | [Dev setup fix — API port and a database that actually exists](#dev-setup-fix--api-port-and-a-database-that-actually-exists-2026-09-16) | Gaurav |
@@ -22,6 +23,83 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase 5 — Automated reminders (2026-09-16)
+
+The background worker that sends the FR19 reminders **2 days and 2 hours
+before an event starts**. **Phase 5 is complete.** (The other half of FR19,
+the broadcast when an event is published, shipped with Phase 4.)
+
+### ⚠️ What you need to do
+
+Pull, `npm install` is not needed, and there is **no schema change** —
+`event_reminders` has been waiting in the schema since Phase 0. Two new
+optional settings in `backend/.env.example` (`REMINDER_WORKER_ENABLED`,
+`REMINDER_INTERVAL_MS`); without them the worker runs every 5 minutes, which
+is what you want.
+
+### How it works
+
+A sweep is two steps, and both are safe to run twice:
+
+1. **Schedule** — every published, upcoming event gets its two
+   `event_reminders` rows, computed in one SQL statement from the booking's
+   authoritative `start_at`. `uq_event_reminders` makes the insert
+   idempotent; a row that has not been sent yet also gets its `scheduled_for`
+   corrected, **so moving an event moves its reminders**.
+2. **Dispatch** — due rows are claimed with `FOR UPDATE SKIP LOCKED`, sent,
+   and stamped `dispatched_at` in the same transaction. Two workers never
+   send the same reminder, and a crash mid-send rolls back to "not yet
+   dispatched" rather than losing it.
+
+The loop is a plain interval inside the API process, not a cron daemon or a
+queue. The sweep is idempotent and reads everything it needs from the
+database, so a scheduler would only add another moving part for a
+twelve-student project to operate — and `SKIP LOCKED` already makes multiple
+instances safe if CampusOS ever runs more than one.
+
+### Decisions made here
+
+- **A reminder that is too late is not sent.** An event published *inside*
+  its own 2-day window would otherwise fire a "2 days to go" note about
+  something happening tomorrow, minutes after the publish broadcast said so.
+  Anything more than 6 hours past its moment is marked handled and skipped;
+  inside that window it still goes out, so a worker that was down for an hour
+  catches up.
+- **Nothing is ever sent about an event that has already started.**
+- **Skipped reminders are stamped too**, with `recipient_count = 0`. An
+  outcome the sweep has reasoned about must never be reconsidered — that is
+  what makes a restart mid-sweep safe.
+- **Only students holding a seat are reminded.** A waitlisted student has no
+  seat to be reminded about.
+- **`POST /api/notifications/reminders/run`** (Principal / HOD only) runs a
+  sweep immediately. The worker does this on a timer; this is how you
+  demonstrate reminders without waiting two days. It is idempotent.
+
+### Also fixed
+
+Event notifications carry a `bookingId` as well as an `eventId`, so the bell
+was sending students who tapped "New event" or a reminder to `/bookings` — a
+page a student cannot use. Event categories now route to the event. That bug
+arrived with Phase 4 and would have shipped unnoticed without the reminders
+to click on.
+
+### Tests
+
+**605 backend tests** (45 new) and **158 frontend tests**, all green, CI
+green. New: `tests/unit/reminder.policy.test.js` (pure scheduling and
+staleness rules), `tests/unit/reminder.worker.test.js` (the loop catches up
+on start, never overlaps itself, survives a failed sweep), and
+`tests/integration/reminders.flow.test.js` (20 tests against PostgreSQL,
+including three concurrent sweeps sending exactly one notification).
+
+### Still open
+
+Unchanged from Phase 4: `certificates`, `event_materials` and `attendance`
+are in the schema but in no SRS requirement. Phase 6 is the last chance to
+either add them to SRS section 10 or drop the tables.
 
 ---
 
@@ -821,7 +899,7 @@ for all data — Phase 1 and Phase 2 replace those.
 | 2 | Venues & scheduling engine | FR6–FR10 | ✅ Done |
 | 3 | Approval workflow & club management | FR11–FR13 | ✅ Done |
 | 4 | Events & RSVP | FR14–FR17 | ✅ Done |
-| 5 | Notifications (scheduled reminders) | FR19 | |
+| 5 | Notifications (scheduled reminders) | FR19 | ✅ Done |
 | 6 | Governance & analytics | FR18, FR20, FR21 | |
 
 Phase 2 is the heart of the project and deserves the most time. Build each

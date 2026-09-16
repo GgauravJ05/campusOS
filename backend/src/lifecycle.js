@@ -19,10 +19,11 @@
  * @param {{ closePool: () => Promise<void> }} deps.db
  * @param {object} deps.logger
  * @param {number} deps.timeoutMs   hard deadline before forcing exit
+ * @param {{ stop: () => void }} [deps.worker]  background loop to halt first
  * @param {(code: number) => void} [deps.exit]  injectable for tests
  * @returns {(signal: string) => Promise<void>}
  */
-function createShutdownHandler({ server, db, logger, timeoutMs, exit = process.exit }) {
+function createShutdownHandler({ server, db, logger, timeoutMs, worker = null, exit = process.exit }) {
   let inProgress = false;
 
   return async function shutdown(signal) {
@@ -31,6 +32,10 @@ function createShutdownHandler({ server, db, logger, timeoutMs, exit = process.e
     inProgress = true;
 
     logger.info({ signal }, 'Shutdown signal received - draining connections');
+
+    // Stop the background loop before the pool closes, so a sweep cannot
+    // start a transaction against a pool that is about to disappear.
+    worker?.stop();
 
     // If a client holds a keep-alive connection open forever, close() never
     // resolves. This deadline guarantees the process still exits.
