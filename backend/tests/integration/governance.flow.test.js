@@ -18,7 +18,7 @@ describeWithDb('governance and analytics (database)', () => {
   let principal;
   let itCoordinator;
   let csCoordinator;
-  let gaurav; // heads Developer Student Club (IT)
+  let gaurav; // heads IT Tech Club (IT)
   let student;
   const clubs = {};
   const auth = (s) => ({ Authorization: `Bearer ${s.accessToken}` });
@@ -38,7 +38,7 @@ describeWithDb('governance and analytics (database)', () => {
   async function eventWithAttendee({ date = day(10), title = 'Reported Event', maxSeats = 20 } = {}) {
     const venueId = await newVenue();
     const booking = await request(app).post('/api/bookings').set(auth(itCoordinator)).send({
-      venueId, clubId: clubs['Developer Student Club'], title, category: 'TECHNICAL',
+      venueId, clubId: clubs['IT Tech Club'], title, category: 'TECHNICAL',
       expectedAttendance: maxSeats, date, startTime: '10:00', endTime: '12:00',
     }).expect(201);
     const eventId = booking.body.data.event.id;
@@ -65,7 +65,7 @@ describeWithDb('governance and analytics (database)', () => {
       live.signIn(app, 'gaurav.jadhav@mmcoe.edu.in'),
     ]);
     student = await live.createVerifiedStudent(app, { fullName: 'Report Student' });
-    const { rows } = await db.query(`SELECT club_id, club_name FROM clubs WHERE club_name = 'Developer Student Club'`);
+    const { rows } = await db.query(`SELECT club_id, club_name FROM clubs WHERE club_name = 'IT Tech Club'`);
     rows.forEach((r) => { clubs[r.club_name] = r.club_id });
   });
 
@@ -306,7 +306,7 @@ describeWithDb('governance and analytics (database)', () => {
       const res = await request(app).get('/api/reports/club-activity')
         .query({ from: day(0), to: day(9) }).set(auth(principal)).expect(200);
 
-      const dsc = res.body.data.rows.find((r) => r.clubId === clubs['Developer Student Club']);
+      const dsc = res.body.data.rows.find((r) => r.clubId === clubs['IT Tech Club']);
       expect(dsc.events).toBeGreaterThanOrEqual(1);
       expect(dsc.registrations).toBeGreaterThanOrEqual(1);
       expect(dsc.seatsFilled).toBeGreaterThanOrEqual(1);
@@ -337,7 +337,7 @@ describeWithDb('governance and analytics (database)', () => {
         .set(auth(csCoordinator)).expect(200);
 
       expect(it.body.data.rows.every((r) => r.department === 'IT')).toBe(true);
-      expect(cs.body.data.rows.map((r) => r.clubId)).not.toContain(clubs['Developer Student Club']);
+      expect(cs.body.data.rows.map((r) => r.clubId)).not.toContain(clubs['IT Tech Club']);
     });
 
     it('exports CSV with a header, a BOM and the declared columns', async () => {

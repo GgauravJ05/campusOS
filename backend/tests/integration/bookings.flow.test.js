@@ -17,8 +17,8 @@ describeWithDb('venue bookings (database)', () => {
   let principal;
   let itCoordinator;
   let csCoordinator;
-  let gaurav; // heads Developer Student Club (IT) and Robotics Club (ENTC)
-  let atharva; // heads Cultural Committee (IT)
+  let gaurav; // heads IT Tech Club (IT)
+  let atharva; // heads Envision Club (IT)
   let member; // Aditya, DSC member
   let student;
   const clubs = {};
@@ -50,7 +50,7 @@ describeWithDb('venue bookings (database)', () => {
       live.signIn(app, 'aditya.patil@mmcoe.edu.in'),
       live.signIn(app, 'srushti.mane@mmcoe.edu.in'),
     ]);
-    const { rows } = await db.query(`SELECT club_id, club_name FROM clubs WHERE club_name IN ('Developer Student Club', 'Cultural Committee', 'Robotics Club')`);
+    const { rows } = await db.query(`SELECT club_id, club_name FROM clubs WHERE club_name IN ('IT Tech Club', 'Envision Club', 'C.O.D.E Club')`);
     rows.forEach((r) => { clubs[r.club_name] = r.club_id; });
   });
 
@@ -92,11 +92,11 @@ describeWithDb('venue bookings (database)', () => {
     it('creates a PENDING request and a PENDING_APPROVAL event routed to the club department', async () => {
       const venueId = await newVenue();
 
-      const res = await request_(gaurav, { venueId, clubId: clubs['Developer Student Club'], date: day(12), startTime: '14:00', endTime: '16:00' }).expect(201);
+      const res = await request_(gaurav, { venueId, clubId: clubs['IT Tech Club'], date: day(12), startTime: '14:00', endTime: '16:00' }).expect(201);
 
       expect(res.body.data).toMatchObject({
         status: 'PENDING', isDirect: false, date: day(12), startTime: '14:00', endTime: '16:00', bufferMinutes: 15,
-        event: { title: 'Hack Night', scope: 'CLUB', status: 'PENDING_APPROVAL', expectedAttendance: 60, club: { name: 'Developer Student Club' }, department: { code: 'IT' } },
+        event: { title: 'Hack Night', scope: 'CLUB', status: 'PENDING_APPROVAL', expectedAttendance: 60, club: { name: 'IT Tech Club' }, department: { code: 'IT' } },
         permissions: { canDecide: false, canCancel: true },
       });
       const { rows: [row] } = await db.query('SELECT start_at FROM bookings WHERE booking_id = $1', [res.body.data.id]);
@@ -105,26 +105,26 @@ describeWithDb('venue bookings (database)', () => {
 
     it('only lets a club head request for a club they lead', async () => {
       const venueId = await newVenue();
-      await request_(atharva, { venueId, clubId: clubs['Developer Student Club'], date: day(12), startTime: '10:00', endTime: '11:00' }).expect(403);
+      await request_(atharva, { venueId, clubId: clubs['IT Tech Club'], date: day(12), startTime: '10:00', endTime: '11:00' }).expect(403);
       await request_(gaurav, { venueId, date: day(12), startTime: '10:00', endTime: '11:00' }).expect(422);
     });
 
     it('is closed to club members and students', async () => {
       const venueId = await newVenue();
-      await request_(member, { venueId, clubId: clubs['Developer Student Club'], date: day(12), startTime: '10:00', endTime: '11:00' }).expect(403);
+      await request_(member, { venueId, clubId: clubs['IT Tech Club'], date: day(12), startTime: '10:00', endTime: '11:00' }).expect(403);
       await request_(student, { venueId, date: day(12), startTime: '10:00', endTime: '11:00' }).expect(403);
     });
 
     it('refuses more people than the venue holds', async () => {
       const venueId = await newVenue({ capacity: 40 });
-      const res = await request_(gaurav, { venueId, clubId: clubs['Developer Student Club'], date: day(12), startTime: '10:00', endTime: '11:00', expectedAttendance: 41 });
+      const res = await request_(gaurav, { venueId, clubId: clubs['IT Tech Club'], date: day(12), startTime: '10:00', endTime: '11:00', expectedAttendance: 41 });
       expect(res.status).toBe(422);
       expect(res.body.error.details[0]).toMatchObject({ field: 'expectedAttendance', message: expect.stringContaining('holds 40') });
     });
 
     it('refuses a past, closed-hours or too-far-ahead window', async () => {
       const venueId = await newVenue();
-      const base = { venueId, clubId: clubs['Developer Student Club'] };
+      const base = { venueId, clubId: clubs['IT Tech Club'] };
       await request_(gaurav, { ...base, date: day(-1), startTime: '10:00', endTime: '11:00' }).expect(422);
       await request_(gaurav, { ...base, date: day(5), startTime: '20:30', endTime: '22:00' }).expect(422);
       await request_(gaurav, { ...base, date: day(120), startTime: '10:00', endTime: '11:00' }).expect(422);
@@ -133,8 +133,8 @@ describeWithDb('venue bookings (database)', () => {
     it('allows competing pending requests for the same window (FR12)', async () => {
       const venueId = await newVenue();
       const slot = { venueId, date: day(14), startTime: '10:00', endTime: '12:00' };
-      await request_(gaurav, { ...slot, clubId: clubs['Developer Student Club'] }).expect(201);
-      await request_(atharva, { ...slot, clubId: clubs['Cultural Committee'], title: 'Music Jam' }).expect(201);
+      await request_(gaurav, { ...slot, clubId: clubs['IT Tech Club'] }).expect(201);
+      await request_(atharva, { ...slot, clubId: clubs['Envision Club'], title: 'Music Jam' }).expect(201);
 
       const check = await request(app).post('/api/venues/check-availability').set(auth(gaurav)).send(slot).expect(200);
       expect(check.body.data).toMatchObject({ available: true, competingRequests: 2 });
@@ -144,7 +144,7 @@ describeWithDb('venue bookings (database)', () => {
       const venueId = await newVenue();
       await request_(itCoordinator, { venueId, date: day(15), startTime: '09:00', endTime: '11:00', title: 'Faculty Review' }).expect(201);
 
-      const res = await request_(gaurav, { venueId, clubId: clubs['Developer Student Club'], date: day(15), startTime: '11:05', endTime: '12:00' });
+      const res = await request_(gaurav, { venueId, clubId: clubs['IT Tech Club'], date: day(15), startTime: '11:05', endTime: '12:00' });
 
       expect(res.status).toBe(409);
       expect(res.body.error.code).toBe('SLOT_UNAVAILABLE');
@@ -176,10 +176,10 @@ describeWithDb('venue bookings (database)', () => {
     it('approves, turns the slot red, auto-rejects overlapping competitors, and audits it', async () => {
       const venueId = await newVenue();
       const slot = { venueId, date: day(20), startTime: '10:00', endTime: '12:00' };
-      const winner = await request_(gaurav, { ...slot, clubId: clubs['Developer Student Club'] }).expect(201);
-      const loser = await request_(atharva, { ...slot, clubId: clubs['Cultural Committee'], title: 'Music Jam' }).expect(201);
-      const inBuffer = await request_(atharva, { venueId, clubId: clubs['Cultural Committee'], date: day(20), startTime: '12:05', endTime: '13:00', title: 'Rehearsal' }).expect(201);
-      const clear = await request_(atharva, { venueId, clubId: clubs['Cultural Committee'], date: day(20), startTime: '12:15', endTime: '13:00', title: 'Rehearsal 2' }).expect(201);
+      const winner = await request_(gaurav, { ...slot, clubId: clubs['IT Tech Club'] }).expect(201);
+      const loser = await request_(atharva, { ...slot, clubId: clubs['Envision Club'], title: 'Music Jam' }).expect(201);
+      const inBuffer = await request_(atharva, { venueId, clubId: clubs['Envision Club'], date: day(20), startTime: '12:05', endTime: '13:00', title: 'Rehearsal' }).expect(201);
+      const clear = await request_(atharva, { venueId, clubId: clubs['Envision Club'], date: day(20), startTime: '12:15', endTime: '13:00', title: 'Rehearsal 2' }).expect(201);
 
       const res = await request(app).post(`/api/bookings/${winner.body.data.id}/approve`).set(auth(itCoordinator)).expect(200);
 
@@ -201,7 +201,7 @@ describeWithDb('venue bookings (database)', () => {
       const ids = [];
       for (let i = 0; i < 20; i += 1) {
         const res = await request_(i % 2 ? gaurav : atharva, {
-          ...slot, clubId: i % 2 ? clubs['Developer Student Club'] : clubs['Cultural Committee'], title: `Race ${i}`,
+          ...slot, clubId: i % 2 ? clubs['IT Tech Club'] : clubs['Envision Club'], title: `Race ${i}`,
         }).expect(201);
         ids.push(res.body.data.id);
       }
@@ -224,7 +224,7 @@ describeWithDb('venue bookings (database)', () => {
     it('does not let a race between a direct booking and approvals double-book', async () => {
       const venueId = await newVenue();
       const slot = { venueId, date: day(22), startTime: '10:00', endTime: '12:00' };
-      const pending = await request_(gaurav, { ...slot, clubId: clubs['Developer Student Club'] }).expect(201);
+      const pending = await request_(gaurav, { ...slot, clubId: clubs['IT Tech Club'] }).expect(201);
 
       const [approval, direct] = await Promise.all([
         request(app).post(`/api/bookings/${pending.body.data.id}/approve`).set(auth(itCoordinator)),
@@ -241,7 +241,7 @@ describeWithDb('venue bookings (database)', () => {
 
     it('refuses to approve twice', async () => {
       const venueId = await newVenue();
-      const req = await request_(gaurav, { venueId, clubId: clubs['Developer Student Club'], date: day(23), startTime: '10:00', endTime: '11:00' }).expect(201);
+      const req = await request_(gaurav, { venueId, clubId: clubs['IT Tech Club'], date: day(23), startTime: '10:00', endTime: '11:00' }).expect(201);
       await request(app).post(`/api/bookings/${req.body.data.id}/approve`).set(auth(itCoordinator)).expect(200);
       const again = await request(app).post(`/api/bookings/${req.body.data.id}/approve`).set(auth(itCoordinator));
       expect(again.status).toBe(409);
@@ -252,7 +252,7 @@ describeWithDb('venue bookings (database)', () => {
   describe('routing (FR12)', () => {
     it('routes a department club request to that department\'s coordinator only', async () => {
       const venueId = await newVenue();
-      const req = await request_(gaurav, { venueId, clubId: clubs['Developer Student Club'], date: day(25), startTime: '10:00', endTime: '11:00' }).expect(201);
+      const req = await request_(gaurav, { venueId, clubId: clubs['IT Tech Club'], date: day(25), startTime: '10:00', endTime: '11:00' }).expect(201);
 
       await request(app).post(`/api/bookings/${req.body.data.id}/approve`).set(auth(csCoordinator)).expect(404);
 
@@ -289,7 +289,7 @@ describeWithDb('venue bookings (database)', () => {
 
     it('auto-rejects pending requests it overrides', async () => {
       const venueId = await newVenue();
-      const pending = await request_(gaurav, { venueId, clubId: clubs['Developer Student Club'], date: day(28), startTime: '10:00', endTime: '12:00' }).expect(201);
+      const pending = await request_(gaurav, { venueId, clubId: clubs['IT Tech Club'], date: day(28), startTime: '10:00', endTime: '12:00' }).expect(201);
 
       await request_(itCoordinator, { venueId, date: day(28), startTime: '11:00', endTime: '13:00' }).expect(201);
 
@@ -306,15 +306,16 @@ describeWithDb('venue bookings (database)', () => {
 
     it('lets a coordinator book for a club in their department but not another', async () => {
       const venueId = await newVenue();
-      await request_(itCoordinator, { venueId, clubId: clubs['Robotics Club'], date: day(30), startTime: '10:00', endTime: '11:00' }).expect(403);
-      await request_(itCoordinator, { venueId, clubId: clubs['Developer Student Club'], date: day(30), startTime: '10:00', endTime: '11:00' }).expect(201);
+      // C.O.D.E Club belongs to Computer Engineering, not IT.
+      await request_(itCoordinator, { venueId, clubId: clubs['C.O.D.E Club'], date: day(30), startTime: '10:00', endTime: '11:00' }).expect(403);
+      await request_(itCoordinator, { venueId, clubId: clubs['IT Tech Club'], date: day(30), startTime: '10:00', endTime: '11:00' }).expect(201);
     });
   });
 
   describe('rejection and cancellation', () => {
     it('requires a recorded reason to reject (FR13)', async () => {
       const venueId = await newVenue();
-      const req = await request_(gaurav, { venueId, clubId: clubs['Developer Student Club'], date: day(31), startTime: '10:00', endTime: '11:00' }).expect(201);
+      const req = await request_(gaurav, { venueId, clubId: clubs['IT Tech Club'], date: day(31), startTime: '10:00', endTime: '11:00' }).expect(201);
 
       await request(app).post(`/api/bookings/${req.body.data.id}/reject`).set(auth(itCoordinator)).send({ reason: ' ' }).expect(422);
 
@@ -328,25 +329,25 @@ describeWithDb('venue bookings (database)', () => {
     it('frees the slot when an approved booking is cancelled', async () => {
       const venueId = await newVenue();
       const booked = await request_(itCoordinator, { venueId, date: day(32), startTime: '10:00', endTime: '12:00' }).expect(201);
-      await request_(gaurav, { venueId, clubId: clubs['Developer Student Club'], date: day(32), startTime: '10:00', endTime: '12:00' }).expect(409);
+      await request_(gaurav, { venueId, clubId: clubs['IT Tech Club'], date: day(32), startTime: '10:00', endTime: '12:00' }).expect(409);
 
       const res = await request(app).post(`/api/bookings/${booked.body.data.id}/cancel`).set(auth(itCoordinator)).expect(200);
       expect(res.body.data).toMatchObject({ status: 'CANCELLED', event: { status: 'CANCELLED' }, permissions: { canCancel: false } });
 
-      await request_(gaurav, { venueId, clubId: clubs['Developer Student Club'], date: day(32), startTime: '10:00', endTime: '12:00' }).expect(201);
+      await request_(gaurav, { venueId, clubId: clubs['IT Tech Club'], date: day(32), startTime: '10:00', endTime: '12:00' }).expect(201);
       await request(app).post(`/api/bookings/${booked.body.data.id}/cancel`).set(auth(itCoordinator)).expect(409);
     });
 
     it('lets the requester cancel their own request but not another club\'s', async () => {
       const venueId = await newVenue();
-      const req = await request_(gaurav, { venueId, clubId: clubs['Developer Student Club'], date: day(33), startTime: '10:00', endTime: '11:00' }).expect(201);
+      const req = await request_(gaurav, { venueId, clubId: clubs['IT Tech Club'], date: day(33), startTime: '10:00', endTime: '11:00' }).expect(201);
       await request(app).post(`/api/bookings/${req.body.data.id}/cancel`).set(auth(atharva)).expect(404);
       await request(app).post(`/api/bookings/${req.body.data.id}/cancel`).set(auth(gaurav)).expect(200);
     });
 
     it('cannot decide or cancel a booking that has already started', async () => {
       const venueId = await newVenue();
-      const req = await request_(gaurav, { venueId, clubId: clubs['Developer Student Club'], date: day(34), startTime: '10:00', endTime: '11:00' }).expect(201);
+      const req = await request_(gaurav, { venueId, clubId: clubs['IT Tech Club'], date: day(34), startTime: '10:00', endTime: '11:00' }).expect(201);
       await db.query(`UPDATE bookings SET start_at = now() - interval '1 hour', end_at = now() + interval '1 hour' WHERE booking_id = $1`, [req.body.data.id]);
 
       const approve = await request(app).post(`/api/bookings/${req.body.data.id}/approve`).set(auth(itCoordinator));
@@ -359,7 +360,7 @@ describeWithDb('venue bookings (database)', () => {
   describe('lists and visibility', () => {
     it('shows club members their club\'s bookings and hides them from students', async () => {
       const venueId = await newVenue();
-      const req = await request_(gaurav, { venueId, clubId: clubs['Developer Student Club'], date: day(35), startTime: '10:00', endTime: '11:00' }).expect(201);
+      const req = await request_(gaurav, { venueId, clubId: clubs['IT Tech Club'], date: day(35), startTime: '10:00', endTime: '11:00' }).expect(201);
 
       const mine = await request(app).get('/api/bookings?view=mine&pageSize=100').set(auth(member)).expect(200);
       expect(mine.body.data.map((b) => b.id)).toContain(req.body.data.id);
@@ -388,7 +389,7 @@ describeWithDb('venue bookings (database)', () => {
     it('draws the calendar: booked slots public, competing pending titles hidden from other clubs', async () => {
       const venueId = await newVenue();
       await request_(itCoordinator, { venueId, date: day(40), startTime: '09:00', endTime: '10:00', title: 'Open Lecture' }).expect(201);
-      await request_(gaurav, { venueId, clubId: clubs['Developer Student Club'], date: day(40), startTime: '14:00', endTime: '15:00', title: 'Secret Launch' }).expect(201);
+      await request_(gaurav, { venueId, clubId: clubs['IT Tech Club'], date: day(40), startTime: '14:00', endTime: '15:00', title: 'Secret Launch' }).expect(201);
 
       const asStudent = await request(app).get(`/api/venues/${venueId}/availability?from=${day(40)}&to=${day(41)}`).set(auth(student)).expect(200);
       expect(asStudent.body.data.blocks).toEqual([

@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-16 | [Refinements — real campus layout, real clubs, one seat per student](#refinements--real-campus-layout-real-clubs-one-seat-per-student-2026-09-16) | Gaurav |
 | 2026-09-16 | [Phase 6 — Dashboards, audit trail & analytics](#phase-6--dashboards-audit-trail--analytics-2026-09-16) | Gaurav |
 | 2026-09-16 | [Phase 5 — Automated reminders](#phase-5--automated-reminders-2026-09-16) | Gaurav |
 | 2026-09-16 | [Phase 4 — Events & RSVP web app](#phase-4--events--rsvp-web-app-2026-09-16) | Gaurav |
@@ -24,6 +25,94 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Refinements — real campus layout, real clubs, one seat per student (2026-09-16)
+
+Three corrections so the demo data matches MMCOE, and one policy change.
+
+### ⚠️ What you need to do
+
+**Rebuild your database.** The department list changed, so an existing
+database will not match:
+
+```bash
+dropdb -h localhost -p 55432 -U postgres campusos
+createdb -h localhost -p 55432 -U postgres -O postgres campusos
+psql -h localhost -p 55432 -U postgres -d campusos -f db/schema.sql
+psql -h localhost -p 55432 -U postgres -d campusos -f db/seed.sql
+```
+
+(Docker users: `docker compose down -v && docker compose up -d`.) No schema
+change — this is seed data only.
+
+### The six departments, one floor each
+
+`CIVIL` and `FE` are gone; `ELEC` and `AIDS` are in. The academic building
+now gives one floor to each department, which is how the campus is laid out
+and what the FR6 Building → Floor → Venue cascade walks down:
+
+| Floor | Department | Venues |
+| ----- | ---------- | ------ |
+| 1 | Electrical | Electrical Machines Lab, PLC & SCADA Lab, Classroom 101 |
+| 2 | Mechanical | Mechanical Workshop, Thermal Engineering Lab, Classroom 201 |
+| 3 | ENTC | Electronics Lab, VLSI & Embedded Lab, Seminar Hall B |
+| 4 | Information Technology | Computer Lab 1, Networking Lab, Seminar Hall A |
+| 5 | Computer Engineering | Computer Lab 2, Project Lab, Classroom 501 |
+| 6 | AI & Data Science | AI & Data Science Lab, Data Analytics Lab, Classroom 601 |
+
+The Main Auditorium, Conference Room, Sports Ground and Open Air Theatre
+belong to no department, so any club may request them.
+
+### Real clubs
+
+Taken from [mmcoe.edu.in](https://mmcoe.edu.in) rather than invented — 19
+department clubs and 8 college-level ones:
+
+| Department | Clubs |
+| ---------- | ----- |
+| Electrical | EESA, Effi-cycle Team, PLC & SCADA Club |
+| Mechanical | SAEINDIA Collegiate Club, ISHRAE Student Chapter, Mechanical Students' Association |
+| ENTC | IETE Student Chapter, ENTC Students' Association |
+| IT | IT Tech Club, Envision Club, Career Guidance Club, IT Students' Association |
+| Computer | C.O.D.E Club, MSOC Club, G.D.G Club, Aadhar Club, Computer Students' Association |
+| AI & DS | AI & DS Student Chapter, AI & DS Students' Association |
+| College-level | Team Rudra, Team Vajra, IEEE Student Branch, ISTE Student Chapter, Student Council, Start-up and Innovation Cell, Cultural Committee, Sports Committee |
+
+`Developer Student Club` is now `IT Tech Club` and the IT `Cultural
+Committee` is now `Envision Club` (Cultural Committee still exists, but
+college-wide, which is what it actually is). **Only four clubs have a head in
+the seed** — the rest are appointed through People, which is how it works in
+the running system.
+
+Three new demo accounts head clubs in other departments, and three new
+students sit in Electrical, Mechanical and AI & DS, so department scoping is
+visible without creating anyone.
+
+### One seat per student
+
+The RSVP seat chooser is gone: a student reserves **one seat, for
+themselves**. Reserving for friends is a queue-jumping tool on a full event,
+and it makes the FR21 attendance roster a list of names that may not be who
+turned up. The API refuses `seats > 1` (422), and the `seats` column stays in
+the schema — always 1 — so a future policy change is a number in
+`eligibility.js`, not a migration. `planPromotions` still handles parties for
+the same reason.
+
+### Tests
+
+**667 backend** and **178 frontend**, all green. Most of the churn was
+mechanical (renamed clubs, new floors), but three assertions were quietly
+wrong and are now honest:
+
+- A venue test patched `Computer Lab 2` as the IT coordinator. That lab is
+  Computer Engineering's now, so the request is correctly refused — the test
+  had been asserting a permission the coordinator should never have had.
+- The duplicate-club-name test probed with a lowercase name that only
+  collided because **an earlier run of the same test had created it**. It now
+  probes a seeded club.
+- Two multi-seat RSVP tests became tests that multi-seat RSVPs are refused.
 
 ---
 

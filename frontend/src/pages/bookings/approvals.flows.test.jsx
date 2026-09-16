@@ -20,7 +20,7 @@ const clubHead = makeUser({
   id: 4,
   fullName: 'Gaurav Jadhav',
   role: { key: 'CLUB_HEAD', name: 'Club Head', rank: 3 },
-  clubs: [{ id: 1, name: 'Developer Student Club', scope: 'DEPARTMENT', isHead: true, position: 'PRESIDENT' }],
+  clubs: [{ id: 1, name: 'IT Tech Club', scope: 'DEPARTMENT', isHead: true, position: 'PRESIDENT' }],
 })
 
 const date = addDays(campusToday(), 12)
@@ -31,7 +31,7 @@ function booking(overrides = {}) {
     id: 70, status: 'PENDING', date, startTime: '10:00', endTime: '12:00', bufferMinutes: 15, isDirect: false,
     rejectionReason: null, modificationNote: null, revision: 0, competingRequests: 0, decidedAt: null, createdAt: new Date().toISOString(),
     venue: { id: 2, name: 'Seminar Hall A', building: 'Main Building', floor: 1, capacity: 200 },
-    event: { id: 9, title: 'Hack Night', description: 'Bring laptops', category: 'TECHNICAL', scope: 'CLUB', expectedAttendance: 80, status: 'PENDING_APPROVAL', club: { id: 1, name: 'Developer Student Club' }, department: { id: 1, code: 'IT' } },
+    event: { id: 9, title: 'Hack Night', description: 'Bring laptops', category: 'TECHNICAL', scope: 'CLUB', expectedAttendance: 80, status: 'PENDING_APPROVAL', club: { id: 1, name: 'IT Tech Club' }, department: { id: 1, code: 'IT' } },
     requestedBy: { id: 4, fullName: 'Gaurav Jadhav', email: 'g@mmcoe.edu.in' },
     decidedBy: null,
     permissions: { canDecide: false, canReject: false, canEdit: false, canCancel: true },
@@ -180,7 +180,7 @@ describe('requester: edit and resubmit', () => {
     await user.click(screen.getByRole('button', { name: /Continue/ }))
 
     expect(screen.getByLabelText('Event title')).toHaveValue('Hack Night')
-    expect(screen.getByText('Developer Student Club')).toBeInTheDocument()
+    expect(screen.getByText('IT Tech Club')).toBeInTheDocument()
     expect(screen.getByText(/Can.t be changed/)).toBeInTheDocument()
     expect(screen.getByText(/back to the approver as a new version/)).toBeInTheDocument()
 

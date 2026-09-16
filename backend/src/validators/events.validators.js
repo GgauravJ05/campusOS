@@ -60,8 +60,10 @@ const update = [
 
 const register = [
   eventId,
+  // One seat per student; the field is accepted so an older client that
+  // still sends `seats: 1` keeps working.
   body('seats').optional().isInt({ min: 1, max: MAX_SEATS_PER_REGISTRATION })
-    .withMessage(`Reserve between 1 and ${MAX_SEATS_PER_REGISTRATION} seats`).toInt(),
+    .withMessage('You can reserve one seat for yourself').toInt(),
 ];
 
 const roster = [

@@ -13,7 +13,7 @@ const permissions = (overrides = {}) => ({ canManage: false, canEdit: false, can
 
 function club(overrides = {}) {
   return {
-    id: 1, name: 'Developer Student Club', description: 'Software, open source and hackathons.', scope: 'DEPARTMENT',
+    id: 1, name: 'IT Tech Club', description: 'Software, open source and hackathons.', scope: 'DEPARTMENT',
     department: { id: 1, code: 'IT', name: 'Information Technology' }, head: { id: 4, fullName: 'Gaurav Jadhav' },
     memberCount: 2, isActive: true, myPosition: null, permissions: permissions(),
     ...overrides,
@@ -42,7 +42,7 @@ describe('clubs directory', () => {
     }))
     const { user } = renderApp('/clubs', { user: student })
 
-    const dsc = await screen.findByRole('link', { name: /Developer Student Club/ })
+    const dsc = await screen.findByRole('link', { name: /IT Tech Club/ })
     expect(dsc).toHaveAttribute('href', '/clubs/1')
     expect(within(dsc).getByText('You: Member')).toBeInTheDocument()
     expect(within(dsc).getByText('Gaurav Jadhav')).toBeInTheDocument()
@@ -61,7 +61,7 @@ describe('clubs directory', () => {
     expect(await screen.findByRole('heading', { name: 'You are not on a club team yet' })).toBeInTheDocument()
     expect(queries.at(-1)).toMatchObject({ mine: 'true' })
     await user.click(screen.getByRole('button', { name: 'All clubs' }))
-    expect(await screen.findByRole('link', { name: /Developer Student Club/ })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /IT Tech Club/ })).toBeInTheDocument()
   })
 
   it('lets faculty see disabled clubs and create a club in their department', async () => {
@@ -168,7 +168,7 @@ describe('club page', () => {
     )
     const { user } = renderApp('/clubs/1', { user: head })
 
-    expect(await screen.findByRole('heading', { name: 'Developer Student Club' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'IT Tech Club' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Disable/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Leave club' })).not.toBeInTheDocument()
     const team = screen.getAllByRole('listitem')
@@ -178,13 +178,13 @@ describe('club page', () => {
 
     // Details
     await user.click(screen.getByRole('button', { name: /Edit/ }))
-    const edit = screen.getByRole('dialog', { name: 'Edit Developer Student Club' })
+    const edit = screen.getByRole('dialog', { name: 'Edit IT Tech Club' })
     expect(within(edit).queryByLabelText('Department')).not.toBeInTheDocument()
     await user.clear(within(edit).getByLabelText(/Description/))
     await user.type(within(edit).getByLabelText(/Description/), 'Build things together')
     await user.click(within(edit).getByRole('button', { name: 'Save changes' }))
     expect(await screen.findByText('Build things together')).toBeInTheDocument()
-    expect(calls[0]).toEqual(['edit', { name: 'Developer Student Club', description: 'Build things together' }])
+    expect(calls[0]).toEqual(['edit', { name: 'IT Tech Club', description: 'Build things together' }])
 
     // Add: an unknown email, then a real one
     await user.click(screen.getByRole('button', { name: /Add member/ }))
@@ -240,7 +240,7 @@ describe('club page', () => {
     const { user } = renderApp('/clubs/1', { user: principal })
 
     await user.click(await screen.findByRole('button', { name: /Disable/ }))
-    const dialog = screen.getByRole('dialog', { name: 'Disable Developer Student Club?' })
+    const dialog = screen.getByRole('dialog', { name: 'Disable IT Tech Club?' })
     expect(dialog).toHaveTextContent(/open venue requests are withdrawn/)
     await user.click(within(dialog).getByRole('button', { name: 'Disable club' }))
 
@@ -291,7 +291,7 @@ describe('club page', () => {
     expect(screen.queryByRole('button', { name: /Edit/ })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Leave club' }))
-    await user.click(within(screen.getByRole('dialog', { name: 'Leave Developer Student Club?' })).getByRole('button', { name: 'Leave club' }))
+    await user.click(within(screen.getByRole('dialog', { name: 'Leave IT Tech Club?' })).getByRole('button', { name: 'Leave club' }))
     expect(await screen.findByText('You left the club')).toBeInTheDocument()
     expect(left).toBe(true)
     expect(screen.queryByRole('button', { name: 'Leave club' })).not.toBeInTheDocument()

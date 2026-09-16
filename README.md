@@ -103,13 +103,28 @@ curl localhost:5050/api/health/ready   # database reachable too
 
 Seeded demo accounts all use the password `Campus@123`:
 
-| Role                         | Email                          |
-| ---------------------------- | ------------------------------ |
-| Principal & HOD (Super Admin)| `principal@mmcoe.edu.in`       |
-| Department Event Coordinator | `coordinator.it@mmcoe.edu.in`  |
-| Club Head                    | `gaurav.jadhav@mmcoe.edu.in`   |
-| Club Member                  | `aditya.patil@mmcoe.edu.in`    |
-| Student                      | `srushti.mane@mmcoe.edu.in`    |
+| Role                         | Email                           | Department |
+| ---------------------------- | ------------------------------- | ---------- |
+| Principal & HOD (Super Admin)| `principal@mmcoe.edu.in`        | college    |
+| Department Event Coordinator | `coordinator.it@mmcoe.edu.in`   | IT         |
+| Department Event Coordinator | `coordinator.cs@mmcoe.edu.in`   | Computer   |
+| Club Head (IT Tech Club)     | `gaurav.jadhav@mmcoe.edu.in`    | IT         |
+| Club Head (C.O.D.E Club)     | `rohan.kulkarni@mmcoe.edu.in`   | Computer   |
+| Club Head (SAEINDIA)         | `sneha.deshmukh@mmcoe.edu.in`   | Mechanical |
+| Club Member                  | `aditya.patil@mmcoe.edu.in`     | IT         |
+| Student                      | `srushti.mane@mmcoe.edu.in`     | IT         |
+| Student                      | `ishita.rane@mmcoe.edu.in`      | AI & DS    |
+
+The seed follows the real campus: six departments, one floor of the academic
+building each — **1 Electrical, 2 Mechanical, 3 ENTC, 4 IT, 5 Computer,
+6 AI & DS** — with the auditorium, conference room, ground and open air
+theatre shared. Clubs are the ones listed on
+[mmcoe.edu.in](https://mmcoe.edu.in), department by department, plus the
+college-level chapters and teams.
+
+> **Sign-in is rate limited** to 10 attempts per 15 minutes per address, so
+> clicking through demo accounts quickly returns `429`. Restart the API to
+> clear the counter — it is held in memory.
 
 ### Running the tests
 

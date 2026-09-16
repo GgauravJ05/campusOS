@@ -4,7 +4,7 @@ import { ArrowLeft, CalendarDays, ClipboardCheck, Clock, Flag, MapPin, Pencil, S
 import { useAuth } from '@/features/auth/authContext'
 import { CATEGORY_LABELS } from '@/features/bookings/bookingsApi'
 import {
-  audienceLabel, eventsApi, EVENT_STATUS_META, MAX_SEATS_PER_RSVP, REGISTRATION_STATUS_META, seatSummary, seatsLeftLabel,
+  audienceLabel, eventsApi, EVENT_STATUS_META, REGISTRATION_STATUS_META, seatSummary, seatsLeftLabel,
 } from '@/features/events/eventsApi'
 import { usersApi } from '@/features/users/usersApi'
 import { EventFormDialog } from '@/components/events/EventFormDialog'
@@ -12,7 +12,6 @@ import { AttendanceDialog } from '@/components/events/AttendanceDialog'
 import { SeatMeter } from '@/components/events/EventCard'
 import { Button } from '@/components/ui/Button'
 import { Dialog } from '@/components/ui/Dialog'
-import { Select } from '@/components/ui/Field'
 import { Alert, Avatar, Badge, Card, CardHeader, EmptyState, Skeleton } from '@/components/ui/Surface'
 import { useToast } from '@/components/ui/Toast'
 import { formatLongDate, formatTimeRange } from '@/lib/campusTime'
@@ -40,25 +39,23 @@ function Detail({ icon: Icon, label, children }) {
  */
 function RsvpPanel({ event, onChanged }) {
   const toast = useToast()
-  const [seats, setSeats] = useState(1)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const [confirming, setConfirming] = useState(false)
 
   const mine = event.myRegistration
   const { canRegister, canCancelRegistration } = event.permissions
-  const maxChoosable = Math.min(MAX_SEATS_PER_RSVP, event.seatsLeft ?? MAX_SEATS_PER_RSVP)
 
   async function register() {
     setError(null)
     setBusy(true)
     try {
-      const { event: updated } = await eventsApi.register(event.id, seats)
+      const { event: updated } = await eventsApi.register(event.id)
       toast.success(
         updated.myRegistration.status === 'WAITLISTED' ? 'Added to the waitlist' : "You're going",
         updated.myRegistration.status === 'WAITLISTED'
           ? 'We will move you up automatically if a seat frees up.'
-          : `${seats === 1 ? 'Your seat is' : `${seats} seats are`} confirmed for ${updated.title}.`,
+          : `Your seat is confirmed for ${updated.title}.`,
       )
       onChanged(updated)
     } catch (err) {
@@ -73,7 +70,7 @@ function RsvpPanel({ event, onChanged }) {
     setBusy(true)
     try {
       const { event: updated } = await eventsApi.cancelRegistration(event.id)
-      toast.info('Registration cancelled', 'Your seats are back in the pool.')
+      toast.info('Registration cancelled', 'Your seat is back in the pool.')
       setConfirming(false)
       onChanged(updated)
     } catch (err) {
@@ -98,7 +95,7 @@ function RsvpPanel({ event, onChanged }) {
         <div className="mt-4 space-y-3">
           <Alert tone={mine.status === 'RESERVED' ? 'success' : 'warning'} title={REGISTRATION_STATUS_META[mine.status].label}>
             {mine.status === 'RESERVED'
-              ? `${mine.seats === 1 ? 'One seat' : `${mine.seats} seats`} reserved ${formatRelative(mine.registeredAt)}.`
+              ? `Reserved ${formatRelative(mine.registeredAt)}.`
               : 'The event is full. You will be moved up automatically if someone cancels.'}
           </Alert>
           {canCancelRegistration && (
@@ -110,18 +107,9 @@ function RsvpPanel({ event, onChanged }) {
       ) : event.eligibility.ineligibleReason ? (
         <Alert tone="info" title="Not open to you" className="mt-4">{event.eligibility.ineligibleReason}</Alert>
       ) : canRegister ? (
-        <div className="mt-4 space-y-3">
-          {maxChoosable > 1 && (
-            <Select aria-label="Number of seats" value={seats} onChange={(e) => setSeats(Number(e.target.value))}>
-              {Array.from({ length: maxChoosable }, (_, i) => i + 1).map((n) => (
-                <option key={n} value={n}>{n === 1 ? '1 seat' : `${n} seats`}</option>
-              ))}
-            </Select>
-          )}
-          <Button className="w-full" loading={busy} onClick={register}>
-            <Ticket className="size-4" aria-hidden /> Reserve {seats === 1 ? 'my seat' : `${seats} seats`}
-          </Button>
-        </div>
+        <Button className="mt-4 w-full" loading={busy} onClick={register}>
+          <Ticket className="size-4" aria-hidden /> Reserve my seat
+        </Button>
       ) : (
         <Alert tone="info" className="mt-4">
           {event.status !== 'PUBLISHED'
@@ -139,8 +127,8 @@ function RsvpPanel({ event, onChanged }) {
           onClose={() => setConfirming(false)}
           title="Cancel your registration?"
           description={event.isFull
-            ? 'Your seats go back into the pool immediately, and the event is full - you may not get them back.'
-            : 'Your seats go back into the pool immediately. You can register again while seats last.'}
+            ? 'Your seat goes back into the pool immediately, and the event is full - you may not get it back.'
+            : 'Your seat goes back into the pool immediately. You can register again while seats last.'}
           footer={(
             <>
               <Button variant="secondary" onClick={() => setConfirming(false)} disabled={busy}>Keep my seat</Button>

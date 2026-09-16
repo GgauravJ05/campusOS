@@ -6,13 +6,16 @@ export const eventsApi = {
   get: (id, { signal } = {}) => api.get(`/events/${id}`, { signal }).then((r) => r.data),
   publish: (id, details) => api.post(`/events/${id}/publish`, details).then((r) => r.data),
   update: (id, changes) => api.patch(`/events/${id}`, changes).then((r) => r.data),
-  register: (id, seats = 1) => api.post(`/events/${id}/registrations`, { seats }).then((r) => r.data),
+  register: (id) => api.post(`/events/${id}/registrations`, { seats: 1 }).then((r) => r.data),
   cancelRegistration: (id) => api.del(`/events/${id}/registrations/me`).then((r) => r.data),
   roster: (id, filters, { signal } = {}) => api.get(`/events/${id}/registrations`, { query: filters, signal }).then((r) => r.data),
 }
 
-/** Matches the backend's MAX_SEATS_PER_REGISTRATION. */
-export const MAX_SEATS_PER_RSVP = 5
+/**
+ * One seat per student, matching the backend. A student reserves a seat for
+ * themselves, not for friends.
+ */
+export const MAX_SEATS_PER_RSVP = 1
 
 /**
  * Event status as an attendee sees it. Only PUBLISHED and COMPLETED are ever

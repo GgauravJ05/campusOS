@@ -28,7 +28,7 @@ const venue = (overrides = {}) => ({
 
 const clubHead = makeUser({
   role: { key: 'CLUB_HEAD', name: 'Club Head', rank: 3 },
-  clubs: [{ id: 1, name: 'Developer Student Club', scope: 'DEPARTMENT', isHead: true, position: 'PRESIDENT' }],
+  clubs: [{ id: 1, name: 'IT Tech Club', scope: 'DEPARTMENT', isHead: true, position: 'PRESIDENT' }],
 })
 
 describe('venue directory', () => {

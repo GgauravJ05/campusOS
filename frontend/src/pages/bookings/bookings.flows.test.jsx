@@ -21,7 +21,7 @@ const clubHead = makeUser({
   id: 4,
   role: { key: 'CLUB_HEAD', name: 'Club Head', rank: 3 },
   clubs: [
-    { id: 1, name: 'Developer Student Club', scope: 'DEPARTMENT', isHead: true, position: 'PRESIDENT' },
+    { id: 1, name: 'IT Tech Club', scope: 'DEPARTMENT', isHead: true, position: 'PRESIDENT' },
     { id: 3, name: 'Robotics Club', scope: 'DEPARTMENT', isHead: false, position: 'MEMBER' },
   ],
 })
@@ -33,7 +33,7 @@ function booking(overrides = {}) {
     id: 50, status: 'PENDING', date, startTime: '10:00', endTime: '12:00', bufferMinutes: 15, isDirect: false,
     rejectionReason: null, decidedAt: null, createdAt: new Date().toISOString(),
     venue: { id: 2, name: 'Seminar Hall A', building: 'Main Building', floor: 1, capacity: 200 },
-    event: { id: 9, title: 'Hack Night', category: 'TECHNICAL', scope: 'CLUB', expectedAttendance: 80, status: 'PENDING_APPROVAL', club: { id: 1, name: 'Developer Student Club' }, department: { id: 1, code: 'IT' } },
+    event: { id: 9, title: 'Hack Night', category: 'TECHNICAL', scope: 'CLUB', expectedAttendance: 80, status: 'PENDING_APPROVAL', club: { id: 1, name: 'IT Tech Club' }, department: { id: 1, code: 'IT' } },
     requestedBy: { id: 4, fullName: 'Gaurav Jadhav', email: 'g@mmcoe.edu.in' },
     decidedBy: null,
     permissions: { canDecide: false, canCancel: true },
@@ -121,7 +121,7 @@ describe('booking wizard', () => {
     let created
     server.use(
       http.get(`${API}/venues/meta`, () => ok(meta)),
-      http.get(`${API}/directory/clubs`, () => ok([{ id: 1, name: 'Developer Student Club', scope: 'DEPARTMENT' }])),
+      http.get(`${API}/directory/clubs`, () => ok([{ id: 1, name: 'IT Tech Club', scope: 'DEPARTMENT' }])),
       http.post(`${API}/venues/check-availability`, () => ok({ available: true, bufferMinutes: 15, competingRequests: 0, conflicts: [], suggestions: [] })),
       http.post(`${API}/bookings`, async ({ request }) => {
         created = await request.json()

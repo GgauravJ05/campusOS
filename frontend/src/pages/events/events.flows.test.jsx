@@ -31,7 +31,7 @@ function event(overrides = {}) {
     isFull: false,
     waitlistCount: 0,
     eligibility: { departments: [], years: [], ineligibleReason: null },
-    club: { id: 1, name: 'Developer Student Club' },
+    club: { id: 1, name: 'IT Tech Club' },
     department: departments[0],
     venue: { id: 3, name: 'Seminar Hall A', building: 'Main Building', floor: 1, capacity: 200 },
     bookingId: 9,
@@ -70,7 +70,7 @@ describe('event discovery feed (FR14)', () => {
 
     const card = await screen.findByRole('link', { name: /Hack Night/ })
     expect(card).toHaveAttribute('href', '/events/1')
-    expect(within(card).getByText('Developer Student Club')).toBeInTheDocument()
+    expect(within(card).getByText('IT Tech Club')).toBeInTheDocument()
     expect(within(card).getByText('Seminar Hall A')).toBeInTheDocument()
     expect(within(card).getByText('10 am – 12 pm')).toBeInTheDocument()
     expect(within(card).getByText('28 seats left')).toBeInTheDocument()
@@ -237,29 +237,21 @@ describe('event detail and RSVP (FR15, FR16)', () => {
 
     await user.click(screen.getByRole('button', { name: /Reserve my seat/ }))
 
-    expect(await screen.findByText(/One seat reserved/)).toBeInTheDocument()
+    expect(await screen.findByText(/^Reserved /)).toBeInTheDocument()
     expect(sent).toEqual({ seats: 1 })
     expect(screen.getByText('13 of 40 seats taken')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cancel my registration' })).toBeInTheDocument()
   })
 
-  it('reserves several seats at once', async () => {
-    let sent
-    server.use(
-      detailHandler(event()),
-      http.post(`${API}/events/1/registrations`, async ({ request }) => {
-        sent = await request.json()
-        return ok({ registrationId: 5, event: event({ bookedSeats: 15, seatsLeft: 25, myRegistration: { id: 5, status: 'RESERVED', seats: 3, registeredAt: '2026-09-16T05:00:00.000Z' } }) })
-      }),
-    )
-    const { user } = renderApp('/events/1', { user: student })
+  it('offers one seat only - a student reserves for themselves', async () => {
+    server.use(detailHandler(event()))
+    renderApp('/events/1', { user: student })
 
     await screen.findByRole('heading', { name: 'Hack Night' })
-    await user.selectOptions(screen.getByLabelText('Number of seats'), '3')
-    await user.click(screen.getByRole('button', { name: /Reserve 3 seats/ }))
-
-    await waitFor(() => expect(sent).toEqual({ seats: 3 }))
-    expect(await screen.findByText(/3 seats reserved/)).toBeInTheDocument()
+    // No seat-count chooser: reserving for friends would be a queue-jumping
+    // tool on a full event.
+    expect(screen.queryByLabelText('Number of seats')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Reserve my seat/ })).toBeInTheDocument()
   })
 
   it('confirms before releasing a seat, then returns it (FR16)', async () => {

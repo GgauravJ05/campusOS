@@ -24,8 +24,14 @@ const PUBLIC_STATUSES = Object.freeze(['PUBLISHED', 'COMPLETED']);
 /** Statuses an event must be in to accept a reservation. */
 const RSVP_STATUS = 'PUBLISHED';
 
-/** Most seats one student may hold, so a single RSVP cannot swallow a venue. */
-const MAX_SEATS_PER_REGISTRATION = 5;
+/**
+ * A seat is reserved for one student, by that student. Booking seats for
+ * friends would be a queue-jumping tool on a full event, and it makes the
+ * attendance roster (FR21) a list of names that may not be who turned up.
+ * The `seats` column stays in the schema, always 1, so a future policy
+ * change is a number here rather than a migration.
+ */
+const MAX_SEATS_PER_REGISTRATION = 1;
 
 /**
  * @typedef {{ id: number, role: string, departmentId: number | null, academicYear?: number | null }} Actor
@@ -102,7 +108,7 @@ function checkReservation(actor, event, { seats = 1, allowWaitlist = false, now 
     return deny(409, 'ALREADY_REGISTERED', 'You are already registered for this event');
   }
   if (!Number.isInteger(seats) || seats < 1 || seats > MAX_SEATS_PER_REGISTRATION) {
-    return deny(422, 'INVALID_SEAT_COUNT', `Reserve between 1 and ${MAX_SEATS_PER_REGISTRATION} seats`);
+    return deny(422, 'INVALID_SEAT_COUNT', 'You can reserve one seat for yourself');
   }
 
   const ineligible = checkEligibility(actor, event);
