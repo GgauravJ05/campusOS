@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-16 | [Phase 4 — Events & RSVP web app](#phase-4--events--rsvp-web-app-2026-09-16) | Gaurav |
 | 2026-09-16 | [Phase 4 — Events, discovery & RSVP API](#phase-4--events-discovery--rsvp-api-2026-09-16) | Gaurav |
 | 2026-09-16 | [Dev setup fix — API port and a database that actually exists](#dev-setup-fix--api-port-and-a-database-that-actually-exists-2026-09-16) | Gaurav |
 | 2026-09-15 | [Phase 3 — Approvals, clubs & notifications web app](#phase-3--approvals-clubs--notifications-web-app-2026-09-15) | Gaurav |
@@ -21,6 +22,57 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase 4 — Events & RSVP web app (2026-09-16)
+
+The screens for the Phase 4 API. **Phase 4 (FR14–FR17) is now complete.**
+
+### ⚠️ What you need to do
+
+Pull and restart `npm run dev` in `frontend/`. No new packages, no database
+change. The API must be on **5050** (see the setup entry below) or every
+screen will look empty.
+
+### Screens
+
+| Route | Who | What |
+| ----- | --- | ---- |
+| `/events` | everyone | **FR14** discovery feed. Search, filter by category, and switch between **Upcoming · I'm going · Ready to publish** (the last only for organisers). Cards show the venue, time, how full the event is and whether you are already going. Paged. |
+| `/events` | students | **FR17** recommendation rail above the feed: three events scored against what you have registered for, each with the reason why. It is titled "Happening soon" when you have no history yet, and hidden entirely when there is nothing to suggest. |
+| `/events/:id` | everyone | The event, its venue and its audience, plus the RSVP panel: seat meter, **Reserve my seat** (1–5 seats), waitlist state, and **Cancel my registration** behind a confirmation that warns you when the event is full. |
+| `/events/:id` | organisers | **Publish event** opens the dialog where the seat cap and the audience (departments, academic years) are set, and **Edit details** changes them afterwards. Below it, the roster of who is coming and who is waiting. |
+
+The Events tab lost its "Soon" badge, the dashboard roadmap marks Phase 4
+live, and `ModulePreviewPage` — the honest placeholder that stood in for this
+module — is deleted now that the real thing exists.
+
+### Decisions made here
+
+- **Eligibility is explained, never enforced by hiding things.** A student who
+  does not qualify still sees the event, with the reason in place of the
+  reserve button, because "why can't I register?" is the question the SRS
+  eligibility rule actually raises.
+- **The seat meter turns amber past 80% and rose when full**, so "nearly full"
+  reads without the numbers.
+- **Cancelling asks first**, and the wording changes when the event is full —
+  giving up the last seat is not the same decision as giving up one of forty.
+- **Publishing and editing share one dialog.** Publishing is the only moment
+  the seat cap and audience matter, so that is where they live; the schedule
+  and venue are absent because they belong to the booking.
+
+### Tests
+
+**155 frontend tests** (27 new), lint clean, production build green. The new
+suite drives the real components against a mocked API at the network layer:
+feed filters, paging, the recommendation rail, reserving one and several
+seats, the waitlist, cancelling (and declining to cancel), an eligibility
+refusal, losing the last seat to someone else, publishing with an audience,
+a seat cap larger than the venue, and the roster.
+
+Each fixture's shape was checked field by field against the live API rather
+than assumed, so the mocks cannot drift from the backend silently.
 
 ---
 
@@ -768,7 +820,7 @@ for all data — Phase 1 and Phase 2 replace those.
 | 1 | Auth & RBAC | FR1–FR5 | ✅ Done |
 | 2 | Venues & scheduling engine | FR6–FR10 | ✅ Done |
 | 3 | Approval workflow & club management | FR11–FR13 | ✅ Done |
-| 4 | Events & RSVP | FR14–FR17 | ✅ API done |
+| 4 | Events & RSVP | FR14–FR17 | ✅ Done |
 | 5 | Notifications (scheduled reminders) | FR19 | |
 | 6 | Governance & analytics | FR18, FR20, FR21 | |
 

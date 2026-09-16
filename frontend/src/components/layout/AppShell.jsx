@@ -15,7 +15,7 @@ import { SUMMARY_STALE_EVENT } from '@/lib/summary'
 
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/events', label: 'Events', icon: CalendarDays, soon: true },
+  { to: '/events', label: 'Events', icon: CalendarDays },
   { to: '/venues', label: 'Venues', icon: MapPin },
   { to: '/bookings', label: 'Bookings', icon: CalendarCheck2, roles: ['CLUB_HEAD', 'CLUB_MEMBER', ...FACULTY_ROLES], badge: 'bookings' },
   { to: '/clubs', label: 'Clubs', icon: Flag },
