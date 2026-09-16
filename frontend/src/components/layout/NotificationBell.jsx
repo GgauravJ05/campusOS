@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, BellOff, CalendarCheck2, CalendarX2, CheckCheck, Flag, MessageSquareWarning, Send } from 'lucide-react'
+import { AlarmClock, Bell, BellOff, CalendarCheck2, CalendarX2, CheckCheck, Flag, MessageSquareWarning, PartyPopper, Send, Ticket } from 'lucide-react'
 import { notificationLink, notificationsApi } from '@/features/notifications/notificationsApi'
 import { Spinner } from '@/components/ui/Spinner'
 import { cn, formatRelative } from '@/lib/utils'
@@ -12,6 +12,10 @@ const CATEGORY_ICONS = {
   BOOKING_CHANGES_REQUESTED: { icon: MessageSquareWarning, cls: 'bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400' },
   BOOKING_CANCELLED: { icon: CalendarX2, cls: 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800' },
   CLUB_MEMBERSHIP: { icon: Flag, cls: 'bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400' },
+  EVENT_PUBLISHED: { icon: PartyPopper, cls: 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400' },
+  REGISTRATION_CONFIRMED: { icon: Ticket, cls: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' },
+  EVENT_REMINDER: { icon: AlarmClock, cls: 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400' },
+  EVENT_CANCELLED: { icon: CalendarX2, cls: 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400' },
 }
 const FALLBACK_ICON = { icon: Bell, cls: 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800' }
 
@@ -103,7 +107,7 @@ export function NotificationBell({ unread, onChange }) {
             <div className="flex flex-col items-center px-6 py-10 text-center">
               <BellOff className="mb-2 size-6 text-zinc-300 dark:text-zinc-600" aria-hidden />
               <p className="text-sm font-medium">You&apos;re all caught up</p>
-              <p className="mt-0.5 text-xs text-zinc-500">Decisions on your requests and club news show up here.</p>
+              <p className="mt-0.5 text-xs text-zinc-500">Event news, reminders and decisions on your requests show up here.</p>
             </div>
           ) : (
             <ul className="max-h-[26rem] divide-y divide-zinc-100 overflow-y-auto dark:divide-zinc-800">

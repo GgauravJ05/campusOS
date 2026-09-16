@@ -30,6 +30,29 @@ describe('createShutdownHandler', () => {
     expect(exit).toHaveBeenCalledWith(0);
   });
 
+  it('stops the background worker before anything else', async () => {
+    const order = [];
+    const server = { close: jest.fn((cb) => { order.push('server'); cb(); }) };
+    const db = { closePool: jest.fn(async () => { order.push('pool'); }) };
+    const worker = { stop: jest.fn(() => { order.push('worker'); }) };
+    const exit = jest.fn(() => { order.push('exit'); });
+
+    await createShutdownHandler({ server, db, worker, logger: mockLogger(), timeoutMs: 1000, exit })('SIGTERM');
+
+    // The reminder sweep opens transactions; letting one start while the
+    // pool is closing is exactly what this ordering prevents.
+    expect(order).toEqual(['worker', 'server', 'pool', 'exit']);
+  });
+
+  it('shuts down fine with no worker at all', async () => {
+    const server = { close: jest.fn((cb) => cb()) };
+    const db = { closePool: jest.fn(async () => {}) };
+    const exit = jest.fn();
+
+    await createShutdownHandler({ server, db, logger: mockLogger(), timeoutMs: 1000, exit })('SIGTERM');
+    expect(exit).toHaveBeenCalledWith(0);
+  });
+
   it('ignores a second signal so an impatient Ctrl-C cannot tear down twice', async () => {
     const server = mockServer();
     const db = { closePool: jest.fn().mockResolvedValue(undefined) };

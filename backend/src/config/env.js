@@ -195,7 +195,16 @@ function loadConfig(rawEnv = process.env) {
       pretty: readBool(rawEnv.LOG_PRETTY, !isProduction),
     },
     shutdownTimeoutMs: readInt(rawEnv.SHUTDOWN_TIMEOUT_MS, 'SHUTDOWN_TIMEOUT_MS', 10000, problems),
+    reminders: {
+      // Off in tests so the suites control the clock themselves.
+      enabled: readBool(rawEnv.REMINDER_WORKER_ENABLED, nodeEnv !== 'test'),
+      intervalMs: readInt(rawEnv.REMINDER_INTERVAL_MS, 'REMINDER_INTERVAL_MS', 5 * 60 * 1000, problems),
+    },
   };
+
+  if (config.reminders.intervalMs < 1000) {
+    problems.push('REMINDER_INTERVAL_MS must be at least 1000');
+  }
 
   if (config.security.bcryptRounds < 10 || config.security.bcryptRounds > 15) {
     problems.push('BCRYPT_ROUNDS must be between 10 and 15');

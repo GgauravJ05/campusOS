@@ -48,6 +48,34 @@ const RSVP_DEFAULTS = Object.freeze({
   'rsvp.allow_waitlist': 'false',
 });
 
+/** The two FR19 reminder offsets, in hours before the event starts. */
+const REMINDER_DEFAULTS = Object.freeze({
+  'reminder.first_offset_hours': '48',
+  'reminder.second_offset_hours': '2',
+});
+
+/**
+ * @param {import('pg').PoolClient} [client]
+ * @returns {Promise<{ firstOffsetHours: number, secondOffsetHours: number }>}
+ */
+async function getReminderRules(client = db) {
+  const { rows } = await client.query(
+    'SELECT setting_key, setting_value FROM system_settings WHERE setting_key = ANY($1)',
+    [Object.keys(REMINDER_DEFAULTS)],
+  );
+  const values = { ...REMINDER_DEFAULTS, ...Object.fromEntries(rows.map((r) => [r.setting_key, r.setting_value])) };
+  const hours = (key) => {
+    const n = Number.parseFloat(values[key]);
+    // A zero or negative offset would schedule a reminder at or after the
+    // event start, which decide() would only ever skip.
+    return Number.isFinite(n) && n > 0 ? n : Number.parseFloat(REMINDER_DEFAULTS[key]);
+  };
+  return {
+    firstOffsetHours: hours('reminder.first_offset_hours'),
+    secondOffsetHours: hours('reminder.second_offset_hours'),
+  };
+}
+
 /**
  * @param {import('pg').PoolClient} [client]
  * @returns {Promise<{ allowWaitlist: boolean }>}
@@ -61,4 +89,4 @@ async function getRsvpRules(client = db) {
   return { allowWaitlist: String(values['rsvp.allow_waitlist']).toLowerCase() === 'true' };
 }
 
-module.exports = { getSchedulingRules, getRsvpRules, DEFAULTS, RSVP_DEFAULTS };
+module.exports = { getSchedulingRules, getRsvpRules, getReminderRules, DEFAULTS, RSVP_DEFAULTS, REMINDER_DEFAULTS };
