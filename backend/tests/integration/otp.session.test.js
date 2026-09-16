@@ -119,7 +119,7 @@ describeWithDb('one-time codes and sessions (database)', () => {
       const student = await live.createVerifiedStudent(app);
       const res = await request(app).get('/api/directory/clubs').set('Authorization', `Bearer ${student.accessToken}`).expect(200);
       expect(res.body.data).toEqual(expect.arrayContaining([
-        expect.objectContaining({ name: 'Developer Student Club', head: expect.objectContaining({ fullName: 'Gaurav Jadhav' }) }),
+        expect.objectContaining({ name: 'IT Tech Club', head: expect.objectContaining({ fullName: 'Gaurav Jadhav' }) }),
       ]));
     });
 
@@ -145,7 +145,7 @@ describeWithDb('one-time codes and sessions (database)', () => {
 
     it('filters by department for the super admin and returns an empty page cleanly', async () => {
       const principal = await live.signIn(app, 'principal@mmcoe.edu.in');
-      const res = await request(app).get(`/api/users?departmentId=${await live.departmentId('CIVIL')}&q=nobody-by-this-name`)
+      const res = await request(app).get(`/api/users?departmentId=${await live.departmentId('AIDS')}&q=nobody-by-this-name`)
         .set('Authorization', `Bearer ${principal.accessToken}`).expect(200);
       expect(res.body).toMatchObject({ data: [], meta: { total: 0, totalPages: 0 } });
     });

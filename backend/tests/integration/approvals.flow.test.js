@@ -18,8 +18,8 @@ describeWithDb('approval workflow (database)', () => {
   let principal;
   let itCoordinator;
   let csCoordinator;
-  let gaurav; // heads Developer Student Club (IT)
-  let atharva; // heads Cultural Committee (IT)
+  let gaurav; // heads IT Tech Club (IT)
+  let atharva; // heads Envision Club (IT)
   let aditya; // DSC member
   const clubs = {};
   const auth = (s) => ({ Authorization: `Bearer ${s.accessToken}` });
@@ -40,7 +40,7 @@ describeWithDb('approval workflow (database)', () => {
   async function dscRequest(overrides = {}) {
     const venueId = overrides.venueId ?? await newVenue();
     const res = await submit(gaurav, {
-      venueId, clubId: clubs['Developer Student Club'], date: day(30), startTime: '10:00', endTime: '12:00', ...overrides,
+      venueId, clubId: clubs['IT Tech Club'], date: day(30), startTime: '10:00', endTime: '12:00', ...overrides,
     }).expect(201);
     return { venueId, booking: res.body.data };
   }
@@ -67,7 +67,7 @@ describeWithDb('approval workflow (database)', () => {
       live.signIn(app, 'atharva.desai@mmcoe.edu.in'),
       live.signIn(app, 'aditya.patil@mmcoe.edu.in'),
     ]);
-    const { rows } = await db.query(`SELECT club_id, club_name FROM clubs WHERE club_name IN ('Developer Student Club', 'Cultural Committee')`);
+    const { rows } = await db.query(`SELECT club_id, club_name FROM clubs WHERE club_name IN ('IT Tech Club', 'Envision Club')`);
     rows.forEach((r) => { clubs[r.club_name] = r.club_id; });
   });
 
@@ -121,7 +121,7 @@ describeWithDb('approval workflow (database)', () => {
     it('does not hold the slot: approving a competitor auto-rejects the request sent back', async () => {
       const { venueId, booking } = await dscRequest();
       const rival = await submit(atharva, {
-        venueId, clubId: clubs['Cultural Committee'], date: day(30), startTime: '11:00', endTime: '13:00', title: 'Music Jam',
+        venueId, clubId: clubs['Envision Club'], date: day(30), startTime: '11:00', endTime: '13:00', title: 'Music Jam',
       }).expect(201);
       await sendBack(itCoordinator, booking.id).expect(200);
       live.mailer.sendMailInBackground.mockClear();
@@ -209,7 +209,7 @@ describeWithDb('approval workflow (database)', () => {
       const nothing = await edit(gaurav, booking.id, {});
       expect(nothing.status).toBe(422);
 
-      const club = await edit(gaurav, booking.id, { title: 'New club', clubId: clubs['Cultural Committee'] });
+      const club = await edit(gaurav, booking.id, { title: 'New club', clubId: clubs['Envision Club'] });
       expect(club.status).toBe(422);
       expect(club.body.error.details[0].message).toMatch(/cannot be changed/);
 
@@ -267,8 +267,8 @@ describeWithDb('approval workflow (database)', () => {
 
     it('shows how many other requests compete for the same window', async () => {
       const { venueId, booking } = await dscRequest();
-      await submit(atharva, { venueId, clubId: clubs['Cultural Committee'], date: day(30), startTime: '11:00', endTime: '12:30', title: 'Jam' }).expect(201);
-      await submit(atharva, { venueId, clubId: clubs['Cultural Committee'], date: day(30), startTime: '15:00', endTime: '16:00', title: 'Later' }).expect(201);
+      await submit(atharva, { venueId, clubId: clubs['Envision Club'], date: day(30), startTime: '11:00', endTime: '12:30', title: 'Jam' }).expect(201);
+      await submit(atharva, { venueId, clubId: clubs['Envision Club'], date: day(30), startTime: '15:00', endTime: '16:00', title: 'Later' }).expect(201);
 
       const res = await request(app).get(`/api/bookings/${booking.id}`).set(auth(itCoordinator)).expect(200);
       expect(res.body.data.competingRequests).toBe(1);

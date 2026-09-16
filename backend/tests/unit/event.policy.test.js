@@ -130,11 +130,18 @@ describe('checkReservation (FR15)', () => {
     expect(policy.checkReservation(student, full)).toMatchObject({ status: 409, code: 'EVENT_FULL' });
   });
 
-  it('names how many seats are left when the party does not fit', () => {
-    const nearlyFull = openEvent({ bookedSeats: 98 });
-    const result = policy.checkReservation(student, nearlyFull, { seats: 3 });
-    expect(result).toMatchObject({ code: 'EVENT_FULL' });
-    expect(result.message).toBe('Only 2 seats left');
+  it('refuses to reserve seats for anyone but yourself', () => {
+    // One seat per student: reserving for friends would be a queue-jumping
+    // tool on a full event, and it makes the attendance roster a list of
+    // names that may not be who turned up.
+    const result = policy.checkReservation(student, openEvent(), { seats: 2 });
+    expect(result).toMatchObject({ status: 422, code: 'INVALID_SEAT_COUNT' });
+    expect(result.message).toBe('You can reserve one seat for yourself');
+  });
+
+  it('says how many seats are left when the last one has gone', () => {
+    const full = openEvent({ bookedSeats: 100 });
+    expect(policy.checkReservation(student, full).message).toBe('This event is fully booked');
   });
 
   it('waitlists instead of refusing when the setting is on', () => {
@@ -148,6 +155,8 @@ describe('checkReservation (FR15)', () => {
   });
 });
 
+// planPromotions stays general: a reservation is one seat today, and the
+// scheduler should not have to change if that policy ever does.
 describe('planPromotions (FR16 seat recovery)', () => {
   const waiting = [
     { registrationId: 1, seats: 2 },

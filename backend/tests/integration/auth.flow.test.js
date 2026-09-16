@@ -210,7 +210,7 @@ describeWithDb('auth flows (database)', () => {
 
       expect(res.body.data.user.role.key).toBe('CLUB_HEAD');
       expect(res.body.data.user.clubs).toEqual(expect.arrayContaining([
-        expect.objectContaining({ name: 'Developer Student Club', isHead: true, scope: 'DEPARTMENT' }),
+        expect.objectContaining({ name: 'IT Tech Club', isHead: true, scope: 'DEPARTMENT' }),
       ]));
     });
 

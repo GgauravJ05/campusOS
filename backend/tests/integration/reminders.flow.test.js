@@ -169,7 +169,7 @@ describeWithDb('reminder sweep (FR19)', () => {
   // -------------------------------------------------------------------------
   describe('dispatch', () => {
     it('reminds everyone holding a seat, in-app and by email', async () => {
-      const eventId = await publishedEvent({ hoursFromNow: 47, attendees: [{ student }, { student: secondStudent, seats: 2 }] });
+      const eventId = await publishedEvent({ hoursFromNow: 47, attendees: [{ student }, { student: secondStudent }] });
       const summary = await reminders.sweep();
 
       expect(summary.sent).toBeGreaterThanOrEqual(1);

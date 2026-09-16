@@ -50,8 +50,9 @@ describeWithDb('venues (database)', () => {
     });
 
     it('filters by building and floor', async () => {
-      const res = await request(app).get('/api/venues?building=IT%20Block&floor=2').set(auth(student)).expect(200);
-      expect(res.body.data.map((v) => v.name).sort()).toEqual(['Computer Lab 1', 'Computer Lab 2']);
+      // Floor 4 of the academic building is Information Technology.
+      const res = await request(app).get('/api/venues?building=Academic%20Building&floor=4').set(auth(student)).expect(200);
+      expect(res.body.data.map((v) => v.name).sort()).toEqual(['Computer Lab 1', 'Networking Lab', 'Seminar Hall A']);
     });
 
     it('filters by minimum capacity and type', async () => {
@@ -63,7 +64,8 @@ describeWithDb('venues (database)', () => {
       const res = await request(app).get('/api/venues?equipment=projector,ac').set(auth(student)).expect(200);
       const names = res.body.data.map((v) => v.name);
       expect(names).toEqual(expect.arrayContaining(['Main Auditorium', 'Seminar Hall A', 'Computer Lab 1']));
-      expect(names).not.toContain('Computer Lab 2');
+      // The networking lab has desktops and routers, but no projector.
+      expect(names).not.toContain('Networking Lab');
     });
 
     it('searches name, building and location, treating wildcards literally', async () => {
@@ -80,12 +82,12 @@ describeWithDb('venues (database)', () => {
     it('serves the Building -> Floor -> Venue hierarchy and filter vocabularies', async () => {
       const res = await request(app).get('/api/venues/meta').set(auth(student)).expect(200);
 
-      const itBlock = res.body.data.buildings.find((b) => b.name === 'IT Block');
-      // A superset check: other suites may add floors to this building.
-      expect(itBlock.floors.map((f) => f.floor)).toEqual(expect.arrayContaining([2, 3]));
-      expect(itBlock.floors.map((f) => f.floor)).toEqual([...itBlock.floors.map((f) => f.floor)].sort((a, b) => a - b));
-      const secondFloor = itBlock.floors.find((f) => f.floor === 2);
-      expect(secondFloor.venues.map((v) => v.name)).toEqual(expect.arrayContaining(['Computer Lab 1', 'Computer Lab 2']));
+      const academic = res.body.data.buildings.find((b) => b.name === 'Academic Building');
+      // One floor per department, 1 to 6. A superset check: other suites add venues.
+      expect(academic.floors.map((f) => f.floor)).toEqual(expect.arrayContaining([1, 2, 3, 4, 5, 6]));
+      expect(academic.floors.map((f) => f.floor)).toEqual([...academic.floors.map((f) => f.floor)].sort((a, b) => a - b));
+      const itFloor = academic.floors.find((f) => f.floor === 4);
+      expect(itFloor.venues.map((v) => v.name)).toEqual(expect.arrayContaining(['Computer Lab 1', 'Networking Lab']));
       expect(res.body.data.equipment).toContain('PROJECTOR');
       expect(res.body.data.rules).toMatchObject({ defaultBufferMinutes: 15, openingTime: '07:00', closingTime: '21:00' });
     });
@@ -148,7 +150,7 @@ describeWithDb('venues (database)', () => {
     });
 
     it('ignores an empty update', async () => {
-      const { rows: [lab] } = await db.query(`SELECT venue_id FROM venues WHERE venue_name = 'Computer Lab 2'`);
+      const { rows: [lab] } = await db.query(`SELECT venue_id FROM venues WHERE venue_name = 'Computer Lab 1'`);
       await request(app).patch(`/api/venues/${lab.venue_id}`).set(auth(itCoordinator)).send({}).expect(200);
     });
 

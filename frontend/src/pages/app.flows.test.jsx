@@ -9,7 +9,7 @@ const principal = makeUser({ id: 1, fullName: 'Dr. Principal MMCOE', email: 'pri
 const clubHead = makeUser({
   role: { key: 'CLUB_HEAD', name: 'Club Head / President', rank: 3 },
   clubs: [
-    { id: 1, name: 'Developer Student Club', scope: 'DEPARTMENT', departmentCode: 'IT', isHead: true, position: 'PRESIDENT' },
+    { id: 1, name: 'IT Tech Club', scope: 'DEPARTMENT', departmentCode: 'IT', isHead: true, position: 'PRESIDENT' },
     { id: 3, name: 'Robotics Club', scope: 'COLLEGE', departmentCode: null, isHead: false, position: 'TECHNICAL_LEAD' },
   ],
 })
@@ -19,7 +19,7 @@ describe('dashboard and shell', () => {
     renderApp('/dashboard', { user: clubHead })
 
     expect(await screen.findByRole('heading', { name: /Asha/ })).toBeInTheDocument()
-    expect(screen.getByText('Developer Student Club')).toBeInTheDocument()
+    expect(screen.getByText('IT Tech Club')).toBeInTheDocument()
     expect(screen.getByText('You lead 1 club.')).toBeInTheDocument()
     expect(screen.getByText('College-wide')).toBeInTheDocument()
     expect(screen.getByText('technical lead')).toBeInTheDocument()
@@ -210,7 +210,7 @@ describe('people management', () => {
     const target = makeUser({ id: 21, fullName: 'Srushti Mane', email: 'srushti.mane@mmcoe.edu.in' })
     const withPermissions = (user) => ({ ...user, permissions: { canManage: true, assignableRoles: ['CLUB_HEAD', 'CLUB_MEMBER', 'STUDENT'] } })
     const clubs = [
-      { id: 1, name: 'Developer Student Club', scope: 'DEPARTMENT', department: departments[0], head: { id: 4, fullName: 'Gaurav Jadhav' }, memberCount: 3 },
+      { id: 1, name: 'IT Tech Club', scope: 'DEPARTMENT', department: departments[0], head: { id: 4, fullName: 'Gaurav Jadhav' }, memberCount: 3 },
       { id: 9, name: 'Nature Club', scope: 'COLLEGE', department: null, head: null, memberCount: 0 },
     ]
 
@@ -224,7 +224,7 @@ describe('people management', () => {
           return ok(withPermissions({
             ...target,
             role: { key: 'CLUB_HEAD', name: 'Club Head / President', rank: 3 },
-            clubs: [{ id: 1, name: 'Developer Student Club', scope: 'DEPARTMENT', isHead: true, position: 'PRESIDENT' }],
+            clubs: [{ id: 1, name: 'IT Tech Club', scope: 'DEPARTMENT', isHead: true, position: 'PRESIDENT' }],
           }))
         }),
       )

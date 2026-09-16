@@ -18,8 +18,8 @@ describeWithDb('events and RSVP (database)', () => {
   let app;
   let principal;
   let itCoordinator;
-  let gaurav; // heads Developer Student Club (IT)
-  let clubMember; // in Developer Student Club, but does not run it
+  let gaurav; // heads IT Tech Club (IT)
+  let clubMember; // in IT Tech Club, but does not run it
   let student; // IT, year 2
   let itDept;
   let csDept;
@@ -45,7 +45,7 @@ describeWithDb('events and RSVP (database)', () => {
   async function approvedEvent({ capacity = 100, attendance = 50, date = day(20), category = 'TECHNICAL', title = 'Hack Night' } = {}) {
     const venueId = await newVenue(capacity);
     const res = await request(app).post('/api/bookings').set(auth(itCoordinator)).send({
-      venueId, clubId: clubs['Developer Student Club'], title: `${title} ${runTag}`, category,
+      venueId, clubId: clubs['IT Tech Club'], title: `${title} ${runTag}`, category,
       expectedAttendance: attendance, date, startTime: '10:00', endTime: '12:00',
     }).expect(201);
     return { venueId, bookingId: res.body.data.id, eventId: res.body.data.event.id };
@@ -93,7 +93,7 @@ describeWithDb('events and RSVP (database)', () => {
     ]);
     student = await live.createVerifiedStudent(app, { fullName: 'Feed Reader' });
     [itDept, csDept] = await Promise.all([live.departmentId('IT'), live.departmentId('CS')]);
-    const { rows } = await db.query(`SELECT club_id, club_name FROM clubs WHERE club_name = 'Developer Student Club'`);
+    const { rows } = await db.query(`SELECT club_id, club_name FROM clubs WHERE club_name = 'IT Tech Club'`);
     rows.forEach((r) => { clubs[r.club_name] = r.club_id; });
   });
 
@@ -135,7 +135,7 @@ describeWithDb('events and RSVP (database)', () => {
     it('refuses to publish an event whose booking is still pending', async () => {
       const venueId = await newVenue();
       const pending = await request(app).post('/api/bookings').set(auth(gaurav)).send({
-        venueId, clubId: clubs['Developer Student Club'], title: 'Pending Talk', category: 'SEMINAR',
+        venueId, clubId: clubs['IT Tech Club'], title: 'Pending Talk', category: 'SEMINAR',
         expectedAttendance: 20, date: day(21), startTime: '14:00', endTime: '16:00',
       }).expect(201);
 
@@ -240,7 +240,7 @@ describeWithDb('events and RSVP (database)', () => {
       expect(byCategory.body.data.items.every((e) => e.category === 'CULTURAL')).toBe(true);
 
       const byClub = await request(app).get('/api/events')
-        .query({ q: runTag, clubId: clubs['Developer Student Club'], from: day(60), to: day(60) }).set(auth(student)).expect(200);
+        .query({ q: runTag, clubId: clubs['IT Tech Club'], from: day(60), to: day(60) }).set(auth(student)).expect(200);
       expect(byClub.body.data.items.map((e) => e.id)).toContain(cultural.eventId);
 
       const otherWindow = await request(app).get('/api/events')
@@ -304,10 +304,11 @@ describeWithDb('events and RSVP (database)', () => {
       expect(live.sentMail(student.email).at(-1).subject).toMatch(/seat confirmed/);
     });
 
-    it('reserves several seats at once', async () => {
+    it('refuses to reserve more than one seat', async () => {
       const { eventId } = await publishedEvent({ maxSeats: 10 });
-      const res = await rsvp(student, eventId, { seats: 3 }).expect(201);
-      expect(res.body.data.event).toMatchObject({ bookedSeats: 3, seatsLeft: 7 });
+      // A student reserves a seat for themselves, not for friends.
+      await rsvp(student, eventId, { seats: 3 }).expect(422);
+      expect(await seatCount(eventId)).toMatchObject({ booked_seats: 0 });
     });
 
     it('refuses a second registration from the same student', async () => {
@@ -361,6 +362,7 @@ describeWithDb('events and RSVP (database)', () => {
     it('rejects a seat count outside the allowed range before touching the database', async () => {
       const { eventId } = await publishedEvent();
       await rsvp(student, eventId, { seats: 0 }).expect(422);
+      await rsvp(student, eventId, { seats: 2 }).expect(422);
       await rsvp(student, eventId, { seats: 99 }).expect(422);
       expect(await seatCount(eventId)).toMatchObject({ booked_seats: 0 });
     });
@@ -368,13 +370,13 @@ describeWithDb('events and RSVP (database)', () => {
 
   // -------------------------------------------------------------------------
   describe('backout and seat recovery (FR16)', () => {
-    it('releases the seats atomically when a student backs out', async () => {
+    it('releases the seat atomically when a student backs out', async () => {
       const { eventId } = await publishedEvent({ maxSeats: 10 });
-      await rsvp(student, eventId, { seats: 2 }).expect(201);
-      expect(await seatCount(eventId)).toMatchObject({ booked_seats: 2 });
+      await rsvp(student, eventId).expect(201);
+      expect(await seatCount(eventId)).toMatchObject({ booked_seats: 1 });
 
       const res = await cancelRsvp(student, eventId).expect(200);
-      expect(res.body.data).toMatchObject({ seatsReleased: 2, promoted: 0 });
+      expect(res.body.data).toMatchObject({ seatsReleased: 1, promoted: 0 });
       expect(res.body.data.event).toMatchObject({ bookedSeats: 0, seatsLeft: 10, myRegistration: null });
       expect(await seatCount(eventId)).toMatchObject({ booked_seats: 0 });
     });
@@ -396,12 +398,12 @@ describeWithDb('events and RSVP (database)', () => {
 
     it('lets a student who backed out register again', async () => {
       const { eventId } = await publishedEvent({ maxSeats: 10 });
-      await rsvp(student, eventId, { seats: 2 }).expect(201);
+      await rsvp(student, eventId).expect(201);
       await cancelRsvp(student, eventId).expect(200);
 
       // The (event, student) row is unique, so this reuses it rather than
       // inserting a second one.
-      const again = await rsvp(student, eventId, { seats: 1 }).expect(201);
+      const again = await rsvp(student, eventId).expect(201);
       expect(again.body.data.event).toMatchObject({ bookedSeats: 1 });
       const { rows } = await db.query(
         'SELECT count(*)::int AS n FROM event_registrations WHERE event_id = $1 AND student_id = $2',
@@ -494,20 +496,25 @@ describeWithDb('events and RSVP (database)', () => {
       expect(live.sentMail(first.email).at(-1).subject).toMatch(/a seat opened up/);
     });
 
-    it('skips a waiting party too large for the freed seat', async () => {
+    it('promotes waiters in the order they joined', async () => {
       await setWaitlist(true);
-      const { eventId } = await publishedEvent({ maxSeats: 2 });
-      const big = await live.createVerifiedStudent(app, { fullName: 'Brings Friends' });
-      const small = await live.createVerifiedStudent(app, { fullName: 'Comes Alone' });
+      const { eventId } = await publishedEvent({ maxSeats: 1 });
+      const first = await live.createVerifiedStudent(app, { fullName: 'Waited First' });
+      const second = await live.createVerifiedStudent(app, { fullName: 'Waited Second' });
 
-      await rsvp(student, eventId, { seats: 2 }).expect(201);
-      await rsvp(big, eventId, { seats: 2 }).expect(201);
-      await rsvp(small, eventId, { seats: 1 }).expect(201);
+      await rsvp(student, eventId).expect(201);
+      await rsvp(first, eventId).expect(201);
+      await rsvp(second, eventId).expect(201);
 
-      // Releasing 2 seats fits the party of 2 first, FIFO.
       const res = await cancelRsvp(student, eventId).expect(200);
-      expect(res.body.data).toMatchObject({ seatsReleased: 2, promoted: 1 });
-      expect(await seatCount(eventId)).toMatchObject({ booked_seats: 2 });
+      expect(res.body.data).toMatchObject({ seatsReleased: 1, promoted: 1 });
+
+      const { rows } = await db.query(
+        `SELECT u.full_name FROM event_registrations r JOIN users u ON u.user_id = r.student_id
+          WHERE r.event_id = $1 AND r.status = 'RESERVED'`,
+        [eventId],
+      );
+      expect(rows).toEqual([{ full_name: 'Waited First' }]);
     });
   });
 
@@ -515,10 +522,10 @@ describeWithDb('events and RSVP (database)', () => {
   describe('organiser roster and editing', () => {
     it('shows the organiser who is coming, and hides the roster from students', async () => {
       const { eventId } = await publishedEvent({ maxSeats: 10 });
-      await rsvp(student, eventId, { seats: 2 }).expect(201);
+      await rsvp(student, eventId).expect(201);
 
       const res = await request(app).get(`/api/events/${eventId}/registrations`).set(auth(itCoordinator)).expect(200);
-      expect(res.body.data.meta).toMatchObject({ total: 1, reserved: 2, waitlisted: 0 });
+      expect(res.body.data.meta).toMatchObject({ total: 1, reserved: 1, waitlisted: 0 });
       expect(res.body.data.items[0].student).toMatchObject({ fullName: 'Feed Reader', email: student.email });
 
       await request(app).get(`/api/events/${eventId}/registrations`).set(auth(student)).expect(403);
@@ -526,14 +533,17 @@ describeWithDb('events and RSVP (database)', () => {
 
     it('lets the organiser raise the seat cap, but not below what is already taken', async () => {
       const { eventId } = await publishedEvent({ maxSeats: 10 });
-      await rsvp(student, eventId, { seats: 3 }).expect(201);
+      const second = await live.createVerifiedStudent(app, { fullName: 'Second Attendee' });
+      await rsvp(student, eventId).expect(201);
+      await rsvp(second, eventId).expect(201);
 
       const raised = await request(app).patch(`/api/events/${eventId}`).set(auth(itCoordinator))
         .send({ maxSeats: 20 }).expect(200);
-      expect(raised.body.data).toMatchObject({ maxSeats: 20, seatsLeft: 17 });
+      expect(raised.body.data).toMatchObject({ maxSeats: 20, seatsLeft: 18 });
 
+      // Two seats are taken, so the cap cannot drop to one.
       const lowered = await request(app).patch(`/api/events/${eventId}`).set(auth(itCoordinator))
-        .send({ maxSeats: 2 }).expect(409);
+        .send({ maxSeats: 1 }).expect(409);
       expect(lowered.body.error.code).toBe('SEATS_ALREADY_TAKEN');
     });
 

@@ -25,7 +25,7 @@ const dashboard = (overrides = {}) => ({
     title: 'Your next events',
     items: [{
       eventId: 1, title: 'Hack Night', date: '2026-10-12', startTime: '10:00', endTime: '12:00',
-      venue: 'Seminar Hall A', club: 'Developer Student Club', status: 'PUBLISHED', seatsLeft: 28,
+      venue: 'Seminar Hall A', club: 'IT Tech Club', status: 'PUBLISHED', seatsLeft: 28,
     }],
   },
   ...overrides,

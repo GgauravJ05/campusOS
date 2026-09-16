@@ -141,13 +141,14 @@ describeWithDb('concurrent RSVP (FR15, FR16)', () => {
     expect(await reservedRows(eventId)).toBe(seats);
   }, 30000);
 
-  it('counts multi-seat parties correctly when they race for the same block', async () => {
-    // 20 students asking for 2 seats each against a 7-seat event: three fit.
+  it('refuses a request for more than one seat, even under load', async () => {
     const eventId = await publishedEvent(7);
     const outcomes = await raceToRegister(eventId, 2);
 
-    expect(outcomes.filter((o) => o === 'reserved')).toHaveLength(3);
-    expect(await bookedSeats(eventId)).toBe(6);
+    // One seat per student, so nobody gets in with a party of two.
+    expect(outcomes.filter((o) => o === 'reserved')).toHaveLength(0);
+    expect(outcomes.every((o) => o === 'INVALID_SEAT_COUNT')).toBe(true);
+    expect(await bookedSeats(eventId)).toBe(0);
   }, 30000);
 
   it('recovers every seat when all of them are given back at once', async () => {

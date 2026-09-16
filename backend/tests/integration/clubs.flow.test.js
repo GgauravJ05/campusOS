@@ -17,7 +17,7 @@ describeWithDb('clubs (database)', () => {
   let principal;
   let itCoordinator;
   let csCoordinator;
-  let gaurav; // heads Developer Student Club (IT)
+  let gaurav; // heads IT Tech Club (IT)
   let aditya; // DSC member
   let student;
   let itDept;
@@ -60,31 +60,31 @@ describeWithDb('clubs (database)', () => {
   describe('directory', () => {
     it('lists active clubs for everyone, with the viewer\'s own position and permissions', async () => {
       const res = await request(app).get('/api/clubs').set(auth(gaurav)).expect(200);
-      const dsc = res.body.data.find((c) => c.name === 'Developer Student Club');
+      const dsc = res.body.data.find((c) => c.name === 'IT Tech Club');
       expect(dsc).toMatchObject({
         scope: 'DEPARTMENT', department: { code: 'IT' }, head: { fullName: 'Gaurav Jadhav' }, isActive: true,
         myPosition: 'PRESIDENT', permissions: { canManage: false, canEdit: true, canManageMembers: true },
       });
-      const cultural = res.body.data.find((c) => c.name === 'Cultural Committee');
+      const cultural = res.body.data.find((c) => c.name === 'Envision Club');
       expect(cultural).toMatchObject({ myPosition: null, permissions: { canEdit: false } });
     });
 
     it('filters to my clubs, by search text and by department', async () => {
       const mine = await request(app).get('/api/clubs?mine=true').set(auth(aditya)).expect(200);
       // Other suites add Aditya to throwaway clubs, so check membership rather than an exact list.
-      expect(mine.body.data.map((c) => [c.name, c.myPosition])).toContainEqual(['Developer Student Club', 'TECHNICAL_LEAD']);
+      expect(mine.body.data.map((c) => [c.name, c.myPosition])).toContainEqual(['IT Tech Club', 'TECHNICAL_LEAD']);
       expect(mine.body.data.every((c) => c.myPosition !== null)).toBe(true);
-      expect(mine.body.data.map((c) => c.name)).not.toContain('Cultural Committee');
+      expect(mine.body.data.map((c) => c.name)).not.toContain('Envision Club');
 
-      const search = await request(app).get('/api/clubs?q=robot').set(auth(student)).expect(200);
-      expect(search.body.data.map((c) => c.name)).toEqual(['Robotics Club']);
+      const search = await request(app).get('/api/clubs?q=rudra').set(auth(student)).expect(200);
+      expect(search.body.data.map((c) => c.name)).toEqual(['Team Rudra']);
 
       const cs = await request(app).get(`/api/clubs?departmentId=${csDept}`).set(auth(student)).expect(200);
       expect(cs.body.data.every((c) => c.department.code === 'CS')).toBe(true);
     });
 
     it('shows a club with its team; emails only to the people who run it', async () => {
-      const { rows: [dsc] } = await db.query(`SELECT club_id FROM clubs WHERE club_name = 'Developer Student Club'`);
+      const { rows: [dsc] } = await db.query(`SELECT club_id FROM clubs WHERE club_name = 'IT Tech Club'`);
 
       const asHead = await request(app).get(`/api/clubs/${dsc.club_id}`).set(auth(gaurav)).expect(200);
       expect(asHead.body.data.members[0]).toMatchObject({ fullName: 'Gaurav Jadhav', position: 'PRESIDENT', isHead: true, email: 'gaurav.jadhav@mmcoe.edu.in' });
@@ -123,7 +123,7 @@ describeWithDb('clubs (database)', () => {
     });
 
     it('refuses duplicate names (case-insensitively), unknown departments and non-faculty', async () => {
-      const dup = await create(itCoordinator, { name: 'developer student club' });
+      const dup = await create(itCoordinator, { name: 'it tech club' });
       expect(dup.status).toBe(409);
       expect(dup.body.error.code).toBe('CLUB_NAME_TAKEN');
 
@@ -156,7 +156,7 @@ describeWithDb('clubs (database)', () => {
 
     it('renames with a uniqueness check, and treats an unchanged update as a no-op', async () => {
       const club = (await create(itCoordinator, { name: unique('Renamers') }).expect(201)).body.data;
-      const taken = await patch(itCoordinator, club.id, { name: 'Cultural Committee' });
+      const taken = await patch(itCoordinator, club.id, { name: 'Envision Club' });
       expect(taken.body.error.code).toBe('CLUB_NAME_TAKEN');
 
       const renamed = await patch(itCoordinator, club.id, { name: `${club.name} 2` }).expect(200);
