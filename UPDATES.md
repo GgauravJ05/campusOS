@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-16 | [Phase 6 — Dashboards, audit trail & analytics](#phase-6--dashboards-audit-trail--analytics-2026-09-16) | Gaurav |
 | 2026-09-16 | [Phase 5 — Automated reminders](#phase-5--automated-reminders-2026-09-16) | Gaurav |
 | 2026-09-16 | [Phase 4 — Events & RSVP web app](#phase-4--events--rsvp-web-app-2026-09-16) | Gaurav |
 | 2026-09-16 | [Phase 4 — Events, discovery & RSVP API](#phase-4--events-discovery--rsvp-api-2026-09-16) | Gaurav |
@@ -23,6 +24,79 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase 6 — Dashboards, audit trail & analytics (2026-09-16)
+
+FR18, FR20 and FR21. **Every functional requirement in the SRS is now
+implemented.**
+
+### ⚠️ What you need to do
+
+Pull and run **`npm install` in `backend/`** — this phase adds one dependency
+(`pdfkit`, for the FR21 PDF export). No schema change: `admin_logs` and
+`attendance` have been in the schema since Phase 0.
+
+### What shipped
+
+| Requirement | What it is | Where |
+| ----------- | ---------- | ----- |
+| **FR18** Role-tailored dashboards | One endpoint, four shapes. A student sees seats and their next events; a club head sees their own club; a coordinator sees their department; the Principal sees the college. Every metric links to the screen that acts on it. | `GET /api/dashboard`, `/dashboard` |
+| **FR20** Immutable audit logging | Sign-ins are now recorded (FR20 names them explicitly), joining the role changes, venue decisions, approvals and overrides already being written. Filterable, paged, searchable. | `GET /api/admin/audit`, `/admin/audit` |
+| **FR21** Analytics & export | Venue utilisation, club activity and student attendance — on screen, or downloaded as CSV or PDF. | `GET /api/reports/:report?format=`, `/reports` |
+| — | **Attendance marking**, because FR21's turnout metrics need something to measure. | `POST /api/events/:id/attendance` |
+
+### Decisions made here
+
+- **Utilisation is measured against bookable hours**, not against 24 hours a
+  day. The operating window is 07:00–21:00 (C7), so a hall booked 9-to-5
+  every day is fully used, not a third used. Reporting it the other way
+  would make every venue look idle.
+- **Turnout counts only events that have happened.** Turnout for an event
+  next week is a guess, not a metric.
+- **Nobody is defaulted to "present."** The attendance dialog starts blank —
+  "present" is a claim about a person, and it should be made deliberately.
+  There is a one-click "mark everyone present" for the common case.
+- **The audit trail is the Principal's alone.** It records every sign-in on
+  campus, which is not a department coordinator's business. Coordinators get
+  the three metric reports, scoped to their own department.
+- **The trail page has no edit control anywhere**, matching the table, which
+  refuses `UPDATE` and `DELETE` at the database level.
+- **CSV exports defuse formula injection.** A club named `=cmd|...` is a
+  spreadsheet exploit, not a club; values starting `=`, `+`, `-` or `@` are
+  prefixed with a tab, and the file carries a BOM so Excel reads UTF-8 names
+  correctly.
+
+### The schema question, resolved
+
+This has been open since Phase 0. Re-reading the SRS settles most of it:
+
+- **`attendance` is justified** — FR21 requires "student attendance metrics",
+  which cannot exist without attendance data. It is now written and read.
+- **`certificates` and `event_materials` are still unjustified.** No
+  requirement mentions either, and six phases have not needed them.
+  **Recommendation: drop both tables** before the final review rather than
+  explaining two unused tables to an examiner. Say the word and it is a
+  five-minute change.
+
+### Also fixed
+
+An event whose booking was cancelled or rejected returned **500** from
+`GET /api/events/:id`. With no approved booking, the mapper falls back to the
+display date columns, and PostgreSQL hands those back as a `Date` where the
+code expected `YYYY-MM-DD` — producing an Invalid Date. The query now asks
+for the text form. This arrived with Phase 4 and had been live since; a test
+now pins it.
+
+### Tests
+
+**666 backend tests** (61 new) and **178 frontend tests** (20 new), lint
+clean, production build green, CI green. New suites:
+`tests/unit/reports.format.test.js` (CSV escaping, formula injection, PDF
+pagination), `tests/unit/audit.test.js`, and
+`tests/integration/governance.flow.test.js` (28 tests, including a check
+that `UPDATE` and `DELETE` on `admin_logs` are refused by the database).
 
 ---
 
@@ -900,10 +974,17 @@ for all data — Phase 1 and Phase 2 replace those.
 | 3 | Approval workflow & club management | FR11–FR13 | ✅ Done |
 | 4 | Events & RSVP | FR14–FR17 | ✅ Done |
 | 5 | Notifications (scheduled reminders) | FR19 | ✅ Done |
-| 6 | Governance & analytics | FR18, FR20, FR21 | |
+| 6 | Governance & analytics | FR18, FR20, FR21 | ✅ Done |
 
-Phase 2 is the heart of the project and deserves the most time. Build each
-phase **backend → Postman → frontend**, never frontend-first against mocks,
-or the UI gets written twice. Phase 2+3 and Phase 4+5 are independent
-vertical slices once Phase 1 auth exists, so two groups can work in parallel
-without colliding.
+**All twenty-one functional requirements are implemented** as of
+2026-09-16. Built backend → Postman → frontend throughout, never
+frontend-first against mocks, which is why the UI was never written twice.
+
+What is left before the final review is not a phase:
+
+1. **Drop `certificates` and `event_materials`,** or add them to SRS section
+   10. No requirement mentions either, and six phases have not needed them.
+   (`attendance` is justified by FR21 and is used.)
+2. **Correct the SRS team roster** — roll number TI154 appears twice.
+3. **Enable branch protection** on `dev`, which needs the repository public
+   or a GitHub Pro plan.

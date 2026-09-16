@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
-  CalendarCheck2, CalendarDays, ChevronsUpDown, Flag, LayoutDashboard, LogOut, Menu, MapPin, ShieldCheck, UserRound, UsersRound, X,
+  BarChart3, CalendarCheck2, CalendarDays, ChevronsUpDown, Flag, LayoutDashboard, LogOut, Menu, MapPin, ShieldCheck, UserRound, UsersRound, X,
 } from 'lucide-react'
 import { useAuth } from '@/features/auth/authContext'
 import { bookingsApi } from '@/features/bookings/bookingsApi'
@@ -20,6 +20,8 @@ const NAV_ITEMS = [
   { to: '/bookings', label: 'Bookings', icon: CalendarCheck2, roles: ['CLUB_HEAD', 'CLUB_MEMBER', ...FACULTY_ROLES], badge: 'bookings' },
   { to: '/clubs', label: 'Clubs', icon: Flag },
   { to: '/users', label: 'People', icon: UsersRound, roles: FACULTY_ROLES },
+  { to: '/reports', label: 'Reports', icon: BarChart3, roles: FACULTY_ROLES },
+  { to: '/admin/audit', label: 'Audit trail', icon: ShieldCheck, roles: ['SUPER_ADMIN'] },
   { to: '/profile', label: 'Profile & security', icon: UserRound },
 ]
 

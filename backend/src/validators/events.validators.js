@@ -3,6 +3,7 @@
 const { body, param, query } = require('express-validator');
 const { CATEGORIES, FEED_STATUSES } = require('../services/events/event.service');
 const { MAX_SEATS_PER_REGISTRATION } = require('../services/events/eligibility');
+const { STATUSES: ATTENDANCE_STATUSES } = require('../services/events/attendance.service');
 
 const SCOPES = ['CLUB', 'DEPARTMENT', 'COLLEGE'];
 const REGISTRATION_STATUSES = ['RESERVED', 'WAITLISTED', 'CANCELLED'];
@@ -69,8 +70,18 @@ const roster = [
   query('includeCancelled').optional().isBoolean().toBoolean(),
 ];
 
+const markAttendance = [
+  eventId,
+  body('marks').isArray({ min: 1, max: 500 }).withMessage('Mark at least one student'),
+  body('marks.*.studentId').isInt({ min: 1 }).withMessage('Invalid student').toInt(),
+  body('marks.*.status').isIn(ATTENDANCE_STATUSES).withMessage('Choose present, absent or excused'),
+];
+
 module.exports = {
   SCOPES,
+  ATTENDANCE_STATUSES,
+  attendance: [eventId],
+  markAttendance,
   REGISTRATION_STATUSES,
   list,
   getOne: [eventId],

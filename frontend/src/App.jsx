@@ -27,6 +27,8 @@ const BookingsPage = lazy(() => import('@/pages/bookings/BookingsPage'))
 const EditBookingPage = lazy(() => import('@/pages/bookings/EditBookingPage'))
 const EventsPage = lazy(() => import('@/pages/events/EventsPage'))
 const EventDetailPage = lazy(() => import('@/pages/events/EventDetailPage'))
+const ReportsPage = lazy(() => import('@/pages/reports/ReportsPage'))
+const AuditTrailPage = lazy(() => import('@/pages/admin/AuditTrailPage'))
 const ClubsPage = lazy(() => import('@/pages/clubs/ClubsPage'))
 const ClubDetailPage = lazy(() => import('@/pages/clubs/ClubDetailPage'))
 const StatusPage = lazy(() => import('@/pages/StatusPage'))
@@ -65,6 +67,11 @@ export function AppRoutes() {
             <Route element={<RequireAuth roles={FACULTY_ROLES} />}>
               <Route path="users" element={<UsersPage />} />
               <Route path="users/:id" element={<UserDetailPage />} />
+              <Route path="reports" element={<ReportsPage />} />
+            </Route>
+            {/* The trail records every sign-in on campus: the Principal / HOD alone. */}
+            <Route element={<RequireAuth roles={['SUPER_ADMIN']} />}>
+              <Route path="admin/audit" element={<AuditTrailPage />} />
             </Route>
             <Route path="forbidden" element={<StatusPage variant="forbidden" />} />
           </Route>

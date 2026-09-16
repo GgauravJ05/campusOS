@@ -419,6 +419,18 @@ describeWithDb('events and RSVP (database)', () => {
       expect(res.body.error.code).toBe('EVENT_STARTED');
     });
 
+    it('still renders an event whose booking was cancelled', async () => {
+      const { eventId, bookingId } = await publishedEvent({ date: day(28) });
+      await request(app).post(`/api/bookings/${bookingId}/cancel`).set(auth(itCoordinator)).send({}).expect(200);
+
+      // With no approved booking left, the event falls back to the display
+      // date columns the SRS mandates. Reading that back as a Date rather
+      // than YYYY-MM-DD used to produce an Invalid Date and a 500.
+      const res = await request(app).get(`/api/events/${eventId}`).set(auth(itCoordinator)).expect(200);
+      expect(res.body.data).toMatchObject({ status: 'CANCELLED', date: day(28), venue: null });
+      expect(res.body.data.startTime).toBe('10:00');
+    });
+
     it('refuses to cancel a registration that does not exist', async () => {
       const { eventId } = await publishedEvent();
       await cancelRsvp(student, eventId).expect(404);

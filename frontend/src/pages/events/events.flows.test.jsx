@@ -477,6 +477,97 @@ describe('organising an event', () => {
   })
 })
 
+describe('attendance', () => {
+  const past = (overrides = {}) => event({
+    date: '2020-01-10',
+    startAt: '2020-01-10T04:30:00.000Z',
+    endAt: '2020-01-10T06:30:00.000Z',
+    permissions: permissions({ canEdit: true, canViewRoster: true }),
+    ...overrides,
+  })
+
+  const roster = () => http.get(`${API}/events/1/registrations`, () => ok({
+    items: [{ id: 1, status: 'RESERVED', seats: 1, registeredAt: '2020-01-01T00:00:00.000Z', cancelledAt: null, student: { id: 10, fullName: 'Asha Kulkarni', email: 'asha@mmcoe.edu.in', academicYear: 2, department: 'IT' } }],
+    meta: { total: 1, reserved: 1, waitlisted: 0, maxSeats: 40 },
+  }))
+
+  const attendance = (status = null) => ({
+    items: [{ studentId: 10, fullName: 'Asha Kulkarni', email: 'asha@mmcoe.edu.in', academicYear: 2, department: 'IT', seats: 1, status, markedAt: null, markedBy: null }],
+    meta: { registered: 1, present: status === 'PRESENT' ? 1 : 0, absent: 0, excused: 0, unmarked: status ? 0 : 1, canMark: true },
+  })
+
+  it('marks who turned up once the event has happened', async () => {
+    let sent
+    server.use(
+      http.get(`${API}/events/1`, () => ok(past())),
+      roster(),
+      http.get(`${API}/events/1/attendance`, () => ok(attendance())),
+      http.post(`${API}/events/1/attendance`, async ({ request }) => {
+        sent = await request.json()
+        return ok({ marked: 1, attendance: attendance('PRESENT') })
+      }),
+    )
+    const { user } = renderApp('/events/1', { user: coordinator })
+
+    // The roster asks "who came", not "who's coming", for a past event.
+    expect(await screen.findByText('Who came')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Mark attendance/ }))
+
+    const dialog = await screen.findByRole('dialog')
+    await user.click(await within(dialog).findByRole('radio', { name: 'Present' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Save attendance' }))
+
+    await waitFor(() => expect(sent).toEqual({ marks: [{ studentId: 10, status: 'PRESENT' }] }))
+    expect(await screen.findByText('Attendance saved')).toBeInTheDocument()
+  })
+
+  it('marks everyone present in one click', async () => {
+    let sent
+    server.use(
+      http.get(`${API}/events/1`, () => ok(past())),
+      roster(),
+      http.get(`${API}/events/1/attendance`, () => ok(attendance())),
+      http.post(`${API}/events/1/attendance`, async ({ request }) => {
+        sent = await request.json()
+        return ok({ marked: 1, attendance: attendance('PRESENT') })
+      }),
+    )
+    const { user } = renderApp('/events/1', { user: coordinator })
+
+    await user.click(await screen.findByRole('button', { name: /Mark attendance/ }))
+    const dialog = await screen.findByRole('dialog')
+    await user.click(await within(dialog).findByRole('button', { name: 'Mark everyone present' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Save attendance' }))
+
+    await waitFor(() => expect(sent.marks).toEqual([{ studentId: 10, status: 'PRESENT' }]))
+  })
+
+  it('never offers attendance before the event has happened', async () => {
+    server.use(
+      http.get(`${API}/events/1`, () => ok(event({ permissions: permissions({ canEdit: true, canViewRoster: true }) }))),
+      roster(),
+    )
+    renderApp('/events/1', { user: coordinator })
+
+    expect(await screen.findByText("Who's coming")).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Mark attendance/ })).not.toBeInTheDocument()
+  })
+
+  it('will not save an empty roster', async () => {
+    server.use(
+      http.get(`${API}/events/1`, () => ok(past())),
+      roster(),
+      http.get(`${API}/events/1/attendance`, () => ok(attendance())),
+    )
+    const { user } = renderApp('/events/1', { user: coordinator })
+
+    await user.click(await screen.findByRole('button', { name: /Mark attendance/ }))
+    const dialog = await screen.findByRole('dialog')
+    // Nobody is defaulted to present: "present" is a claim about a person.
+    expect(within(dialog).getByRole('button', { name: 'Save attendance' })).toBeDisabled()
+  })
+})
+
 describe('event notifications (FR19)', () => {
   const notification = (overrides = {}) => ({
     id: 1, category: 'EVENT_REMINDER', title: 'Starting in 2 days: Hack Night',
@@ -511,9 +602,7 @@ describe('event notifications (FR19)', () => {
 
       await user.click(await screen.findByRole('button', { name: 'Notifications, 1 unread' }))
       const panel = await screen.findByRole('region', { name: 'Notifications' })
-      // eslint-disable-next-line no-await-in-loop
       await user.click(within(panel).getByRole('button', { name: new RegExp(`Test ${category}`) }))
-      // eslint-disable-next-line no-await-in-loop
       await waitFor(() => expect(currentPath()).toBe('/events/1'))
       unmount()
     }

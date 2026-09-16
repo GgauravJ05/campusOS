@@ -4,6 +4,7 @@ const { matchedData } = require('express-validator');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess } = require('../utils/ApiResponse');
 const events = require('../services/events/event.service');
+const attendance = require('../services/events/attendance.service');
 
 const list = asyncHandler(async (req, res) => {
   sendSuccess(res, 200, await events.listEvents(req.user, matchedData(req, { locations: ['query'] })));
@@ -44,4 +45,15 @@ const roster = asyncHandler(async (req, res) => {
   sendSuccess(res, 200, await events.listRegistrations(req.user, req.params.id, { status, includeCancelled }));
 });
 
-module.exports = { list, recommended, getOne, publish, update, register, cancelRegistration, roster };
+const attendanceList = asyncHandler(async (req, res) => {
+  sendSuccess(res, 200, await attendance.list(req.user, req.params.id));
+});
+
+const markAttendance = asyncHandler(async (req, res) => {
+  sendSuccess(res, 200, await attendance.mark(req.user, req.params.id, req.body.marks, { ip: req.ip }));
+});
+
+module.exports = {
+  list, recommended, getOne, publish, update, register, cancelRegistration, roster,
+  attendanceList, markAttendance,
+};
