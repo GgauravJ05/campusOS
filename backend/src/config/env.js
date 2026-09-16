@@ -88,7 +88,7 @@ function loadConfig(rawEnv = process.env) {
   }
   const isProduction = nodeEnv === 'production';
 
-  const port = readInt(rawEnv.PORT, 'PORT', 5000, problems);
+  const port = readInt(rawEnv.PORT, 'PORT', 5050, problems);
   if (port < 1 || port > 65535) {
     problems.push(`PORT must be between 1 and 65535, received "${port}"`);
   }

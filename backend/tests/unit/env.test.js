@@ -19,7 +19,7 @@ describe('loadConfig', () => {
     const config = loadConfig(baseEnv());
 
     expect(config.nodeEnv).toBe('development');
-    expect(config.port).toBe(5000);
+    expect(config.port).toBe(5050);
     expect(config.database.port).toBe(5432);
     expect(config.security.bcryptRounds).toBe(12);
     expect(config.jwt.accessTokenTtl).toBe('15m');

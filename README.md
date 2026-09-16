@@ -33,7 +33,8 @@ Colleges currently manage campus clubs, special interest groups (SIGs), venue al
 
 ## 🚀 Getting Started
 
-**Prerequisites:** Node.js 24 LTS, and Docker (or a local PostgreSQL 15+).
+**Prerequisites:** Node.js 24 LTS, and Docker **or** a local PostgreSQL 15+
+(see the no-Docker instructions below).
 
 ```bash
 git clone https://github.com/GgauravJ05/campusOS.git
@@ -46,7 +47,7 @@ docker compose up -d
 cd backend
 cp .env.example .env      # edit JWT_SECRET
 npm install
-npm run dev               # http://localhost:5000
+npm run dev               # http://localhost:5050
 
 # 3. Web app (separate terminal)
 cd frontend
@@ -54,16 +55,51 @@ npm install
 npm run dev               # http://localhost:5173
 ```
 
+<details>
+<summary><strong>No Docker? Run PostgreSQL natively (macOS / Homebrew)</strong></summary>
+
+The project expects the database on port **55432**, so it never collides
+with a PostgreSQL you already run. To get that without Docker:
+
+```bash
+brew install postgresql@16
+export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
+
+# Use the project's port instead of the default 5432
+sed -i '' 's/^#*port = .*/port = 55432/' /opt/homebrew/var/postgresql@16/postgresql.conf
+brew services start postgresql@16
+
+# The app connects as "postgres"; Homebrew creates a cluster owned by you
+psql -h localhost -p 55432 -d postgres \
+  -c "CREATE ROLE postgres LOGIN SUPERUSER PASSWORD 'postgres'"
+
+createdb -h localhost -p 55432 -U postgres campusos
+createdb -h localhost -p 55432 -U postgres campusos_test
+
+for db in campusos campusos_test; do
+  psql -h localhost -p 55432 -U postgres -d $db -v ON_ERROR_STOP=1 -f db/schema.sql
+  psql -h localhost -p 55432 -U postgres -d $db -v ON_ERROR_STOP=1 -f db/seed.sql
+done
+```
+
+Then set `TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:55432/campusos_test`
+in `backend/.env`. To start over, drop and recreate the database and re-apply
+the two files above - some suites assume the freshly seeded data.
+
+</details>
+
 Check the API is healthy:
 
 ```bash
-curl localhost:5000/api/health         # process up
-curl localhost:5000/api/health/ready   # database reachable too
+curl localhost:5050/api/health         # process up
+curl localhost:5050/api/health/ready   # database reachable too
 ```
 
-> **macOS users:** port 5000 is taken by the AirPlay Receiver and returns
-> `403` to everything. Disable it in *System Settings → General → AirDrop &
-> Handoff*, or set a different `PORT` in `backend/.env`.
+> **Why 5050 and not 5000?** On macOS the AirPlay Receiver owns port 5000
+> and answers `403` to everything, which looks exactly like a broken login.
+> The whole project therefore defaults to **5050** — API, `.env.example` and
+> the Vite dev proxy. Change `PORT` in `backend/.env` and
+> `VITE_API_PROXY_TARGET` in `frontend/.env.local` together, or not at all.
 
 Seeded demo accounts all use the password `Campus@123`:
 
@@ -78,8 +114,8 @@ Seeded demo accounts all use the password `Campus@123`:
 ### Running the tests
 
 ```bash
-cd backend && npm test      # 330 tests: unit + API flows (DB suites need PostgreSQL)
-cd frontend && npm test     # 80 tests: components and user journeys
+cd backend && npm test      # 560 tests: unit + API flows (DB suites need PostgreSQL)
+cd frontend && npm test     # 128 tests: components and user journeys
 ```
 
 Every pull request runs both suites in CI, including the database suites against a real PostgreSQL.
