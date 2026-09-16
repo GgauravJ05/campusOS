@@ -134,6 +134,34 @@ function bookingOutcome({ fullName, outcome, bookingId, title, venueName, date, 
   };
 }
 
+const REGISTRATION_OUTCOMES = Object.freeze({
+  RESERVED: { subject: 'seat confirmed', heading: 'Your seat is confirmed', lead: 'You are registered. Your seat is confirmed.' },
+  WAITLISTED: { subject: 'waitlisted', heading: "You're on the waitlist", lead: 'This event is full, so you are on the waitlist. We will move you up automatically if a seat frees up.' },
+  PROMOTED: { subject: 'a seat opened up', heading: 'A seat opened up for you', lead: 'Someone cancelled, so you have been moved off the waitlist. Your seat is confirmed.' },
+});
+
+/**
+ * Confirms an RSVP, a waitlist place, or a promotion off the waitlist
+ * (FR15, FR16).
+ * @param {{ fullName, outcome: keyof REGISTRATION_OUTCOMES, title, venueName, date, startTime, endTime, seats }} input
+ */
+function registrationOutcome({ fullName, outcome, title, venueName, date, startTime, endTime, seats = 1 }) {
+  const copy = REGISTRATION_OUTCOMES[outcome];
+  const url = `${config.appUrl}/events`;
+  const when = `${date}, ${startTime}-${endTime}`;
+  const seatLine = seats > 1 ? `${seats} seats` : '1 seat';
+  return {
+    subject: `"${title}" - ${copy.subject}`,
+    text: `Hi ${fullName},\n\n${copy.lead}\n\n${title}\n${venueName}\n${when}\n${seatLine}\n\nSee your events: ${url}`,
+    html: layout({
+      heading: copy.heading,
+      bodyHtml: `<p>Hi ${escapeHtml(fullName)},</p><p>${copy.lead}</p>`
+        + `<div style="background:#f4f5f7;border-radius:8px;padding:16px;margin:16px 0"><strong>${escapeHtml(title)}</strong><br>${escapeHtml(venueName)}<br>${escapeHtml(when)}<br>${escapeHtml(seatLine)}</div>`
+        + `<p><a href="${escapeHtml(url)}" style="color:#4f46e5">See your events</a></p>`,
+    }),
+  };
+}
+
 function addedToClub({ fullName, clubName, position, addedBy }) {
   const url = `${config.appUrl}/clubs`;
   const role = position.toLowerCase().replace(/_/g, ' ');
@@ -149,6 +177,7 @@ function addedToClub({ fullName, clubName, position, addedBy }) {
 
 module.exports = {
   bookingOutcome,
+  registrationOutcome,
   addedToClub,
   escapeHtml,
   verificationCode,

@@ -39,9 +39,14 @@ describeWithDb('venues (database)', () => {
       const res = await request(app).get('/api/venues?pageSize=100').set(auth(student)).expect(200);
 
       expect(res.body.data.length).toBeGreaterThanOrEqual(13);
-      const auditorium = res.body.data.find((v) => v.name === 'Main Auditorium');
-      expect(auditorium).toMatchObject({ building: 'Main Building', floor: 0, type: 'AUDITORIUM', capacity: 500, bufferMinutes: 15, canManage: false });
       expect(res.body.data.every((v) => v.isActive)).toBe(true);
+
+      // Searched by name rather than picked out of the first page: other
+      // suites add venues, and a paged list is not a stable place to look.
+      const named = await request(app).get('/api/venues?q=Main%20Auditorium').set(auth(student)).expect(200);
+      expect(named.body.data.find((v) => v.name === 'Main Auditorium')).toMatchObject({
+        building: 'Main Building', floor: 0, type: 'AUDITORIUM', capacity: 500, bufferMinutes: 15, canManage: false,
+      });
     });
 
     it('filters by building and floor', async () => {
@@ -76,8 +81,11 @@ describeWithDb('venues (database)', () => {
       const res = await request(app).get('/api/venues/meta').set(auth(student)).expect(200);
 
       const itBlock = res.body.data.buildings.find((b) => b.name === 'IT Block');
-      expect(itBlock.floors.map((f) => f.floor)).toEqual([2, 3]);
-      expect(itBlock.floors[0].venues.map((v) => v.name)).toEqual(['Computer Lab 1', 'Computer Lab 2']);
+      // A superset check: other suites may add floors to this building.
+      expect(itBlock.floors.map((f) => f.floor)).toEqual(expect.arrayContaining([2, 3]));
+      expect(itBlock.floors.map((f) => f.floor)).toEqual([...itBlock.floors.map((f) => f.floor)].sort((a, b) => a - b));
+      const secondFloor = itBlock.floors.find((f) => f.floor === 2);
+      expect(secondFloor.venues.map((v) => v.name)).toEqual(expect.arrayContaining(['Computer Lab 1', 'Computer Lab 2']));
       expect(res.body.data.equipment).toContain('PROJECTOR');
       expect(res.body.data.rules).toMatchObject({ defaultBufferMinutes: 15, openingTime: '07:00', closingTime: '21:00' });
     });

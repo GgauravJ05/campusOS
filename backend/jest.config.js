@@ -20,6 +20,13 @@ module.exports = {
   coverageThreshold: {
     global: { statements: 97, branches: 89, functions: 97, lines: 98 },
   },
+  // Every database suite shares one PostgreSQL instance, and some of them
+  // change global state (system_settings, venues, seat counters). Running
+  // suites in parallel therefore makes them race each other rather than
+  // test anything, so they run one at a time. The whole suite is seconds
+  // either way; a flaky pipeline is not worth the saving. (CI passes
+  // --runInBand for the same reason; this makes a plain `npm test` match it.)
+  maxWorkers: 1,
   clearMocks: true,
   restoreMocks: true,
   testTimeout: 10000,

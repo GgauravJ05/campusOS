@@ -45,6 +45,8 @@ const authenticate = asyncHandler(async (req, _res, next) => {
     role: row.role_key,
     rank: row.rank_level,
     departmentId: row.department_id,
+    // FR15 eligibility is checked against department *and* academic year.
+    academicYear: row.academic_year ?? null,
   };
   req.auth = { familyId: claims.familyId };
   req.userRow = row;

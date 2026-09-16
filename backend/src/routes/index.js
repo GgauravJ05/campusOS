@@ -8,7 +8,7 @@
  *   Phase 1  /auth, /users, /directory
  *   Phase 2  /venues, /bookings
  *   Phase 3  /clubs, /notifications (approvals live on /bookings)
- *   Phase 4  /events, /registrations
+ *   Phase 4  /events (discovery, publish, RSVP)
  *   Phase 5  reminder worker (writes /notifications)
  *   Phase 6  /admin, /reports
  */
@@ -22,6 +22,7 @@ const venuesRoutes = require('./venues.routes');
 const bookingsRoutes = require('./bookings.routes');
 const clubsRoutes = require('./clubs.routes');
 const notificationsRoutes = require('./notifications.routes');
+const eventsRoutes = require('./events.routes');
 
 const router = Router();
 
@@ -33,5 +34,6 @@ router.use('/venues', venuesRoutes);
 router.use('/bookings', bookingsRoutes);
 router.use('/clubs', clubsRoutes);
 router.use('/notifications', notificationsRoutes);
+router.use('/events', eventsRoutes);
 
 module.exports = router;

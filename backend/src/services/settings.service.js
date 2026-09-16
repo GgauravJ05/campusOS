@@ -43,4 +43,22 @@ async function getSchedulingRules(client = db) {
   };
 }
 
-module.exports = { getSchedulingRules, DEFAULTS };
+/** RSVP behaviour the SRS leaves configurable (FR15, FR16). */
+const RSVP_DEFAULTS = Object.freeze({
+  'rsvp.allow_waitlist': 'false',
+});
+
+/**
+ * @param {import('pg').PoolClient} [client]
+ * @returns {Promise<{ allowWaitlist: boolean }>}
+ */
+async function getRsvpRules(client = db) {
+  const { rows } = await client.query(
+    'SELECT setting_key, setting_value FROM system_settings WHERE setting_key = ANY($1)',
+    [Object.keys(RSVP_DEFAULTS)],
+  );
+  const values = { ...RSVP_DEFAULTS, ...Object.fromEntries(rows.map((r) => [r.setting_key, r.setting_value])) };
+  return { allowWaitlist: String(values['rsvp.allow_waitlist']).toLowerCase() === 'true' };
+}
+
+module.exports = { getSchedulingRules, getRsvpRules, DEFAULTS, RSVP_DEFAULTS };
