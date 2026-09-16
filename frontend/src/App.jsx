@@ -20,12 +20,13 @@ const DashboardPage = lazy(() => import('@/pages/DashboardPage'))
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
 const UsersPage = lazy(() => import('@/pages/users/UsersPage'))
 const UserDetailPage = lazy(() => import('@/pages/users/UserDetailPage'))
-const ModulePreviewPage = lazy(() => import('@/pages/ModulePreviewPage'))
 const VenuesPage = lazy(() => import('@/pages/venues/VenuesPage'))
 const VenueDetailPage = lazy(() => import('@/pages/venues/VenueDetailPage'))
 const NewBookingPage = lazy(() => import('@/pages/bookings/NewBookingPage'))
 const BookingsPage = lazy(() => import('@/pages/bookings/BookingsPage'))
 const EditBookingPage = lazy(() => import('@/pages/bookings/EditBookingPage'))
+const EventsPage = lazy(() => import('@/pages/events/EventsPage'))
+const EventDetailPage = lazy(() => import('@/pages/events/EventDetailPage'))
 const ClubsPage = lazy(() => import('@/pages/clubs/ClubsPage'))
 const ClubDetailPage = lazy(() => import('@/pages/clubs/ClubDetailPage'))
 const StatusPage = lazy(() => import('@/pages/StatusPage'))
@@ -59,7 +60,8 @@ export function AppRoutes() {
             <Route element={<RequireAuth roles={BOOKING_ROLES} />}>
               <Route path="bookings/new" element={<NewBookingPage />} />
             </Route>
-            <Route path="events" element={<ModulePreviewPage module="events" />} />
+            <Route path="events" element={<EventsPage />} />
+            <Route path="events/:id" element={<EventDetailPage />} />
             <Route element={<RequireAuth roles={FACULTY_ROLES} />}>
               <Route path="users" element={<UsersPage />} />
               <Route path="users/:id" element={<UserDetailPage />} />

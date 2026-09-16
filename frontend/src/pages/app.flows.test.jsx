@@ -62,10 +62,14 @@ describe('dashboard and shell', () => {
     expect(document.documentElement).toHaveClass('dark')
   })
 
-  it('describes upcoming modules honestly instead of showing fake data', async () => {
-    renderApp('/events', { user: makeUser() })
-    expect(await screen.findByRole('heading', { name: 'Events is on its way' })).toBeInTheDocument()
-    expect(screen.getByText(/Phase 4/)).toBeInTheDocument()
+  it('marks shipped phases live on the roadmap and the rest as upcoming', async () => {
+    renderApp('/dashboard', { user: makeUser() })
+
+    // Events shipped in Phase 4; reminders and analytics have not.
+    const events = (await screen.findByText('Events & RSVP')).closest('p')
+    expect(within(events).getByText('Live')).toBeInTheDocument()
+    const reminders = screen.getByText('Reminders').closest('p')
+    expect(within(reminders).getByText('Phase 5')).toBeInTheDocument()
   })
 })
 

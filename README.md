@@ -115,7 +115,7 @@ Seeded demo accounts all use the password `Campus@123`:
 
 ```bash
 cd backend && npm test      # 560 tests: unit + API flows (DB suites need PostgreSQL)
-cd frontend && npm test     # 128 tests: components and user journeys
+cd frontend && npm test     # 155 tests: components and user journeys
 ```
 
 Every pull request runs both suites in CI, including the database suites against a real PostgreSQL.
