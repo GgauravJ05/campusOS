@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
       // SameSite=Strict refresh cookie is first-party with no CORS dance.
       proxy: {
         '/api': {
-          target: env.VITE_API_PROXY_TARGET || 'http://localhost:5000',
+          target: env.VITE_API_PROXY_TARGET || 'http://localhost:5050',
           changeOrigin: false,
         },
       },

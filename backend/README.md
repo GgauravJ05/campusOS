@@ -12,19 +12,20 @@ docker compose up -d          # PostgreSQL on 55432 (dev) and 55433 (test)
 cd backend
 cp .env.example .env          # then edit JWT_SECRET
 npm install
-npm run dev                   # http://localhost:5000
+npm run dev                   # http://localhost:5050
 ```
 
 Verify:
 
 ```bash
-curl localhost:5000/api/health        # process is up
-curl localhost:5000/api/health/ready  # database is reachable too
+curl localhost:5050/api/health        # process is up
+curl localhost:5050/api/health/ready  # database is reachable too
 ```
 
-> **macOS:** port 5000 is occupied by the AirPlay Receiver, which answers
-> `403` to everything. Either disable it in *System Settings → General →
-> AirDrop & Handoff*, or set a different `PORT` in `.env`.
+> **Why 5050?** On macOS the AirPlay Receiver owns port 5000 and answers
+> `403` to every request, which is indistinguishable from a broken API. The
+> default is 5050 everywhere; if you change `PORT` here, change
+> `VITE_API_PROXY_TARGET` in `frontend/.env.local` to match.
 
 Compose applies `db/schema.sql` and `db/seed.sql` automatically the first
 time the volume is created. Every seeded account uses the password

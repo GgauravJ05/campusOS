@@ -10,9 +10,10 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-The dev server proxies `/api` to the backend on `http://localhost:5000`, so the
-API must be running (see `backend/README.md`). If your API runs on another port
-(macOS users often move off 5000), create `frontend/.env.local`:
+The dev server proxies `/api` to the backend on `http://localhost:5050`, so the
+API must be running (see `backend/README.md`). If your API runs on another port,
+create `frontend/.env.local` — a proxy pointed at a port nothing is listening on
+fails every API call, which shows up in the UI as a login that never works:
 
 ```bash
 VITE_API_PROXY_TARGET=http://localhost:5050
