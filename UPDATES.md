@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-18 | [Phase B — the two real bugs, fixed and proved](#phase-b--the-two-real-bugs-fixed-and-proved-2026-09-18) | Gaurav |
 | 2026-09-18 | [Syllabus alignment — CLAUDE.md, prompt.md, and the full course mapping](#syllabus-alignment--claudemd-promptmd-and-the-full-course-mapping-2026-09-18) | Gaurav |
 | 2026-09-16 | [Refinements — real campus layout, real clubs, one seat per student](#refinements--real-campus-layout-real-clubs-one-seat-per-student-2026-09-16) | Gaurav |
 | 2026-09-16 | [Phase 6 — Dashboards, audit trail & analytics](#phase-6--dashboards-audit-trail--analytics-2026-09-16) | Gaurav |
@@ -26,6 +27,70 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase B — the two real bugs, fixed and proved (2026-09-18)
+
+The syllabus-alignment audit above found two real concurrency bugs and one
+mislabeled test. This entry fixes all three, each with a regression test that
+fails against the old code and passes against the fix (verified by hand:
+temporarily reverting each fix and re-running its test before restoring it).
+
+**1. The deadlock.** `club.service.js` `addMember` locked club→user;
+`user.service.js` `changeRole` locked user→club — opposite orders on the same
+two rows, a circular wait. `changeRole` now locks the club first, matching
+`addMember` and the global lock order written down in `CLAUDE.md`.
+`tests/integration/lockorder.concurrency.test.js` fires many `addMember` and
+`changeRole` calls at the same club and users at once; it fails with
+Postgres's own `40P01` against the old order and passes clean against the fix.
+
+**2. The double broadcast.** `event.service.js` `publishEvent` and
+`updateEvent` checked `status`/seat caps from an unlocked read, then took the
+`FOR UPDATE` lock afterward and never re-checked — two simultaneous publishes
+could both pass the check, and the second would overwrite the first's
+settings and notify every eligible student a second time. Both functions now
+take the lock **first**, before any read or check.
+`tests/integration/publish.concurrency.test.js` fires 20 simultaneous publish
+requests at one approved event; against the old code, 4-7 of them wrongly
+succeed (confirmed over three runs), against the fix exactly one does, and a
+tracked recipient is notified exactly once either way it resolves.
+
+**3. The FR10 proof didn't test FR10's code.** `tests/integration/concurrency.test.js`
+reimplemented the approval transaction in raw SQL and never called
+`approveBooking` — it predates that service (commit `8979c71`, before Phase 2
+added the real API). It turned out to be redundant: `bookings.flow.test.js`
+already has "gives exactly one winner when 20 competing requests are approved
+at the same moment" (added with Phase 2, commit `71ecc71`), which races the
+real `approveBooking` through the HTTP API. Removed the raw-SQL file rather
+than rewriting it, and corrected `docs/reviews/REVIEW-SCRIPT.md`, which had
+been presenting `rsvp.concurrency.test.js` (FR15, seat capacity) as the FR10
+proof — the review script now runs and explains both tests, correctly
+attributed.
+
+**Why the reseed mattered here:** the first full-suite run after these fixes
+showed one unrelated failure in `events.flow.test.js`'s recommendation-ranking
+test, and `npm test`'s parallel workers also intermittently fail
+`venues.flow.test.js` on venue-name assertions. Both are pre-existing: they
+reproduce identically on a clean checkout of `dev` with none of this branch's
+changes, caused by months of test suites leaving rows behind in the shared
+`campusos_test` database (most suites' `afterAll` only closes the pool) and,
+for the venue case, by Jest's default parallel workers racing on that shared
+state. Confirmed not a regression by running `git stash` and reproducing the
+same two failures on unmodified `dev`. A full reseed
+(`dropdb`/`createdb`/`schema.sql`/`seed.sql` per `CLAUDE.md`) plus
+`--runInBand` gives a clean 290/290 on the integration suite. Fixing the
+underlying test-isolation gap is separate from Phase B and not addressed here.
+
+**Docs updated:** `docs/SYLLABUS-MAPPING.md` (OS Unit 3 rows for both bugs now
+say fixed, with the real test file cited; the U4 concurrency row cites the
+correct FR10/FR15 tests), `docs/reviews/REVIEW-SCRIPT.md` (FR10 section now
+runs `bookings.flow.test.js`, FR15 section correctly attributed to
+`rsvp.concurrency.test.js`).
+
+**Verification:** `npx jest tests/integration --runInBand` on a freshly seeded
+database — 290 passed, 0 skipped, 0 failed, including both new concurrency
+tests.
 
 ---
 

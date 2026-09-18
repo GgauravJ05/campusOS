@@ -227,7 +227,19 @@ npm test
 > the summary still prints "667 total" either way. If you see skips, the
 > database is not running — see the checklist.
 
-**Then run the one that matters:**
+**Then run the two that matter most:**
+
+```bash
+npx jest tests/integration/bookings.flow.test.js -t "gives exactly one winner"
+```
+
+> "Twenty clubs requesting the same room at the same instant, approved by two
+> different coordinators racing each other. Exactly one booking is approved,
+> nineteen are rejected, none error out.
+>
+> That's FR10 and constraint C9 from the SRS — row-level pessimistic locking
+> on the venue row, with the `excl_bookings_no_overlap` exclusion constraint
+> sitting behind the application as a backstop."
 
 ```bash
 npx jest tests/integration/rsvp.concurrency.test.js
@@ -236,9 +248,9 @@ npx jest tests/integration/rsvp.concurrency.test.js
 > "This is twenty students trying to reserve the same last seat at exactly the
 > same moment. Exactly one of them gets it, every time.
 >
-> That's FR10 and constraint C9 from the SRS — row-level pessimistic locking,
-> with a database constraint sitting behind the application as a backstop. The
-> same test proves a cancelled seat is recovered correctly.
+> That's FR15 — seat-capacity safety, the same row-level locking pattern
+> applied to registrations instead of bookings. The same test proves a
+> cancelled seat is recovered correctly.
 >
 > That's the part I'd most like you to take away: the guarantees the SRS asks
 > for aren't claims in a document, they're tests that run on every push."
