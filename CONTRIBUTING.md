@@ -5,6 +5,12 @@ twelve people can change one codebase without stepping on each other.
 
 By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
 
+**Before any change, however small:** read [`CLAUDE.md`](CLAUDE.md) and run
+through [`prompt.md`](prompt.md). This project is assessed against the Second
+Year IT syllabus as well as the SRS — `CLAUDE.md` explains that constraint and
+`docs/SYLLABUS-MAPPING.md` tracks it. This applies whether you're using an AI
+assistant or writing code by hand.
+
 ---
 
 ## 1. Setup
