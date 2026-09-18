@@ -246,6 +246,101 @@ describeWithDb('database schema', () => {
     });
   });
 
+  describe('stored functions and cursor (DBMS Unit 2)', () => {
+    /** A second student, since register_for_event needs a distinct one per call. */
+    let otherStudentId;
+
+    beforeAll(async () => {
+      const { rows: [role] } = await pool.query(`SELECT role_id FROM roles WHERE role_key = 'STUDENT'`);
+      const { rows: [student] } = await pool.query(
+        `INSERT INTO users (full_name, email, password_hash, role_id, is_verified)
+         VALUES ('Schema Test Student', $1, 'x', $2, TRUE) RETURNING user_id`,
+        [`schema.test.student.${Date.now()}@mmcoe.edu.in`, role.role_id],
+      );
+      otherStudentId = student.user_id;
+    });
+
+    afterAll(async () => {
+      await pool.query('DELETE FROM users WHERE user_id = $1', [otherStudentId]);
+    });
+
+    async function publishedEvent(overrides = {}) {
+      const { rows } = await pool.query(
+        `INSERT INTO events (club_id, created_by, title, category, event_date, start_time, end_time, status, max_seats)
+         VALUES ($1, $2, $3, $4, CURRENT_DATE + 7, '10:00', '12:00', 'PUBLISHED', $5)
+         RETURNING event_id`,
+        [
+          fixtures.clubId, fixtures.userId, overrides.title || 'Register Function Test', 'TECHNICAL',
+          overrides.maxSeats ?? 1,
+        ],
+      );
+      return rows[0].event_id;
+    }
+
+    it('register_for_event() inserts a registration and bumps booked_seats', async () => {
+      const eventId = await publishedEvent({ maxSeats: 2 });
+
+      const { rows: [{ register_for_event: registrationId }] } = await pool.query(
+        'SELECT register_for_event($1, $2, 1)', [eventId, fixtures.userId],
+      );
+      expect(registrationId).toEqual(expect.any(Number));
+
+      const { rows: [event] } = await pool.query('SELECT booked_seats FROM events WHERE event_id = $1', [eventId]);
+      expect(event.booked_seats).toBe(1);
+    });
+
+    it('register_for_event() refuses an event that is not published', async () => {
+      const { rows: [{ event_id: eventId }] } = await pool.query(
+        `INSERT INTO events (club_id, created_by, title, category, event_date, start_time, end_time, status)
+         VALUES ($1, $2, 'Draft Event', 'TECHNICAL', CURRENT_DATE + 7, '10:00', '12:00', 'DRAFT') RETURNING event_id`,
+        [fixtures.clubId, fixtures.userId],
+      );
+
+      await expect(pool.query('SELECT register_for_event($1, $2, 1)', [eventId, fixtures.userId]))
+        .rejects.toMatchObject({ code: '23514' });
+    });
+
+    it('the capacity trigger refuses a registration that would overbook the event, even outside register_for_event()', async () => {
+      const eventId = await publishedEvent({ maxSeats: 1 });
+      await pool.query('SELECT register_for_event($1, $2, 1)', [eventId, fixtures.userId]);
+
+      // A raw INSERT, not the function - the trigger is the guard here, not
+      // application code, so it must catch this regardless of the caller.
+      await expect(
+        pool.query('INSERT INTO event_registrations (event_id, student_id, seats) VALUES ($1, $2, 1)', [
+          eventId, otherStudentId,
+        ]),
+      ).rejects.toMatchObject({ code: '23514' });
+    });
+
+    it('close_past_events() marks an event COMPLETED once its approved booking has ended, and leaves future ones alone', async () => {
+      const pastEventId = await publishedEvent({ title: 'Past Cursor Event' });
+      await createBooking({
+        eventId: pastEventId,
+        status: 'APPROVED',
+        start: new Date(Date.now() - 3 * 86_400_000),
+        end: new Date(Date.now() - 3 * 86_400_000 + 2 * 3_600_000),
+      });
+      const futureEventId = await publishedEvent({ title: 'Future Cursor Event' });
+      await createBooking({
+        eventId: futureEventId,
+        status: 'APPROVED',
+        start: new Date(Date.now() + 3 * 86_400_000),
+        end: new Date(Date.now() + 3 * 86_400_000 + 2 * 3_600_000),
+      });
+
+      const { rows: [{ close_past_events: closedCount }] } = await pool.query('SELECT close_past_events()');
+      expect(closedCount).toBeGreaterThanOrEqual(1);
+
+      const { rows: statuses } = await pool.query(
+        `SELECT event_id, status FROM events WHERE event_id IN ($1, $2)`, [pastEventId, futureEventId],
+      );
+      const byId = Object.fromEntries(statuses.map((r) => [r.event_id, r.status]));
+      expect(byId[pastEventId]).toBe('COMPLETED');
+      expect(byId[futureEventId]).toBe('PUBLISHED');
+    });
+  });
+
   describe('user credentials', () => {
     it('refuses an account with neither a password nor an OAuth identity', async () => {
       const { rows: [role] } = await pool.query(`SELECT role_id FROM roles WHERE role_key = 'STUDENT'`);

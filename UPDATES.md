@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-18 | [Phase C.3 — a stored function, a trigger, and a cursor](#phase-c3--a-stored-function-a-trigger-and-a-cursor-2026-09-18) | Gaurav |
 | 2026-09-18 | [Phase C.2 — reporting views, HAVING, and the FILTER-to-CASE rewrite](#phase-c2--reporting-views-having-and-the-filter-to-case-rewrite-2026-09-18) | Gaurav |
 | 2026-09-18 | [Phase C.1b — normalize events.eligible_departments/eligible_years](#phase-c1b--normalize-eventseligible_departmentseligible_years-2026-09-18) | Gaurav |
 | 2026-09-18 | [Phase C.1 — normalize venues.equipment, add the composite-PK example](#phase-c1--normalize-venuesequipment-add-the-composite-pk-example-2026-09-18) | Gaurav |
@@ -30,6 +31,53 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase C.3 — a stored function, a trigger, and a cursor (2026-09-18)
+
+Fourth Phase C slice: DBMS Unit 2's stored procedures/functions and cursor
+rows, both zero before this.
+
+**What's new, all in `db/schema.sql`:**
+
+- `enforce_event_registration_capacity()` + `trg_event_registrations_capacity`
+  — a second, independent capacity guard on `event_registrations`, sitting
+  alongside (not replacing) FR15's own tested seat-lock in
+  `event.service.js`. It recomputes live demand from `event_registrations`
+  itself rather than trusting the stored `booked_seats` counter, so it
+  still catches an overbooking insert that bypassed the application
+  entirely. Deliberately did not touch the concurrency-critical `register()`
+  code that `rsvp.concurrency.test.js` already proves correct - the risk of
+  regressing a hard-won guarantee for a syllabus-theater refactor was not
+  worth it.
+- `register_for_event(event_id, student_id, seats)` — a standalone PL/pgSQL
+  function demonstrating the lock/check/insert pattern. Not the live API's
+  registration path: `event.service.js` additionally handles waitlisting,
+  eligibility and notifications, real business policy that belongs in the
+  application layer.
+- `close_past_events()` — uses an explicit `CURSOR` (`OPEN`/`FETCH`/
+  `EXIT WHEN NOT FOUND`/`CLOSE`) to mark events `COMPLETED` once their
+  approved booking has ended. This closes a real gap: nothing in the
+  codebase had ever set that status before. Wired into the existing
+  reminder worker's sweep (`reminder.service.js`'s new `closePastEvents()`),
+  so it runs on the worker's normal 5-minute tick.
+
+**Docs:** `docs/DATABASE.md` gained a "Stored functions, a trigger, and a
+cursor" section. `docs/SYLLABUS-MAPPING.md`'s Triggers row updated, and two
+new rows added (stored procedures/functions, cursors), both now fixed.
+
+**Tests:** a new "stored functions and cursor" block in
+`tests/integration/schema.test.js` exercises all three directly - a
+successful `register_for_event()` call, a rejection for a non-published
+event, the trigger rejecting a raw overbooking `INSERT` outside the function
+entirely, and `close_past_events()` completing a past event while leaving a
+future one alone.
+
+**Verification:** `npm run test:ci` on a freshly seeded database: 672
+passed, 0 skipped, coverage gates hold - including the full FR10/FR15
+concurrency suites, confirming the new trigger changes no existing
+behaviour.
 
 ---
 

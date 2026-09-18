@@ -174,15 +174,30 @@ async function dispatchDue({ now = new Date(), limit = BATCH_SIZE } = {}) {
 }
 
 /**
- * One full pass: schedule, then send what is due.
+ * Marks every published event whose booked window has ended COMPLETED.
+ * Delegates to the database function `close_past_events()` (db/schema.sql),
+ * which walks the matching rows with an explicit cursor - nothing here
+ * needed FR19's timing precision, so the plain per-row PL/pgSQL loop is the
+ * simplest correct tool, not a JS loop reimplementing the same idea.
  *
- * @returns {Promise<{ scheduled: number, sent: number, notified: number, skipped: number }>}
+ * @returns {Promise<number>} events marked COMPLETED this sweep
+ */
+async function closePastEvents() {
+  const { rows: [row] } = await db.query('SELECT close_past_events() AS n');
+  return row.n;
+}
+
+/**
+ * One full pass: schedule, then send what is due, then close what has ended.
+ *
+ * @returns {Promise<{ scheduled: number, sent: number, notified: number, skipped: number, completed: number }>}
  */
 async function sweep({ now = new Date() } = {}) {
   const rules = await settings.getReminderRules();
   const scheduled = await scheduleUpcoming(db, rules);
   const dispatched = await dispatchDue({ now });
-  const summary = { scheduled, ...dispatched };
+  const completed = await closePastEvents();
+  const summary = { scheduled, ...dispatched, completed };
 
   if (summary.sent || summary.skipped) {
     logger.info(summary, 'Reminder sweep complete');
@@ -192,4 +207,4 @@ async function sweep({ now = new Date() } = {}) {
   return summary;
 }
 
-module.exports = { BATCH_SIZE, scheduleUpcoming, dispatchDue, sweep, recipientsOf };
+module.exports = { BATCH_SIZE, scheduleUpcoming, dispatchDue, closePastEvents, sweep, recipientsOf };
