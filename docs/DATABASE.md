@@ -179,3 +179,83 @@ oversight. `chk_events_booked_within_capacity` is the database's backstop
 against it ever drifting past `max_seats`. Recorded here so the mapping is
 honest about which "3NF violations" are bugs and which are traded-off
 on purpose.
+
+## Views — reporting in plain SQL ✅ fixed
+
+FR21 needed venue utilisation, club activity and attendance reports. Before
+Phase C, `reports/metrics.service.js` computed all three with PostgreSQL's
+`FILTER (WHERE ...)` clause — correct, but not the `GROUP BY`/`HAVING`/`CASE`
+form the syllabus teaches, and there was no `CREATE VIEW` anywhere in the
+schema at all.
+
+**Four views, added to `db/schema.sql`:**
+
+```sql
+CREATE VIEW v_venue_utilisation AS
+SELECT v.venue_id, v.venue_name, v.building, v.capacity,
+       count(CASE WHEN b.status = 'APPROVED' THEN 1 END)::int  AS approved_bookings,
+       count(CASE WHEN b.status = 'CANCELLED' THEN 1 END)::int AS cancelled_bookings,
+       COALESCE(SUM(CASE WHEN b.status = 'APPROVED'
+                          THEN EXTRACT(EPOCH FROM (b.end_at - b.start_at)) / 3600 END), 0) AS approved_hours
+  FROM venues v LEFT JOIN bookings b ON b.venue_id = v.venue_id
+ WHERE v.is_active
+ GROUP BY v.venue_id, v.venue_name, v.building, v.capacity;
+```
+
+`v_club_activity` and `v_event_attendance` follow the same shape (plain
+joins, `count(CASE WHEN ... THEN col END)` instead of `count(col) FILTER
+(WHERE ...)` — the two are equivalent, since `COUNT`/`SUM` already ignore
+`NULL`, but `CASE` is the form every SQL textbook teaches and every database
+implements, not a PostgreSQL extension). `v_club_activity` also has a real
+**`HAVING`**:
+
+```sql
+GROUP BY c.club_id, c.club_name, d.dept_code
+HAVING count(DISTINCT e.event_id) > 0;
+```
+
+This is `HAVING`'s textbook job: filtering on the *result* of an aggregate.
+A club that has run zero events should not clutter an activity report, but
+`e.event_id` does not exist as a filterable column until after the
+`GROUP BY` has collapsed the joined rows — a plain `WHERE` cannot reach it.
+
+**Why the report API doesn't simply `SELECT * FROM` these views.** A view is
+a stored, parameterless `SELECT`. The FR21 report endpoints take a
+caller-chosen date range (`?from=...&to=...`), and standard SQL has no way
+to pass a parameter into a view at query time. So these four views are
+**lifetime-to-date** aggregates — genuinely useful on their own (`SELECT *
+FROM v_venue_utilisation;` in psql answers "which venue gets used most,
+ever?") — while `metrics.service.js` keeps its own parameterized queries for
+the date-scoped report. Those queries were rewritten to the same
+`CASE`/`GROUP BY` form as the views, closing the `FILTER (WHERE ...)` gap
+everywhere in `reports/`, even where a view itself couldn't be the answer.
+
+**The updatable view.** `v_active_venues` is deliberately the simplest
+possible view — one table, no joins, no aggregation, no `DISTINCT`:
+
+```sql
+CREATE VIEW v_active_venues AS
+SELECT venue_id, venue_name, building, floor, venue_type, capacity, department_id
+  FROM venues WHERE is_active;
+```
+
+PostgreSQL (like standard SQL) allows a genuine `UPDATE`/`INSERT`/`DELETE`
+straight through a view this simple — no `INSTEAD OF` trigger needed. Tested
+directly:
+
+```sql
+UPDATE v_active_venues SET capacity = 999 WHERE venue_name = 'Computer Lab 1';
+SELECT capacity FROM venues WHERE venue_name = 'Computer Lab 1';  -- 999
+```
+
+**Where to see it:**
+
+```sql
+\dv                              -- lists all four views
+SELECT * FROM v_venue_utilisation ORDER BY approved_hours DESC;
+SELECT * FROM v_club_activity;   -- clubs with zero events are absent (HAVING)
+```
+
+`tests/integration/governance.flow.test.js` exercises the report endpoints
+this rewrite touched; all 30 tests passed unchanged, which is the point —
+`CASE`-based aggregation and `FILTER (WHERE ...)` produce identical results.

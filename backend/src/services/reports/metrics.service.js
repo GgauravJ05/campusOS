@@ -51,10 +51,11 @@ async function venueUtilisation(actor, filters = {}) {
 
   const { rows } = await db.query(
     `SELECT v.venue_id, v.venue_name, v.building, v.capacity,
-            count(*) FILTER (WHERE b.status = 'APPROVED')::int AS bookings,
-            count(*) FILTER (WHERE b.status = 'CANCELLED')::int AS cancelled,
-            COALESCE(sum(EXTRACT(EPOCH FROM (b.end_at - b.start_at)) / 3600)
-                     FILTER (WHERE b.status = 'APPROVED'), 0) AS hours
+            count(CASE WHEN b.status = 'APPROVED' THEN 1 END)::int AS bookings,
+            count(CASE WHEN b.status = 'CANCELLED' THEN 1 END)::int AS cancelled,
+            COALESCE(sum(CASE WHEN b.status = 'APPROVED'
+                              THEN EXTRACT(EPOCH FROM (b.end_at - b.start_at)) / 3600
+                         END), 0) AS hours
        FROM venues v
        LEFT JOIN bookings b ON b.venue_id = v.venue_id
         AND b.start_at >= $1::date AND b.start_at < $2::date + 1
@@ -102,10 +103,10 @@ async function clubActivity(actor, filters = {}) {
   const { rows } = await db.query(
     `SELECT c.club_id, c.club_name, d.dept_code,
             count(DISTINCT e.event_id)::int AS events,
-            count(DISTINCT e.event_id) FILTER (WHERE e.status IN ('PUBLISHED', 'COMPLETED'))::int AS published,
-            count(DISTINCT e.event_id) FILTER (WHERE e.status = 'CANCELLED')::int AS cancelled,
-            count(r.registration_id) FILTER (WHERE r.status <> 'CANCELLED')::int AS registrations,
-            COALESCE(sum(r.seats) FILTER (WHERE r.status = 'RESERVED'), 0)::int AS seats_filled
+            count(DISTINCT CASE WHEN e.status IN ('PUBLISHED', 'COMPLETED') THEN e.event_id END)::int AS published,
+            count(DISTINCT CASE WHEN e.status = 'CANCELLED' THEN e.event_id END)::int AS cancelled,
+            count(CASE WHEN r.status <> 'CANCELLED' THEN r.registration_id END)::int AS registrations,
+            COALESCE(sum(CASE WHEN r.status = 'RESERVED' THEN r.seats END), 0)::int AS seats_filled
        FROM clubs c
        LEFT JOIN departments d ON d.department_id = c.department_id
        LEFT JOIN events e ON e.club_id = c.club_id
@@ -153,10 +154,10 @@ async function attendance(actor, filters = {}) {
   const { rows } = await db.query(
     `SELECT e.event_id, e.title, to_char(e.event_date, 'YYYY-MM-DD') AS event_date, e.category,
             COALESCE(c.club_name, d.dept_name, 'College event') AS organiser,
-            count(r.registration_id) FILTER (WHERE r.status = 'RESERVED')::int AS registered,
-            count(a.attendance_id) FILTER (WHERE a.status = 'PRESENT')::int AS present,
-            count(a.attendance_id) FILTER (WHERE a.status = 'ABSENT')::int AS absent,
-            count(a.attendance_id) FILTER (WHERE a.status = 'EXCUSED')::int AS excused
+            count(CASE WHEN r.status = 'RESERVED' THEN r.registration_id END)::int AS registered,
+            count(CASE WHEN a.status = 'PRESENT' THEN a.attendance_id END)::int AS present,
+            count(CASE WHEN a.status = 'ABSENT' THEN a.attendance_id END)::int AS absent,
+            count(CASE WHEN a.status = 'EXCUSED' THEN a.attendance_id END)::int AS excused
        FROM events e
        LEFT JOIN clubs c ON c.club_id = e.club_id
        LEFT JOIN departments d ON d.department_id = e.department_id
