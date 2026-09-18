@@ -361,8 +361,6 @@ CREATE TABLE events (
     status           VARCHAR(24)  NOT NULL DEFAULT 'DRAFT',
     max_seats        INTEGER,
     booked_seats     INTEGER      NOT NULL DEFAULT 0,
-    eligible_departments INTEGER[] NOT NULL DEFAULT '{}',  -- empty = open to all
-    eligible_years   SMALLINT[]   NOT NULL DEFAULT '{}',   -- empty = open to all
     banner_url       TEXT,
     created_at       TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -403,6 +401,48 @@ CREATE TABLE events (
 CREATE TRIGGER trg_events_updated_at
     BEFORE UPDATE ON events
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+
+-- ------------------------------------------------------------
+-- 10a. EVENT ELIGIBILITY (FR15) - two junction tables, not one
+--
+-- events.eligible_departments INTEGER[] and eligible_years SMALLINT[] were
+-- each a 1NF violation (a repeating group). They are decomposed here as TWO
+-- separate junction tables rather than one combined
+-- (event_id, department_id, academic_year) table - see CLAUDE.md's database
+-- rules. "Eligible departments" and "eligible years" are independent facts
+-- about an event: an event open to IT and CS, for years 2 and 3, means
+-- "IT or CS" AND "year 2 or 3" - four combinations, not two rows. Combining
+-- them into one table would force choosing a subset of that cross product
+-- to store, which is a 4NF violation (a cartesian product masquerading as
+-- one fact). Both composite PKs, both empty by default (empty = open to
+-- everyone on that dimension, same convention the arrays used).
+-- ------------------------------------------------------------
+
+CREATE TABLE event_eligible_departments (
+    event_id        INTEGER NOT NULL,
+    department_id   INTEGER NOT NULL,
+
+    PRIMARY KEY (event_id, department_id),
+
+    CONSTRAINT fk_event_eligible_departments_event
+        FOREIGN KEY (event_id) REFERENCES events(event_id) ON DELETE CASCADE,
+
+    CONSTRAINT fk_event_eligible_departments_department
+        FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE CASCADE
+);
+
+CREATE TABLE event_eligible_years (
+    event_id        INTEGER  NOT NULL,
+    academic_year   SMALLINT NOT NULL,
+
+    PRIMARY KEY (event_id, academic_year),
+
+    CONSTRAINT fk_event_eligible_years_event
+        FOREIGN KEY (event_id) REFERENCES events(event_id) ON DELETE CASCADE,
+
+    CONSTRAINT chk_event_eligible_years_range CHECK (academic_year BETWEEN 1 AND 5)
+);
 
 
 -- ============================================================
@@ -743,6 +783,11 @@ CREATE INDEX idx_events_category           ON events(category);
 -- Backs the student discovery feed (FR14): published events, soonest first.
 CREATE INDEX idx_events_feed               ON events(event_date, start_time)
     WHERE status = 'PUBLISHED';
+
+-- The PKs already cover "this event's eligible X"; these cover the reverse
+-- direction, "events eligible for department/year Y" (dashboard.service.js).
+CREATE INDEX idx_event_eligible_departments_department_id ON event_eligible_departments(department_id);
+CREATE INDEX idx_event_eligible_years_academic_year        ON event_eligible_years(academic_year);
 
 CREATE INDEX idx_bookings_event_id         ON bookings(event_id);
 CREATE INDEX idx_bookings_requested_by     ON bookings(requested_by);

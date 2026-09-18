@@ -63,8 +63,10 @@ async function studentDashboard(actor) {
        FROM events e
        JOIN bookings b ON b.event_id = e.event_id AND b.status = 'APPROVED'
       WHERE e.status = 'PUBLISHED' AND b.start_at > now()
-        AND (cardinality(e.eligible_departments) = 0 OR $2::int = ANY(e.eligible_departments))
-        AND (cardinality(e.eligible_years) = 0 OR $3::smallint = ANY(e.eligible_years))
+        AND (NOT EXISTS (SELECT 1 FROM event_eligible_departments WHERE event_id = e.event_id)
+             OR EXISTS (SELECT 1 FROM event_eligible_departments WHERE event_id = e.event_id AND department_id = $2))
+        AND (NOT EXISTS (SELECT 1 FROM event_eligible_years WHERE event_id = e.event_id)
+             OR EXISTS (SELECT 1 FROM event_eligible_years WHERE event_id = e.event_id AND academic_year = $3))
         AND NOT EXISTS (
           SELECT 1 FROM event_registrations r
            WHERE r.event_id = e.event_id AND r.student_id = $1 AND r.status <> 'CANCELLED')`,
