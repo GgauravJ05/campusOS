@@ -202,8 +202,29 @@ async function loadRow(actor, eventId, client = db) {
   return rows[0];
 }
 
+/**
+ * Other upcoming published events run by the same club - a self-join on
+ * events (e1.club_id = e2.club_id AND e1.event_id <> e2.event_id), the
+ * "more like this" pattern applied to one table joined to itself rather
+ * than two different tables.
+ */
+async function relatedEvents(eventId, clubId) {
+  if (!clubId) return [];
+  const { rows } = await db.query(
+    `SELECT e2.event_id, e2.title, to_char(e2.event_date, 'YYYY-MM-DD') AS event_date
+       FROM events e1
+       JOIN events e2 ON e2.club_id = e1.club_id AND e2.event_id <> e1.event_id
+      WHERE e1.event_id = $1 AND e2.status = 'PUBLISHED' AND e2.event_date >= CURRENT_DATE
+      ORDER BY e2.event_date ASC
+      LIMIT 5`,
+    [eventId],
+  );
+  return rows.map((r) => ({ id: r.event_id, title: r.title, date: r.event_date }));
+}
+
 async function getEvent(actor, eventId) {
-  return toEvent(await loadRow(actor, eventId), actor);
+  const row = await loadRow(actor, eventId);
+  return { ...toEvent(row, actor), relatedEvents: await relatedEvents(eventId, row.club_id) };
 }
 
 // ---------------------------------------------------------------------------
@@ -745,6 +766,33 @@ async function recommendations(actor, { limit = 6 } = {}) {
 }
 
 /**
+ * Everything relevant to one student in one list: events they hold a seat
+ * at, and events they created (a club head who registered for their own
+ * event appears once in each role, tagged accordingly). Two independent
+ * queries against the same table, combined with UNION rather than an OR
+ * across a join, because "my registrations" and "my creations" are
+ * different relationships to `events`, not two conditions on the same one.
+ */
+async function myActivity(actor, { limit = 50 } = {}) {
+  const { rows } = await db.query(
+    `SELECT e.event_id, e.title, to_char(e.event_date, 'YYYY-MM-DD') AS event_date, e.status, 'ATTENDEE' AS my_role
+       FROM events e JOIN event_registrations r ON r.event_id = e.event_id
+      WHERE r.student_id = $1 AND r.status <> 'CANCELLED'
+     UNION
+     SELECT e.event_id, e.title, to_char(e.event_date, 'YYYY-MM-DD') AS event_date, e.status, 'ORGANISER' AS my_role
+       FROM events e
+      WHERE e.created_by = $1
+      ORDER BY event_date DESC, event_id DESC
+      LIMIT $2`,
+    [actor.id, Math.min(Math.max(Number(limit) || 50, 1), 200)],
+  );
+
+  return rows.map((row) => ({
+    id: row.event_id, title: row.title, date: row.event_date, status: row.status, myRole: row.my_role,
+  }));
+}
+
+/**
  * Tells everyone holding a seat that the event is off. Called by the booking
  * engine when a booking - and with it its event - is cancelled, so the
  * notification commits in the same transaction as the cancellation.
@@ -789,5 +837,6 @@ module.exports = {
   listRegistrations,
   recommendations,
   registrationHistory,
+  myActivity,
   notifyRegistrantsOfCancellation,
 };

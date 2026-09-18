@@ -120,13 +120,13 @@ such rather than forced.
 
 ## B25IT401 — Database Management Systems (PCC, 3L+2P) — the strongest course
 
-**Honest summary today:** this is the best-covered course. Constraints,
-triggers, transactions and locking are genuinely strong. Composite primary
-keys, views, HAVING, a stored PL/pgSQL function and a cursor are now real
-(Phase C: three junction tables, four SQL views, one function-and-trigger
-pair, one cursor-driven function). Set operators, `NOT IN`, and any NoSQL
-work are still **confirmed absent** (checked directly against the schema and
-code, not assumed) and tracked as the remaining Phase C slices.
+**Honest summary today:** this is the best-covered course, and every SQL
+query form the syllabus names is now genuinely present somewhere in a real
+feature: composite primary keys, views, HAVING, a stored PL/pgSQL function,
+a cursor, UNION, NOT IN, and a self-join (Phase C: three junction tables,
+four SQL views, one function-and-trigger pair, one cursor-driven function,
+one UNION-based endpoint, one NOT IN query, one self-join). Only NoSQL
+(covered instead via JSONB, tracked separately below) remains.
 
 ### Theory
 
@@ -137,11 +137,11 @@ code, not assumed) and tracked as the remaining Phase C slices.
 | U2 | DDL / DML | ✅ | `db/schema.sql` (CREATE), `db/seed.sql` (INSERT … SELECT, `ON CONFLICT` upserts) | `psql -f db/schema.sql` |
 | U2 | DCL (GRANT/REVOKE) | ⬜ | App connects as a single `postgres` role | — |
 | U2 | TCL (transactions) | ✅ | `backend/src/config/db.js` `withTransaction()` — 10+ call sites | Code; not surfaced in the UI |
-| U2 | Joins, ordering, aggregate functions | ✅ | 75+ JOINs across services; `ORDER BY` in every list query | Any listing screen |
+| U2 | Joins, ordering, aggregate functions | ✅ | 75+ JOINs, including a genuine **self-join** (`event.service.js`'s `relatedEvents()`: `events e1 JOIN events e2 ON e2.club_id = e1.club_id AND e2.event_id <> e1.event_id`); `ORDER BY` in every list query; `MIN`/`MAX`/`AVG` in `metrics.service.js`'s venue report (busiest/quietest/typical venue load) | Any listing screen; `GET /api/events/:id` for the self-join (`relatedEvents` in the response); `GET /api/reports/venue-utilisation` for `minHours`/`maxHours`/`avgHours` |
 | U2 | GROUP BY / **HAVING** | ✅ | GROUP BY throughout `metrics.service.js` and the new views; `v_club_activity` (`db/schema.sql`) uses `HAVING count(DISTINCT e.event_id) > 0` to drop clubs that have never run an event, the classic "filter on the aggregate, not the raw row" case HAVING exists for | `SELECT * FROM v_club_activity;` — a club with zero events never appears, which a `WHERE` on `e.event_id` could not do (that column doesn't exist until after the GROUP BY runs) |
 | U2 | Views | ✅ **Fixed** | Four views in `db/schema.sql`: `v_venue_utilisation`, `v_club_activity`, `v_event_attendance` (plain `GROUP BY`/`CASE`, no `FILTER (WHERE ...)` or window functions), and `v_active_venues`, a simple **updatable** view | `SELECT * FROM v_venue_utilisation;` in psql; `UPDATE v_active_venues SET capacity = ... WHERE venue_id = ...` writes straight through to `venues` |
-| U2 | Set operations (UNION/INTERSECT/EXCEPT) | ⬜ | **Confirmed: zero occurrences** | Planned: Phase C, a student's "my activity" feed |
-| U2 | Set membership (IN/EXISTS/NOT IN) | 🟡 | `EXISTS`/`NOT EXISTS` used (e.g. `event.service.js`, `dashboard.service.js`); **`NOT IN`: zero** | Planned: Phase C, "registered but not marked present" |
+| U2 | Set operations (UNION/INTERSECT/EXCEPT) | ✅ **Fixed** | `event.service.js`'s `myActivity()` combines "events I'm registered for" and "events I created" with a real `UNION` — two different relationships to the same table, not one condition to OR together, tagging each row `ATTENDEE`/`ORGANISER` | `GET /api/events/my-activity`; a club head who also RSVPs to their own event gets both tags on one event_id |
+| U2 | Set membership (IN/EXISTS/NOT IN) | ✅ **Fixed** | `EXISTS`/`NOT EXISTS` used throughout; `attendance.service.js`'s `stillToMark()` finds registered students with `student_id NOT IN (SELECT student_id FROM attendance WHERE event_id = $1)` — the organiser's "still to mark" shortlist | `GET /api/events/:id/attendance` → `meta.unmarkedIds` |
 | U2 | Nested/subqueries | 🟡 | Correlated `EXISTS` subqueries only | — |
 | U2 | Triggers | ✅ | `set_updated_at()` (`db/schema.sql:34`) on 6 tables; `reject_admin_log_mutation()` + `trg_admin_logs_immutable`; `enforce_event_registration_capacity()` + `trg_event_registrations_capacity` — a second, independent capacity guard on `event_registrations` alongside the FR15 seat-lock's own counter check | `UPDATE admin_logs SET action='x'` in psql → rejected (**a genuinely good live demo**); a raw `INSERT INTO event_registrations` past capacity → rejected too |
 | U2 | Stored procedures / functions | ✅ **Fixed** | `register_for_event(event_id, student_id, seats)` — a standalone PL/pgSQL function demonstrating the lock/check/insert pattern; `close_past_events()` (below) | `SELECT register_for_event(1, 2, 1);` in psql |
@@ -167,9 +167,9 @@ code, not assumed) and tracked as the remaining Phase C slices.
 | 2 | ER diagram → tables | 🟡 | SRS and an ER-style PDF exist; a formal cardinality-annotated ER diagram is planned after Phase C's normalization |
 | 3 | DDL | ✅ | `db/schema.sql` |
 | 4 | DML (insert/select/update/delete, set operators) | 🟡 | No `DELETE` anywhere (everything soft-deletes via `is_active`/status); no set operators yet |
-| 5 | Operators, LIKE, IN/NOT IN, built-ins | 🟡 | LIKE/IN present; NOT IN still absent — tracked as the next Phase C slice |
+| 5 | Operators, LIKE, IN/NOT IN, built-ins | ✅ | LIKE, IN and `NOT IN` (`attendance.service.js`'s `stillToMark()`) all present, fixed in Phase C |
 | 6 | GROUP BY, HAVING, EXISTS/NOT EXISTS, **views** | ✅ | GROUP BY, EXISTS/NOT EXISTS, HAVING (`v_club_activity`) and four views all present, fixed in Phase C |
-| 7 | Subqueries, joins, set operators | 🟡 | Inner/left joins strong; set operators planned |
+| 7 | Subqueries, joins, set operators | ✅ | Inner/left joins strong; `UNION` (`myActivity()`) fixed in Phase C |
 | 8 | Nested queries | 🟡 | Correlated EXISTS only |
 | 9–11 | MongoDB CRUD / aggregation+indexing / map-reduce | ⬜ | **Not done as MongoDB.** Covered instead via PostgreSQL JSONB (event feedback, Phase C), documented as a substitution |
 
@@ -199,8 +199,14 @@ code, not assumed) and tracked as the remaining Phase C slices.
    an explicit cursor to mark events COMPLETED once their booking has
    ended, a real gap (nothing previously ever set that status), wired into
    the existing reminder worker's sweep.
-4. ⬜ Missing query forms still to add: NOT IN, UNION, AVG/MIN/MAX, a
-   self-join.
+4. ✅ **The remaining query forms**: `NOT IN` (`attendance.service.js`'s
+   `stillToMark()`, the organiser's "still to mark" shortlist); `UNION`
+   (`event.service.js`'s `myActivity()`, combining "events I'm registered
+   for" with "events I created" — two different relationships to `events`,
+   not one condition to OR together); `MIN`/`MAX`/`AVG` (`metrics.service.js`'s
+   venue report: busiest/quietest/typical venue load); a self-join
+   (`relatedEvents()`, `events e1 JOIN events e2 ON e2.club_id = e1.club_id
+   AND e2.event_id <> e1.event_id`, added to every event's detail response).
 5. ⬜ **Event feedback stored as JSONB** with a GIN index — the semi-structured
    data MongoDB would hold, inside PostgreSQL. `docs/DATABASE.md` carries the
    SQL vs NoSQL / CAP / BASE comparison honestly, including why MongoDB itself

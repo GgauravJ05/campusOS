@@ -341,6 +341,60 @@ describeWithDb('database schema', () => {
     });
   });
 
+  describe('related events (self-join)', () => {
+    /** event.service.js's relatedEvents() query, run directly: two events
+     * from `events` joined to itself on club_id, excluding the row itself. */
+    async function relatedTo(eventId) {
+      const { rows } = await pool.query(
+        `SELECT e2.event_id, e2.title
+           FROM events e1
+           JOIN events e2 ON e2.club_id = e1.club_id AND e2.event_id <> e1.event_id
+          WHERE e1.event_id = $1 AND e2.status = 'PUBLISHED' AND e2.event_date >= CURRENT_DATE
+          ORDER BY e2.event_date ASC`,
+        [eventId],
+      );
+      return rows.map((r) => r.event_id);
+    }
+
+    async function publishedEvent(overrides = {}) {
+      const { rows: [row] } = await pool.query(
+        `INSERT INTO events (club_id, created_by, title, category, event_date, start_time, end_time, status)
+         VALUES ($1, $2, $3, 'TECHNICAL', CURRENT_DATE + 30, '10:00', '12:00', 'PUBLISHED') RETURNING event_id`,
+        [fixtures.clubId, fixtures.userId, overrides.title || 'Self-Join Test Event'],
+      );
+      return row.event_id;
+    }
+
+    it('finds another published event from the same club, not itself', async () => {
+      const first = await publishedEvent({ title: 'Series Part 1' });
+      const second = await publishedEvent({ title: 'Series Part 2' });
+
+      const related = await relatedTo(first);
+      expect(related).toContain(second);
+      expect(related).not.toContain(first);
+    });
+
+    it('finds nothing for an event with no club', async () => {
+      const { rows: [role] } = await pool.query(`SELECT role_id FROM roles WHERE role_key = 'SUPER_ADMIN'`);
+      const { rows: [admin] } = await pool.query(
+        `INSERT INTO users (full_name, email, password_hash, role_id, is_verified)
+         VALUES ('Schema Test Admin', $1, 'x', $2, TRUE) RETURNING user_id`,
+        [`schema.test.admin.${Date.now()}@mmcoe.edu.in`, role.role_id],
+      );
+      const { rows: [{ event_id: soloEventId }] } = await pool.query(
+        `INSERT INTO events (club_id, created_by, title, category, event_date, start_time, end_time, status, event_scope)
+         VALUES (NULL, $1, 'College Address', 'SEMINAR', CURRENT_DATE + 30, '10:00', '11:00', 'PUBLISHED', 'COLLEGE')
+         RETURNING event_id`,
+        [admin.user_id],
+      );
+
+      expect(await relatedTo(soloEventId)).toEqual([]);
+
+      await pool.query('DELETE FROM events WHERE event_id = $1', [soloEventId]);
+      await pool.query('DELETE FROM users WHERE user_id = $1', [admin.user_id]);
+    });
+  });
+
   describe('user credentials', () => {
     it('refuses an account with neither a password nor an OAuth identity', async () => {
       const { rows: [role] } = await pool.query(`SELECT role_id FROM roles WHERE role_key = 'STUDENT'`);

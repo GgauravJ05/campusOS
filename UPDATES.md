@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-18 | [Phase C.4 — the remaining SQL query forms: NOT IN, UNION, MIN/MAX/AVG, a self-join](#phase-c4--the-remaining-sql-query-forms-not-in-union-minmaxavg-a-self-join-2026-09-18) | Gaurav |
 | 2026-09-18 | [Phase C.3 — a stored function, a trigger, and a cursor](#phase-c3--a-stored-function-a-trigger-and-a-cursor-2026-09-18) | Gaurav |
 | 2026-09-18 | [Phase C.2 — reporting views, HAVING, and the FILTER-to-CASE rewrite](#phase-c2--reporting-views-having-and-the-filter-to-case-rewrite-2026-09-18) | Gaurav |
 | 2026-09-18 | [Phase C.1b — normalize events.eligible_departments/eligible_years](#phase-c1b--normalize-eventseligible_departmentseligible_years-2026-09-18) | Gaurav |
@@ -31,6 +32,53 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase C.4 — the remaining SQL query forms: NOT IN, UNION, MIN/MAX/AVG, a self-join (2026-09-18)
+
+Fifth Phase C slice, and the last of the "missing query forms" the audit
+found at zero occurrences. Each landed inside a real feature:
+
+- **`NOT IN`**: `attendance.service.js`'s new `stillToMark(eventId)` finds
+  registered students with no attendance row via `student_id NOT IN
+  (SELECT student_id FROM attendance WHERE event_id = $1)`. Exposed as
+  `meta.unmarkedIds` on the existing attendance roster endpoint.
+- **`UNION`**: a new endpoint, `GET /api/events/my-activity`
+  (`event.service.js`'s `myActivity()`), combines "events I'm registered
+  for" and "events I created" with a real `UNION` of two `SELECT`s tagged
+  `ATTENDEE`/`ORGANISER` - two different relationships to `events`, not one
+  condition to `OR` together. A club head who also RSVPs to their own event
+  gets both tags on one event, since the two rows differ in `my_role`.
+- **`MIN`/`MAX`/`AVG`**: added to `GET /api/reports/venue-utilisation`'s
+  totals (`minHours`, `maxHours`, `avgHours`, `busiestVenue`) - the numbers
+  a utilisation report exists to answer, computed by the database over the
+  same period-filtered per-venue figures the report already builds.
+- **A self-join**: every event's detail response
+  (`GET /api/events/:id`) now includes `relatedEvents` - other upcoming
+  published events from the same club, found by joining `events` to itself
+  on `club_id`. Empty for a college-level event with no club.
+
+**Why no new frontend work landed with this:** these are new backend
+capabilities (`my-activity`, `relatedEvents`, `unmarkedIds`) built and
+tested per `CLAUDE.md`'s "backend, then curl/Postman, then frontend" order;
+wiring them into the UI is left for a follow-up pass, same as earlier
+phases were built.
+
+**Tests:** `events.flow.test.js` gained "my activity" (both roles, and the
+dual-role case) and a college-level "related events" case;
+`schema.test.js` gained an isolated self-join test pair, reusing its own
+dedicated fixtures rather than the shared, heavily-reused club in
+`events.flow.test.js` (which turned out to make `LIMIT`/`ORDER BY`
+assertions on a self-join flaky - too many other tests' events sharing the
+one club fixture). Also simplified `metrics.service.js`'s new
+`MIN`/`MAX`/`AVG` totals to drop unreachable defensive fallbacks (every
+department in this schema owns at least one venue, so the "zero venues"
+branch a `?? 0` was guarding against can never actually happen) rather than
+add contrived tests just to satisfy a coverage percentage.
+
+**Verification:** `npm run test:ci` on a freshly seeded database: 677
+passed, 0 skipped, coverage gates hold.
 
 ---
 

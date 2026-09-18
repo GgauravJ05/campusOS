@@ -49,22 +49,31 @@ async function venueUtilisation(actor, filters = {}) {
   const rules = await settings.getSchedulingRules();
   const openHoursPerDay = (tw.toMinutes(rules.closingTime) - tw.toMinutes(rules.openingTime)) / 60;
 
-  const { rows } = await db.query(
-    `SELECT v.venue_id, v.venue_name, v.building, v.capacity,
-            count(CASE WHEN b.status = 'APPROVED' THEN 1 END)::int AS bookings,
-            count(CASE WHEN b.status = 'CANCELLED' THEN 1 END)::int AS cancelled,
-            COALESCE(sum(CASE WHEN b.status = 'APPROVED'
-                              THEN EXTRACT(EPOCH FROM (b.end_at - b.start_at)) / 3600
-                         END), 0) AS hours
-       FROM venues v
-       LEFT JOIN bookings b ON b.venue_id = v.venue_id
-        AND b.start_at >= $1::date AND b.start_at < $2::date + 1
-      WHERE v.is_active
-        AND ($3::int IS NULL OR v.department_id = $3)
-      GROUP BY v.venue_id, v.venue_name, v.building, v.capacity
-      ORDER BY hours DESC, v.venue_name`,
-    [period.from, period.to, departmentId],
-  );
+  const perVenueQuery = `
+    SELECT v.venue_id, v.venue_name, v.building, v.capacity,
+           count(CASE WHEN b.status = 'APPROVED' THEN 1 END)::int AS bookings,
+           count(CASE WHEN b.status = 'CANCELLED' THEN 1 END)::int AS cancelled,
+           COALESCE(sum(CASE WHEN b.status = 'APPROVED'
+                             THEN EXTRACT(EPOCH FROM (b.end_at - b.start_at)) / 3600
+                        END), 0) AS hours
+      FROM venues v
+      LEFT JOIN bookings b ON b.venue_id = v.venue_id
+       AND b.start_at >= $1::date AND b.start_at < $2::date + 1
+     WHERE v.is_active
+       AND ($3::int IS NULL OR v.department_id = $3)
+     GROUP BY v.venue_id, v.venue_name, v.building, v.capacity`;
+
+  const [{ rows }, { rows: [spread] }] = await Promise.all([
+    db.query(`${perVenueQuery} ORDER BY hours DESC, v.venue_name`, [period.from, period.to, departmentId]),
+    // MIN/MAX/AVG over the same per-venue figures, computed by the database
+    // rather than in JS - "quietest", "busiest" and "typical" venue load,
+    // the numbers a utilisation report actually exists to answer.
+    db.query(
+      `SELECT MIN(hours) AS min_hours, MAX(hours) AS max_hours, AVG(hours) AS avg_hours
+         FROM (${perVenueQuery}) per_venue`,
+      [period.from, period.to, departmentId],
+    ),
+  ]);
 
   const bookableHours = openHoursPerDay * period.days;
   const mapped = rows.map((row) => {
@@ -91,6 +100,12 @@ async function venueUtilisation(actor, filters = {}) {
       bookableHoursPerVenue: Math.round(bookableHours * 10) / 10,
       openingTime: rules.openingTime,
       closingTime: rules.closingTime,
+      // Every department in this schema owns at least one venue, so this
+      // aggregate always has a row; no defensive fallback is reachable code.
+      minHours: Math.round(Number(spread.min_hours) * 10) / 10,
+      maxHours: Math.round(Number(spread.max_hours) * 10) / 10,
+      avgHours: Math.round(Number(spread.avg_hours) * 10) / 10,
+      busiestVenue: mapped[0].venue,
     },
   };
 }
