@@ -94,14 +94,66 @@ SELECT * FROM equipment ORDER BY equipment_code;
 including "replaces a venue's equipment with no other field changing" for the
 write side.
 
-## Violation 2 — `events.eligible_departments` / `eligible_years` arrays ⬜ not yet fixed
+## Violation 2 — `events.eligible_departments` / `eligible_years` arrays ✅ fixed
 
-Same 1NF shape as violation 1, on `events`. Planned: two **separate**
-junction tables (`event_eligible_departments`, `event_eligible_years`), not
-one combined table — combining two independent multi-valued facts about one
-entity into a single table would itself be a 4NF violation (a cartesian
-product of every eligible department against every eligible year that was
-never asked for). See `CLAUDE.md`'s database rules for this exact point.
+Same 1NF shape as violation 1, on `events`: two repeating-group columns,
+`eligible_departments INTEGER[]` and `eligible_years SMALLINT[]`.
+
+**The fix — two separate junction tables, not one.**
+
+```sql
+CREATE TABLE event_eligible_departments (
+    event_id      INTEGER NOT NULL REFERENCES events(event_id)      ON DELETE CASCADE,
+    department_id INTEGER NOT NULL REFERENCES departments(department_id) ON DELETE CASCADE,
+    PRIMARY KEY (event_id, department_id)
+);
+
+CREATE TABLE event_eligible_years (
+    event_id      INTEGER  NOT NULL REFERENCES events(event_id) ON DELETE CASCADE,
+    academic_year SMALLINT NOT NULL CHECK (academic_year BETWEEN 1 AND 5),
+    PRIMARY KEY (event_id, academic_year)
+);
+```
+
+Two independent multi-valued facts about one entity — "which departments"
+and "which years" — get **separate** junction tables, never one combined
+`(event_id, department_id, academic_year)` table. An event open to IT and
+CS, for years 2 and 3, means "IT or CS" **and** "year 2 or 3" — four
+eligible combinations, not two rows to pick from. Combining them into one
+table forces a choice between storing every combination (a cartesian
+product no one asked for) or an arbitrary subset (silently dropping some of
+the intended combinations) — that mixing of two independent facts into one
+relation is itself a 4NF violation. See `CLAUDE.md`'s database rules for
+this exact point, and `venue_equipment` above for a case where one junction
+table *is* correct (equipment is the venue's only multi-valued fact here).
+
+Two more composite primary keys, same reasoning as `venue_equipment`: the
+pair (or `event_id` + `academic_year`) already identifies the fact, so no
+surrogate id is needed.
+
+**What changed for the application.** `event.service.js`'s `EVENT_SELECT`
+now assembles `eligible_departments`/`eligible_years` per request with two
+`LEFT JOIN LATERAL` + `array_agg` subqueries, so every existing API response
+and the in-memory eligibility check in `eligibility.js` are unchanged — they
+still see plain JS arrays. Publishing and editing an event replace the
+junction rows through a `syncEligibility()` helper (delete-and-reinsert,
+same pattern as `venue.service.js`'s `syncEquipment`).
+`dashboard.service.js`'s "events I could still register for" query, which
+used to test `cardinality(...) = 0 OR x = ANY(...)` against the arrays, is
+now two `NOT EXISTS (...) OR EXISTS (...)` pairs against the junction
+tables — the same "empty means open to everyone" rule, expressed as
+ordinary joins instead of an array function.
+
+**Where to see it:**
+
+```sql
+\d event_eligible_departments   -- composite primary key
+\d event_eligible_years         -- composite primary key
+```
+
+`tests/integration/events.flow.test.js`, `publish.concurrency.test.js` and
+`governance.flow.test.js` (the student dashboard's "open events" count)
+exercise the full read/write path unchanged.
 
 ## Violation 3 — `venues.location` is derivable, not a 3NF violation ⬜ not yet fixed
 
