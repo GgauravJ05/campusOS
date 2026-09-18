@@ -646,6 +646,50 @@ describeWithDb('events and RSVP (database)', () => {
   });
 
   // -------------------------------------------------------------------------
+  describe('my activity', () => {
+    it('lists events I registered for and events I created, tagged by role', async () => {
+      const { eventId: attending } = await publishedEvent({ date: day(51), title: 'Attending This' });
+      await rsvp(student, attending).expect(201);
+      const { eventId: organising } = await publishedEvent({ date: day(52), title: 'Organising This' });
+
+      const asAttendee = await request(app).get('/api/events/my-activity').set(auth(student)).expect(200);
+      const attendeeRow = asAttendee.body.data.find((e) => e.id === attending);
+      expect(attendeeRow).toMatchObject({ myRole: 'ATTENDEE' });
+      expect(asAttendee.body.data.find((e) => e.id === organising)).toBeUndefined();
+
+      const asOrganiser = await request(app).get('/api/events/my-activity').set(auth(itCoordinator)).expect(200);
+      expect(asOrganiser.body.data.find((e) => e.id === organising)).toMatchObject({ myRole: 'ORGANISER' });
+    });
+
+    it('tags an event both ways when the organiser also holds a seat at their own event', async () => {
+      const { eventId } = await publishedEvent({ date: day(53), title: 'Wearing Both Hats' });
+      await rsvp(itCoordinator, eventId).expect(201);
+
+      const res = await request(app).get('/api/events/my-activity').set(auth(itCoordinator)).expect(200);
+      const roles = res.body.data.filter((e) => e.id === eventId).map((e) => e.myRole).sort();
+      expect(roles).toEqual(['ATTENDEE', 'ORGANISER']);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  describe('related events (self-join), college-level event', () => {
+    it('is empty for a published college-level event with no club', async () => {
+      const venueId = await newVenue(100);
+      const booking = await request(app).post('/api/bookings').set(auth(principal)).send({
+        venueId, title: `Principal Address ${runTag}`, category: 'SEMINAR',
+        expectedAttendance: 50, date: day(56), startTime: '10:00', endTime: '11:00',
+      }).expect(201);
+      // A direct faculty booking (FR12) is auto-approved; still needs
+      // publishing before a student can see it (RSVP visibility, FR14).
+      await request(app).post(`/api/events/${booking.body.data.event.id}/publish`).set(auth(principal))
+        .send({ maxSeats: 50 }).expect(200);
+
+      const res = await request(app).get(`/api/events/${booking.body.data.event.id}`).set(auth(student)).expect(200);
+      expect(res.body.data.relatedEvents).toEqual([]);
+    });
+  });
+
+  // -------------------------------------------------------------------------
   describe('authentication', () => {
     it('requires a signed-in user everywhere', async () => {
       await request(app).get('/api/events').expect(401);

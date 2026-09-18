@@ -85,6 +85,25 @@ async function mark(actor, eventId, marks, { ip } = {}) {
 }
 
 /**
+ * Registered students with no attendance row yet - the organiser's "still to
+ * mark" shortlist. `list()` below already derives the same information from
+ * its LEFT JOIN (a row with `status: null`), so this is a second, independent
+ * way to ask the same question directly in SQL with `NOT IN`, used to build
+ * `meta.unmarkedIds`.
+ */
+async function stillToMark(eventId) {
+  const { rows } = await db.query(
+    `SELECT student_id FROM event_registrations
+      WHERE event_id = $1 AND status = 'RESERVED'
+        AND student_id NOT IN (
+          SELECT student_id FROM attendance WHERE event_id = $1
+        )`,
+    [eventId],
+  );
+  return rows.map((r) => r.student_id);
+}
+
+/**
  * The roster with each student's attendance, for the organiser's marking
  * screen and for FR21.
  */
@@ -119,6 +138,7 @@ async function list(actor, eventId) {
     markedBy: row.marked_by_name,
   }));
 
+  const unmarkedIds = await stillToMark(eventId);
   const counted = (status) => items.filter((i) => i.status === status).length;
   return {
     items,
@@ -127,10 +147,11 @@ async function list(actor, eventId) {
       present: counted('PRESENT'),
       absent: counted('ABSENT'),
       excused: counted('EXCUSED'),
-      unmarked: items.filter((i) => i.status === null).length,
+      unmarked: unmarkedIds.length,
+      unmarkedIds,
       canMark: event.permissions.canViewRoster && policy.hasStarted({ startAt: event.startAt }) && event.status !== 'CANCELLED',
     },
   };
 }
 
-module.exports = { STATUSES, mark, list };
+module.exports = { STATUSES, mark, list, stillToMark };

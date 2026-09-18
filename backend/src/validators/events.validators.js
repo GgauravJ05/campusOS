@@ -93,4 +93,5 @@ module.exports = {
   cancelRegistration: [eventId],
   roster,
   recommendations: [query('limit').optional().isInt({ min: 1, max: 20 }).toInt()],
+  myActivity: [query('limit').optional().isInt({ min: 1, max: 200 }).toInt()],
 };

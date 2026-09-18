@@ -14,6 +14,10 @@ const recommended = asyncHandler(async (req, res) => {
   sendSuccess(res, 200, await events.recommendations(req.user, matchedData(req, { locations: ['query'] })));
 });
 
+const myActivity = asyncHandler(async (req, res) => {
+  sendSuccess(res, 200, await events.myActivity(req.user, matchedData(req, { locations: ['query'] })));
+});
+
 const getOne = asyncHandler(async (req, res) => {
   sendSuccess(res, 200, await events.getEvent(req.user, req.params.id));
 });
@@ -54,6 +58,6 @@ const markAttendance = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  list, recommended, getOne, publish, update, register, cancelRegistration, roster,
+  list, recommended, myActivity, getOne, publish, update, register, cancelRegistration, roster,
   attendanceList, markAttendance,
 };
