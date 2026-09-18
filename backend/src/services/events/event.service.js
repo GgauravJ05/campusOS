@@ -55,7 +55,9 @@ const EVENT_SELECT = `
          -- Date object from pg would silently become an Invalid Date.
          to_char(e.event_date, 'YYYY-MM-DD') AS event_date,
          e.start_time, e.end_time, e.max_seats, e.booked_seats,
-         e.eligible_departments, e.eligible_years, e.banner_url,
+         COALESCE(eed.departments, '{}') AS eligible_departments,
+         COALESCE(eey.years, '{}') AS eligible_years,
+         e.banner_url,
          e.club_id, e.department_id, e.created_by, e.created_at, e.updated_at,
          c.club_name, c.club_head_id,
          d.dept_code, d.dept_name,
@@ -77,7 +79,15 @@ const EVENT_SELECT = `
        ORDER BY b2.booking_id DESC LIMIT 1
     ) b ON TRUE
     LEFT JOIN venues v ON v.venue_id = b.venue_id
-    LEFT JOIN event_registrations r ON r.event_id = e.event_id AND r.student_id = $1 AND r.status <> 'CANCELLED'`;
+    LEFT JOIN event_registrations r ON r.event_id = e.event_id AND r.student_id = $1 AND r.status <> 'CANCELLED'
+    LEFT JOIN LATERAL (
+      SELECT array_agg(department_id ORDER BY department_id) AS departments
+        FROM event_eligible_departments WHERE event_id = e.event_id
+    ) eed ON TRUE
+    LEFT JOIN LATERAL (
+      SELECT array_agg(academic_year ORDER BY academic_year) AS years
+        FROM event_eligible_years WHERE event_id = e.event_id
+    ) eey ON TRUE`;
 
 /**
  * Who may see an event that is not published yet. Mirrors the booking
@@ -269,6 +279,29 @@ async function broadcastAudience(client, { eligibleDepartments, eligibleYears, e
 }
 
 /**
+ * Replaces an event's rows in the eligibility junction tables
+ * (event_eligible_departments, event_eligible_years - see db/schema.sql
+ * section 10a) with exactly the given ids. Delete-and-reinsert, same as
+ * venue.service.js's syncEquipment: both tables are tiny per event.
+ */
+async function syncEligibility(client, eventId, departmentIds, years) {
+  await client.query('DELETE FROM event_eligible_departments WHERE event_id = $1', [eventId]);
+  await client.query('DELETE FROM event_eligible_years WHERE event_id = $1', [eventId]);
+  if (departmentIds.length) {
+    await client.query(
+      `INSERT INTO event_eligible_departments (event_id, department_id) SELECT $1, unnest($2::int[])`,
+      [eventId, departmentIds],
+    );
+  }
+  if (years.length) {
+    await client.query(
+      `INSERT INTO event_eligible_years (event_id, academic_year) SELECT $1, unnest($2::smallint[])`,
+      [eventId, years],
+    );
+  }
+}
+
+/**
  * Opens an approved event to students. Only an approved event can be
  * published: publishing is what turns a confirmed venue booking into
  * something a student can RSVP to.
@@ -312,11 +345,12 @@ async function publishEvent(actor, eventId, input = {}, { ip } = {}) {
 
     await client.query(
       `UPDATE events
-          SET status = 'PUBLISHED', max_seats = $2, eligible_departments = $3, eligible_years = $4,
-              banner_url = COALESCE($5, banner_url), description = COALESCE($6, description)
+          SET status = 'PUBLISHED', max_seats = $2,
+              banner_url = COALESCE($3, banner_url), description = COALESCE($4, description)
         WHERE event_id = $1`,
-      [eventId, maxSeats, eligibleDepartments, eligibleYears, input.bannerUrl ?? null, input.description ?? null],
+      [eventId, maxSeats, input.bannerUrl ?? null, input.description ?? null],
     );
+    await syncEligibility(client, eventId, eligibleDepartments, eligibleYears);
 
     const start = tw.toCampusParts(startInstant(row));
     const end = tw.toCampusParts(endInstant(row));
@@ -386,12 +420,18 @@ async function updateEvent(actor, eventId, input = {}, { ip } = {}) {
     if (input.description !== undefined) set('description', input.description);
     if (input.category !== undefined) set('category', input.category);
     if (input.maxSeats !== undefined) set('max_seats', input.maxSeats);
-    if (input.eligibleDepartments !== undefined) set('eligible_departments', input.eligibleDepartments);
-    if (input.eligibleYears !== undefined) set('eligible_years', input.eligibleYears);
     if (input.bannerUrl !== undefined) set('banner_url', input.bannerUrl);
-    if (sets.length === 0) throw ApiError.validation('Change at least one detail', []);
+    const eligibilityChanged = input.eligibleDepartments !== undefined || input.eligibleYears !== undefined;
+    if (sets.length === 0 && !eligibilityChanged) throw ApiError.validation('Change at least one detail', []);
 
-    await client.query(`UPDATE events SET ${sets.join(', ')} WHERE event_id = $1`, params);
+    if (sets.length > 0) await client.query(`UPDATE events SET ${sets.join(', ')} WHERE event_id = $1`, params);
+    if (eligibilityChanged) {
+      await syncEligibility(
+        client, eventId,
+        input.eligibleDepartments ?? row.eligible_departments,
+        input.eligibleYears ?? row.eligible_years,
+      );
+    }
     await audit.record({
       adminId: actor.id, action: 'EVENT_UPDATED', targetType: 'EVENT', targetId: eventId, ip,
       details: { fields: Object.keys(input).filter((k) => input[k] !== undefined) },

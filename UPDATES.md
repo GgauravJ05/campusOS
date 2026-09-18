@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-18 | [Phase C.1b — normalize events.eligible_departments/eligible_years](#phase-c1b--normalize-eventseligible_departmentseligible_years-2026-09-18) | Gaurav |
 | 2026-09-18 | [Phase C.1 — normalize venues.equipment, add the composite-PK example](#phase-c1--normalize-venuesequipment-add-the-composite-pk-example-2026-09-18) | Gaurav |
 | 2026-09-18 | [Phase B — the two real bugs, fixed and proved](#phase-b--the-two-real-bugs-fixed-and-proved-2026-09-18) | Gaurav |
 | 2026-09-18 | [Syllabus alignment — CLAUDE.md, prompt.md, and the full course mapping](#syllabus-alignment--claudemd-promptmd-and-the-full-course-mapping-2026-09-18) | Gaurav |
@@ -28,6 +29,43 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase C.1b — normalize events.eligible_departments/eligible_years (2026-09-18)
+
+Second Phase C slice: the other two 1NF array violations `docs/DATABASE.md`
+flagged as open after C.1.
+
+**What changed.** `events.eligible_departments INTEGER[]` and
+`eligible_years SMALLINT[]` are replaced by two junction tables,
+`event_eligible_departments` and `event_eligible_years`, each with a
+composite primary key. Kept **separate** rather than combined into one
+`(event_id, department_id, academic_year)` table — see `CLAUDE.md`'s
+database rules: an event eligible for two departments and two years means
+four valid combinations, not two rows to choose from, so merging the two
+independent facts into one table would itself be a 4NF violation.
+
+**What did not change.** Every API response: `event.service.js`'s
+`EVENT_SELECT` now assembles both arrays per request via
+`LEFT JOIN LATERAL` + `array_agg`, so `eligibility.js`'s in-memory check and
+every client reading `eligibility.departments`/`eligibility.years` see the
+same shape as before. Publishing and editing an event write through a new
+`syncEligibility()` helper (delete-and-reinsert, mirroring C.1's
+`syncEquipment`). `dashboard.service.js`'s "events I could still register
+for" query, which used `cardinality(...) = 0 OR x = ANY(...)` against the
+arrays, is now the equivalent `NOT EXISTS (...) OR EXISTS (...)` pair
+against the junction tables.
+
+**Docs:** `docs/DATABASE.md`'s "Violation 2" section updated from planned to
+fixed, with the same the-violation/the-fix/what-changed structure as C.1.
+`docs/SYLLABUS-MAPPING.md`'s 1NF row now reads fully fixed (both array
+violations closed); two 3NF issues (`venues.location`, `events.booked_seats`)
+remain open and tracked as the next slice.
+
+**Verification:** `npm run test:ci` on a freshly seeded database: 668
+passed, 0 skipped, coverage gates hold — no test needed changing, which is
+the point of keeping the API shape stable through a storage change.
 
 ---
 
