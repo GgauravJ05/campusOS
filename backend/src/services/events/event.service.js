@@ -278,6 +278,14 @@ async function broadcastAudience(client, { eligibleDepartments, eligibleYears, e
 async function publishEvent(actor, eventId, input = {}, { ip } = {}) {
   const outbox = [];
   const result = await db.withTransaction(async (client) => {
+    // Lock first, then read and validate. Locking after the checks (the
+    // original shape here) is a check-then-act race: two concurrent
+    // publishes can both read status='APPROVED' before either lock is
+    // taken, and the second one through the lock would go on to overwrite
+    // the first's settings and broadcast to every eligible student a
+    // second time, with neither the ALREADY_PUBLISHED guard nor the lock
+    // itself ever catching it. See CLAUDE.md's note on this bug.
+    await client.query('SELECT 1 FROM events WHERE event_id = $1 FOR UPDATE', [eventId]);
     const row = await loadRow(actor, eventId, client);
     if (!policy.canOrganise(actor, toPolicyEvent(row))) {
       throw ApiError.forbidden('Only the organising club or its faculty can publish this event');
@@ -302,8 +310,6 @@ async function publishEvent(actor, eventId, input = {}, { ip } = {}) {
     const eligibleDepartments = input.eligibleDepartments ?? row.eligible_departments;
     const eligibleYears = input.eligibleYears ?? row.eligible_years;
 
-    // Lock the row so a concurrent publish cannot double-broadcast.
-    await client.query('SELECT 1 FROM events WHERE event_id = $1 FOR UPDATE', [eventId]);
     await client.query(
       `UPDATE events
           SET status = 'PUBLISHED', max_seats = $2, eligible_departments = $3, eligible_years = $4,
@@ -343,6 +349,14 @@ async function publishEvent(actor, eventId, input = {}, { ip } = {}) {
  */
 async function updateEvent(actor, eventId, input = {}, { ip } = {}) {
   await db.withTransaction(async (client) => {
+    // Lock first, then read and validate - see the comment in publishEvent.
+    // Here the stale-read risk is the seat-cap guard below reading
+    // row.booked_seats from before the lock, which could let a cap change
+    // through that a concurrent registration has since made invalid (the
+    // chk_events_booked_within_capacity constraint remains the hard
+    // backstop either way, but a clean 409 is a better failure than a raw
+    // constraint violation).
+    await client.query('SELECT 1 FROM events WHERE event_id = $1 FOR UPDATE', [eventId]);
     const row = await loadRow(actor, eventId, client);
     if (!policy.canOrganise(actor, toPolicyEvent(row))) {
       throw ApiError.forbidden('Only the organising club or its faculty can edit this event');
@@ -351,7 +365,6 @@ async function updateEvent(actor, eventId, input = {}, { ip } = {}) {
       throw ApiError.conflict('This event can no longer be edited', { code: 'EVENT_CLOSED' });
     }
 
-    await client.query('SELECT 1 FROM events WHERE event_id = $1 FOR UPDATE', [eventId]);
     if (input.maxSeats !== undefined && input.maxSeats !== null) {
       if (row.capacity && input.maxSeats > row.capacity) {
         throw ApiError.validation('Too many seats for this venue', [

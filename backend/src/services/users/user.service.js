@@ -170,12 +170,18 @@ async function changeRole(actorUser, targetId, { role: newRole, clubId }, { ip }
   const actor = actorFrom(actorUser);
 
   const result = await db.withTransaction(async (client) => {
+    // Global lock order (see CLAUDE.md): clubs before users. addMember in
+    // club.service.js locks the same two tables in this order; changeRole
+    // used to lock user-then-club, which could deadlock against a concurrent
+    // addMember on the same club and user (opposite lock order = circular
+    // wait). Lock the club first here too.
+    const club = await lockClub(client, clubId);
+
     const target = await repo.findById(targetId, client, { forUpdate: true });
     if (!target || !rbac.canViewUser(actor, targetFrom(target))) {
       throw ApiError.notFound('User not found');
     }
 
-    const club = await lockClub(client, clubId);
     const denial = rbac.checkRoleChange({
       actor,
       target: targetFrom(target),

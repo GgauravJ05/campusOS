@@ -304,7 +304,15 @@ async function updateClub(actor, clubId, changes, { ip } = {}) {
 // The organising team
 // ---------------------------------------------------------------------------
 
-/** Locks the club and checks the actor may change its team. */
+/**
+ * Locks the club and checks the actor may change its team.
+ *
+ * Global lock order (see CLAUDE.md): clubs before users. addMember below
+ * locks the club here, then the target user's row - this is the reference
+ * order every other multi-row transaction on these two tables must follow
+ * (user.service.js changeRole was fixed to match it after a real deadlock
+ * was found between the two).
+ */
 async function lockTeam(client, actor, clubId) {
   const row = await findClubRow(clubId, client, { forUpdate: true });
   await assertVisible(actor, row, client);
