@@ -6,6 +6,10 @@
 
 <!-- e.g. FR8 (conflict detection), closes #12 -->
 
+## Related syllabus course / unit
+
+<!-- e.g. B25IT401 DBMS Unit 3 (integrity constraints); or "none - process change" -->
+
 ## Type of change
 
 - [ ] Feature
@@ -32,3 +36,5 @@
 - [ ] Schema changes are reflected in `db/schema.sql`, `db/reset.sql` and `db/seed.sql`
 - [ ] **`UPDATES.md` has a new entry describing this change**
 - [ ] Docs / README updated if setup or behaviour changed
+- [ ] `docs/SYLLABUS-MAPPING.md` updated if this change applies or closes a syllabus row
+- [ ] Ran through `prompt.md` before opening this PR
