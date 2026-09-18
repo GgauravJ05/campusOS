@@ -575,6 +575,51 @@ CREATE TABLE event_registrations (
     )
 );
 
+-- FR15 seat safety already has an application-level guard: register() in
+-- event.service.js takes SELECT ... FOR UPDATE on the events row before
+-- deciding whether a seat is free, and chk_events_booked_within_capacity
+-- backstops the stored booked_seats counter that guard maintains. This
+-- trigger is a second, independent guard at the row level being written -
+-- it recomputes live demand straight from event_registrations rather than
+-- trusting the booked_seats counter, so it still catches an overbook even
+-- if that counter were ever wrong (a raw psql INSERT bypassing the app
+-- entirely, for instance). Both guards agree in normal operation; this one
+-- runs inside the same transaction and the same already-locked events row,
+-- so it adds no new lock ordering to reason about.
+CREATE OR REPLACE FUNCTION enforce_event_registration_capacity()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_max_seats INTEGER;
+    v_reserved  INTEGER;
+BEGIN
+    IF NEW.status <> 'RESERVED' THEN
+        RETURN NEW;
+    END IF;
+
+    SELECT max_seats INTO v_max_seats FROM events WHERE event_id = NEW.event_id FOR UPDATE;
+    IF v_max_seats IS NULL THEN
+        RETURN NEW;  -- NULL max_seats means unlimited (FR15 convention)
+    END IF;
+
+    SELECT COALESCE(SUM(seats), 0) INTO v_reserved
+      FROM event_registrations
+     WHERE event_id = NEW.event_id AND status = 'RESERVED'
+       AND registration_id <> NEW.registration_id;
+
+    IF v_reserved + NEW.seats > v_max_seats THEN
+        RAISE EXCEPTION 'event % capacity exceeded: % reserved + % new > % max',
+            NEW.event_id, v_reserved, NEW.seats, v_max_seats
+            USING ERRCODE = 'check_violation';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_event_registrations_capacity
+    BEFORE INSERT OR UPDATE ON event_registrations
+    FOR EACH ROW EXECUTE FUNCTION enforce_event_registration_capacity();
+
 
 -- ============================================================
 -- 13. ATTENDANCE
@@ -826,6 +871,82 @@ CREATE VIEW v_active_venues AS
 SELECT venue_id, venue_name, building, floor, venue_type, capacity, department_id
   FROM venues
  WHERE is_active;
+
+
+-- ============================================================
+-- STORED FUNCTIONS  (DBMS Unit 2 - PL/pgSQL routines and an explicit cursor)
+-- ============================================================
+
+-- A standalone PL/pgSQL equivalent of the FR15 registration transaction:
+-- lock the event, check it is open, insert, bump the seat counter.
+-- trg_event_registrations_capacity above still rejects an overbooking
+-- insert before this function ever sees success.
+--
+-- Deliberately NOT the live API's registration path. event.service.js's
+-- register() additionally handles waitlisting, eligibility rules and
+-- notifications - real business policy that belongs in the application
+-- layer, not hard-coded into a database routine. This function demonstrates
+-- the syllabus construct on the project's own schema and is directly
+-- callable (`SELECT register_for_event(...)`) for that purpose.
+-- p_seats is INTEGER, not the SMALLINT event_registrations.seats stores:
+-- Postgres's function-overload resolution only widens (smallint -> integer)
+-- implicitly, it never narrows, so a plain integer literal or a JS number
+-- passed as int4 (the common case from node-postgres) would otherwise fail
+-- to resolve against a smallint parameter. The INSERT below narrows it back
+-- on assignment into the column, which is always allowed.
+CREATE OR REPLACE FUNCTION register_for_event(p_event_id INTEGER, p_student_id INTEGER, p_seats INTEGER DEFAULT 1)
+RETURNS INTEGER AS $$
+DECLARE
+    v_status           VARCHAR(24);
+    v_registration_id  INTEGER;
+BEGIN
+    SELECT status INTO v_status FROM events WHERE event_id = p_event_id FOR UPDATE;
+    IF v_status IS NULL THEN
+        RAISE EXCEPTION 'event % does not exist', p_event_id USING ERRCODE = 'no_data_found';
+    END IF;
+    IF v_status <> 'PUBLISHED' THEN
+        RAISE EXCEPTION 'event % is not open for registration (status %)', p_event_id, v_status
+            USING ERRCODE = 'check_violation';
+    END IF;
+
+    INSERT INTO event_registrations (event_id, student_id, seats)
+    VALUES (p_event_id, p_student_id, p_seats)
+    RETURNING registration_id INTO v_registration_id;
+
+    UPDATE events SET booked_seats = booked_seats + p_seats WHERE event_id = p_event_id;
+
+    RETURN v_registration_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Nothing currently ever marks an event COMPLETED - a real gap this closes.
+-- Uses an explicit cursor rather than a single UPDATE ... WHERE so each
+-- event is locked and closed one row at a time, matching the row-by-row
+-- processing the syllabus's cursor unit teaches (a single set-based UPDATE
+-- would be shorter, but would not be a cursor).
+CREATE OR REPLACE FUNCTION close_past_events()
+RETURNS INTEGER AS $$
+DECLARE
+    v_cur CURSOR FOR
+        SELECT e.event_id
+          FROM events e
+          JOIN bookings b ON b.event_id = e.event_id AND b.status = 'APPROVED'
+         WHERE e.status = 'PUBLISHED' AND b.end_at < now()
+         FOR UPDATE OF e;
+    v_event_id INTEGER;
+    v_count    INTEGER := 0;
+BEGIN
+    OPEN v_cur;
+    LOOP
+        FETCH v_cur INTO v_event_id;
+        EXIT WHEN NOT FOUND;
+        UPDATE events SET status = 'COMPLETED' WHERE event_id = v_event_id;
+        v_count := v_count + 1;
+    END LOOP;
+    CLOSE v_cur;
+    RETURN v_count;
+END;
+$$ LANGUAGE plpgsql;
 
 
 -- ============================================================

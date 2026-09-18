@@ -122,8 +122,9 @@ such rather than forced.
 
 **Honest summary today:** this is the best-covered course. Constraints,
 triggers, transactions and locking are genuinely strong. Composite primary
-keys and views are now real (Phase C: three junction tables, four SQL
-views). HAVING, set operators, stored procedures, cursors, and any NoSQL
+keys, views, HAVING, a stored PL/pgSQL function and a cursor are now real
+(Phase C: three junction tables, four SQL views, one function-and-trigger
+pair, one cursor-driven function). Set operators, `NOT IN`, and any NoSQL
 work are still **confirmed absent** (checked directly against the schema and
 code, not assumed) and tracked as the remaining Phase C slices.
 
@@ -142,7 +143,9 @@ code, not assumed) and tracked as the remaining Phase C slices.
 | U2 | Set operations (UNION/INTERSECT/EXCEPT) | ⬜ | **Confirmed: zero occurrences** | Planned: Phase C, a student's "my activity" feed |
 | U2 | Set membership (IN/EXISTS/NOT IN) | 🟡 | `EXISTS`/`NOT EXISTS` used (e.g. `event.service.js`, `dashboard.service.js`); **`NOT IN`: zero** | Planned: Phase C, "registered but not marked present" |
 | U2 | Nested/subqueries | 🟡 | Correlated `EXISTS` subqueries only | — |
-| U2 | Triggers | ✅ | `set_updated_at()` (`db/schema.sql:34`) on 6 tables; `reject_admin_log_mutation()` + `trg_admin_logs_immutable` (`db/schema.sql:666-676`) | `UPDATE admin_logs SET action='x'` in psql → rejected. **A genuinely good live demo.** |
+| U2 | Triggers | ✅ | `set_updated_at()` (`db/schema.sql:34`) on 6 tables; `reject_admin_log_mutation()` + `trg_admin_logs_immutable`; `enforce_event_registration_capacity()` + `trg_event_registrations_capacity` — a second, independent capacity guard on `event_registrations` alongside the FR15 seat-lock's own counter check | `UPDATE admin_logs SET action='x'` in psql → rejected (**a genuinely good live demo**); a raw `INSERT INTO event_registrations` past capacity → rejected too |
+| U2 | Stored procedures / functions | ✅ **Fixed** | `register_for_event(event_id, student_id, seats)` — a standalone PL/pgSQL function demonstrating the lock/check/insert pattern; `close_past_events()` (below) | `SELECT register_for_event(1, 2, 1);` in psql |
+| U2 | Cursors | ✅ **Fixed** | `close_past_events()` (`db/schema.sql`) declares an explicit `CURSOR`, `OPEN`s it, `FETCH`es row by row, `EXIT WHEN NOT FOUND`, `CLOSE`s it — the row-by-row processing a single set-based `UPDATE` would not be, which is the point of a cursor exercise. Closes a real gap: nothing previously ever marked an event `COMPLETED` | `SELECT close_past_events();` in psql; wired into the reminder worker's sweep (`reminder.service.js`) |
 | U3 | Relational model, domains | ✅ | Domains enforced via CHECK: `chk_venues_type`, `chk_events_category`, `chk_bookings_status` | `\d events` in psql |
 | U3 | Domain integrity | ✅ | ~35 CHECK constraints, e.g. `chk_venues_capacity`, `chk_events_time` | Insert a bad row in psql |
 | U3 | Referential integrity | ✅ | ~30 named foreign keys, several with `ON DELETE CASCADE`/`SET NULL` | Delete a parent row in psql |
@@ -184,9 +187,18 @@ code, not assumed) and tracked as the remaining Phase C slices.
    API's own queries were rewritten to the same plain form (views can't take
    a runtime date-range parameter, so the parameterized report queries stay
    separate from the views, but now share their SQL style).
-3. ⬜ **Stored function + trigger + cursor**: capacity enforced by a trigger
-   (replacing the dropped CHECK), `register_for_event()` as a PL/pgSQL
-   function, `close_past_events()` using a cursor.
+3. ✅ **Stored function + trigger + cursor**: `enforce_event_registration_capacity()`
+   is a second, independent capacity guard on `event_registrations` (the
+   existing `chk_events_booked_within_capacity` CHECK stays — it backstops
+   the FR15 seat-lock's own counter, which is genuinely correct and tested;
+   this trigger backstops the raw table instead, recomputing live demand
+   rather than trusting a counter); `register_for_event()` is a standalone
+   PL/pgSQL function demonstrating the construct (not the live API's
+   registration path — that stays in `event.service.js`, which also handles
+   waitlisting, eligibility and notifications); `close_past_events()` uses
+   an explicit cursor to mark events COMPLETED once their booking has
+   ended, a real gap (nothing previously ever set that status), wired into
+   the existing reminder worker's sweep.
 4. ⬜ Missing query forms still to add: NOT IN, UNION, AVG/MIN/MAX, a
    self-join.
 5. ⬜ **Event feedback stored as JSONB** with a GIN index — the semi-structured
