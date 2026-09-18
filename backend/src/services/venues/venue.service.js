@@ -22,9 +22,19 @@ const MAX_PAGE_SIZE = 100;
 /** Longest range the availability calendar returns in one request. */
 const MAX_AVAILABILITY_DAYS = 31;
 
+// equipment is aggregated from the venue_equipment junction table (composite
+// PK venue_id, equipment_id - see db/schema.sql section 7a) rather than
+// stored as an array column on venues, but the API shape below is unchanged.
 const VENUE_COLUMNS = `
   v.venue_id, v.venue_name, v.building, v.floor, v.venue_type, v.capacity, v.location,
-  v.equipment, v.buffer_minutes, v.is_active, v.department_id, d.dept_code, d.dept_name`;
+  COALESCE(ve.equipment, '{}') AS equipment, v.buffer_minutes, v.is_active, v.department_id, d.dept_code, d.dept_name`;
+
+const VENUE_EQUIPMENT_JOIN = `
+  LEFT JOIN LATERAL (
+    SELECT array_agg(eq.equipment_code ORDER BY eq.equipment_code) AS equipment
+      FROM venue_equipment vex JOIN equipment eq ON eq.equipment_id = vex.equipment_id
+     WHERE vex.venue_id = v.venue_id
+  ) ve ON TRUE`;
 
 function toVenue(row, defaultBuffer) {
   return {
@@ -80,7 +90,15 @@ async function listVenues(actor, filters = {}) {
   if (filters.type) add('v.venue_type = ?', filters.type);
   if (filters.minCapacity) add('v.capacity >= ?', Number(filters.minCapacity));
   if (filters.departmentId) add('v.department_id = ?', Number(filters.departmentId));
-  if (filters.equipment?.length) add('v.equipment @> ?::text[]', filters.equipment.map((e) => e.toUpperCase()));
+  // Must have every requested item, not just one - one EXISTS per code,
+  // ANDed together, against the venue_equipment junction table.
+  for (const code of filters.equipment || []) {
+    add(
+      `EXISTS (SELECT 1 FROM venue_equipment vex JOIN equipment eq ON eq.equipment_id = vex.equipment_id
+                WHERE vex.venue_id = v.venue_id AND eq.equipment_code = ?)`,
+      code.toUpperCase(),
+    );
+  }
 
   const size = Math.min(Math.max(Number(filters.pageSize) || 50, 1), MAX_PAGE_SIZE);
   const page = Math.max(Number(filters.page) || 1, 1);
@@ -89,6 +107,7 @@ async function listVenues(actor, filters = {}) {
     `SELECT ${VENUE_COLUMNS}, count(*) OVER () AS total_count
        FROM venues v
        LEFT JOIN departments d ON d.department_id = v.department_id
+       ${VENUE_EQUIPMENT_JOIN}
       ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
       ORDER BY v.building, v.floor, v.venue_name
       LIMIT ${size} OFFSET ${(page - 1) * size}`,
@@ -107,22 +126,27 @@ async function listVenues(actor, filters = {}) {
  * in one call so the picker renders without a waterfall.
  */
 async function getDirectoryMeta() {
-  const [{ rows: venues }, rules] = await Promise.all([
+  const [{ rows: venues }, { rows: equipmentRows }, rules] = await Promise.all([
     db.query(
-      `SELECT venue_id, venue_name, building, floor, venue_type, capacity, equipment
+      `SELECT venue_id, venue_name, building, floor, venue_type, capacity
          FROM venues WHERE is_active ORDER BY building, floor, venue_name`,
+    ),
+    db.query(
+      `SELECT DISTINCT eq.equipment_code
+         FROM venue_equipment vex
+         JOIN equipment eq ON eq.equipment_id = vex.equipment_id
+         JOIN venues v ON v.venue_id = vex.venue_id AND v.is_active
+        ORDER BY eq.equipment_code`,
     ),
     settings.getSchedulingRules(),
   ]);
 
   const buildings = new Map();
-  const equipment = new Set();
   for (const v of venues) {
     if (!buildings.has(v.building)) buildings.set(v.building, new Map());
     const floors = buildings.get(v.building);
     if (!floors.has(v.floor)) floors.set(v.floor, []);
     floors.get(v.floor).push({ id: v.venue_id, name: v.venue_name, type: v.venue_type, capacity: v.capacity });
-    (v.equipment || []).forEach((item) => equipment.add(item));
   }
 
   return {
@@ -131,7 +155,7 @@ async function getDirectoryMeta() {
       floors: [...floors].map(([floor, list]) => ({ floor, venues: list })),
     })),
     types: VENUE_TYPES,
-    equipment: [...equipment].sort(),
+    equipment: equipmentRows.map((r) => r.equipment_code),
     rules,
   };
 }
@@ -140,6 +164,7 @@ async function findVenueRow(venueId, client = db, { forUpdate = false } = {}) {
   const { rows } = await client.query(
     `SELECT ${VENUE_COLUMNS}
        FROM venues v LEFT JOIN departments d ON d.department_id = v.department_id
+       ${VENUE_EQUIPMENT_JOIN}
       WHERE v.venue_id = $1 ${forUpdate ? 'FOR UPDATE OF v' : ''}`,
     [venueId],
   );
@@ -156,6 +181,26 @@ function normaliseEquipment(list = []) {
   return [...new Set(list.map((item) => String(item).trim().toUpperCase().replace(/[\s-]+/g, '_')).filter(Boolean))].sort();
 }
 
+/**
+ * Replaces a venue's rows in the venue_equipment junction table with exactly
+ * the given codes: upsert each code into the equipment lookup table, then
+ * delete-and-reinsert the links. Simpler than a diff, and this table is
+ * small (a handful of rows per venue).
+ */
+async function syncEquipment(client, venueId, codes) {
+  await client.query('DELETE FROM venue_equipment WHERE venue_id = $1', [venueId]);
+  if (codes.length === 0) return;
+  await client.query(
+    `INSERT INTO equipment (equipment_code) SELECT unnest($1::text[]) ON CONFLICT (equipment_code) DO NOTHING`,
+    [codes],
+  );
+  await client.query(
+    `INSERT INTO venue_equipment (venue_id, equipment_id)
+     SELECT $1, equipment_id FROM equipment WHERE equipment_code = ANY($2::text[])`,
+    [venueId, codes],
+  );
+}
+
 async function createVenue(actor, input, { ip } = {}) {
   if (!rbac.isFaculty(actor.role)) throw ApiError.forbidden();
   // A coordinator's venues always belong to their department.
@@ -166,14 +211,15 @@ async function createVenue(actor, input, { ip } = {}) {
 
   return db.withTransaction(async (client) => {
     const { rows: [row] } = await client.query(
-      `INSERT INTO venues (venue_name, building, floor, department_id, venue_type, capacity, location, equipment, buffer_minutes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO venues (venue_name, building, floor, department_id, venue_type, capacity, location, buffer_minutes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING venue_id`,
       [
         input.name.trim(), input.building.trim(), input.floor, departmentId, input.type, input.capacity,
-        input.location?.trim() || null, normaliseEquipment(input.equipment), input.bufferMinutes ?? null,
+        input.location?.trim() || null, input.bufferMinutes ?? null,
       ],
     );
+    await syncEquipment(client, row.venue_id, normaliseEquipment(input.equipment));
     await audit.record({
       adminId: actor.id, action: 'VENUE_CREATED', targetType: 'VENUE', targetId: row.venue_id, ip,
       details: { name: input.name, building: input.building },
@@ -184,7 +230,7 @@ async function createVenue(actor, input, { ip } = {}) {
 
 const UPDATABLE = {
   name: 'venue_name', building: 'building', floor: 'floor', type: 'venue_type', capacity: 'capacity',
-  location: 'location', equipment: 'equipment', bufferMinutes: 'buffer_minutes', isActive: 'is_active',
+  location: 'location', bufferMinutes: 'buffer_minutes', isActive: 'is_active',
 };
 
 async function updateVenue(actor, venueId, changes, { ip } = {}) {
@@ -198,7 +244,6 @@ async function updateVenue(actor, venueId, changes, { ip } = {}) {
     for (const [key, column] of Object.entries(UPDATABLE)) {
       if (changes[key] === undefined) continue;
       let value = changes[key];
-      if (key === 'equipment') value = normaliseEquipment(value);
       if (typeof value === 'string') value = value.trim() || (key === 'location' ? null : value);
       params.push(value);
       sets.push(`${column} = $${params.length}`);
@@ -207,9 +252,11 @@ async function updateVenue(actor, venueId, changes, { ip } = {}) {
       params.push(changes.departmentId);
       sets.push(`department_id = $${params.length}`);
     }
-    if (sets.length === 0) return;
+    const equipmentChanged = changes.equipment !== undefined;
+    if (equipmentChanged) await syncEquipment(client, venueId, normaliseEquipment(changes.equipment));
+    if (sets.length === 0 && !equipmentChanged) return;
 
-    await client.query(`UPDATE venues SET ${sets.join(', ')} WHERE venue_id = $1`, params);
+    if (sets.length > 0) await client.query(`UPDATE venues SET ${sets.join(', ')} WHERE venue_id = $1`, params);
     await audit.record({
       adminId: actor.id,
       action: changes.isActive === false ? 'VENUE_DEACTIVATED' : 'VENUE_UPDATED',

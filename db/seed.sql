@@ -98,41 +98,86 @@ ON CONFLICT (setting_key) DO NOTHING;
 -- Shared spaces (auditorium, ground, open air theatre) belong to no
 -- department, so any club may request them.
 -- ------------------------------------------------------------
-INSERT INTO venues (venue_name, building, floor, department_id, venue_type, capacity, location, equipment)
-SELECT v.venue_name, v.building, v.floor, d.department_id, v.venue_type, v.capacity, v.location, v.equipment
+INSERT INTO venues (venue_name, building, floor, department_id, venue_type, capacity, location)
+SELECT v.venue_name, v.building, v.floor, d.department_id, v.venue_type, v.capacity, v.location
 FROM (VALUES
     -- Floor 1 - Electrical Engineering
-    ('Electrical Machines Lab', 'Academic Building', 1::SMALLINT, 'ELEC', 'LABORATORY',      40, 'Floor 1, Academic Building', ARRAY['WORKBENCHES','MOTORS','SAFETY_GEAR']),
-    ('PLC & SCADA Lab',         'Academic Building', 1::SMALLINT, 'ELEC', 'LABORATORY',      35, 'Floor 1, Academic Building', ARRAY['DESKTOPS','PLC_KITS']),
-    ('Classroom 101',           'Academic Building', 1::SMALLINT, 'ELEC', 'CLASSROOM',       70, 'Floor 1, Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('Electrical Machines Lab', 'Academic Building', 1::SMALLINT, 'ELEC', 'LABORATORY',      40, 'Floor 1, Academic Building'),
+    ('PLC & SCADA Lab',         'Academic Building', 1::SMALLINT, 'ELEC', 'LABORATORY',      35, 'Floor 1, Academic Building'),
+    ('Classroom 101',           'Academic Building', 1::SMALLINT, 'ELEC', 'CLASSROOM',       70, 'Floor 1, Academic Building'),
     -- Floor 2 - Mechanical Engineering
-    ('Mechanical Workshop',     'Academic Building', 2::SMALLINT, 'MECH', 'LABORATORY',      80, 'Floor 2, Academic Building', ARRAY['MACHINES','SAFETY_GEAR']),
-    ('Thermal Engineering Lab', 'Academic Building', 2::SMALLINT, 'MECH', 'LABORATORY',      45, 'Floor 2, Academic Building', ARRAY['WORKBENCHES']),
-    ('Classroom 201',           'Academic Building', 2::SMALLINT, 'MECH', 'CLASSROOM',       70, 'Floor 2, Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('Mechanical Workshop',     'Academic Building', 2::SMALLINT, 'MECH', 'LABORATORY',      80, 'Floor 2, Academic Building'),
+    ('Thermal Engineering Lab', 'Academic Building', 2::SMALLINT, 'MECH', 'LABORATORY',      45, 'Floor 2, Academic Building'),
+    ('Classroom 201',           'Academic Building', 2::SMALLINT, 'MECH', 'CLASSROOM',       70, 'Floor 2, Academic Building'),
     -- Floor 3 - Electronics & Telecommunication
-    ('Electronics Lab',         'Academic Building', 3::SMALLINT, 'ENTC', 'LABORATORY',      45, 'Floor 3, Academic Building', ARRAY['OSCILLOSCOPES','WORKBENCHES']),
-    ('VLSI & Embedded Lab',     'Academic Building', 3::SMALLINT, 'ENTC', 'LABORATORY',      40, 'Floor 3, Academic Building', ARRAY['DESKTOPS','FPGA_KITS']),
-    ('Seminar Hall B',          'Academic Building', 3::SMALLINT, 'ENTC', 'SEMINAR_HALL',   150, 'Floor 3, Academic Building', ARRAY['PROJECTOR','MIC','AC']),
+    ('Electronics Lab',         'Academic Building', 3::SMALLINT, 'ENTC', 'LABORATORY',      45, 'Floor 3, Academic Building'),
+    ('VLSI & Embedded Lab',     'Academic Building', 3::SMALLINT, 'ENTC', 'LABORATORY',      40, 'Floor 3, Academic Building'),
+    ('Seminar Hall B',          'Academic Building', 3::SMALLINT, 'ENTC', 'SEMINAR_HALL',   150, 'Floor 3, Academic Building'),
     -- Floor 4 - Information Technology
-    ('Computer Lab 1',          'Academic Building', 4::SMALLINT, 'IT',   'LABORATORY',      60, 'Floor 4, Academic Building', ARRAY['DESKTOPS','PROJECTOR','AC']),
-    ('Networking Lab',          'Academic Building', 4::SMALLINT, 'IT',   'LABORATORY',      40, 'Floor 4, Academic Building', ARRAY['DESKTOPS','ROUTERS','SWITCHES']),
-    ('Seminar Hall A',          'Academic Building', 4::SMALLINT, 'IT',   'SEMINAR_HALL',   200, 'Floor 4, Academic Building', ARRAY['PROJECTOR','MIC','AC']),
+    ('Computer Lab 1',          'Academic Building', 4::SMALLINT, 'IT',   'LABORATORY',      60, 'Floor 4, Academic Building'),
+    ('Networking Lab',          'Academic Building', 4::SMALLINT, 'IT',   'LABORATORY',      40, 'Floor 4, Academic Building'),
+    ('Seminar Hall A',          'Academic Building', 4::SMALLINT, 'IT',   'SEMINAR_HALL',   200, 'Floor 4, Academic Building'),
     -- Floor 5 - Computer Engineering
-    ('Computer Lab 2',          'Academic Building', 5::SMALLINT, 'CS',   'LABORATORY',      60, 'Floor 5, Academic Building', ARRAY['DESKTOPS','PROJECTOR','AC']),
-    ('Project Lab',             'Academic Building', 5::SMALLINT, 'CS',   'LABORATORY',      40, 'Floor 5, Academic Building', ARRAY['DESKTOPS','WHITEBOARD']),
-    ('Classroom 501',           'Academic Building', 5::SMALLINT, 'CS',   'CLASSROOM',       70, 'Floor 5, Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('Computer Lab 2',          'Academic Building', 5::SMALLINT, 'CS',   'LABORATORY',      60, 'Floor 5, Academic Building'),
+    ('Project Lab',             'Academic Building', 5::SMALLINT, 'CS',   'LABORATORY',      40, 'Floor 5, Academic Building'),
+    ('Classroom 501',           'Academic Building', 5::SMALLINT, 'CS',   'CLASSROOM',       70, 'Floor 5, Academic Building'),
     -- Floor 6 - AI & Data Science
-    ('AI & Data Science Lab',   'Academic Building', 6::SMALLINT, 'AIDS', 'LABORATORY',      55, 'Floor 6, Academic Building', ARRAY['DESKTOPS','GPU_WORKSTATIONS','AC']),
-    ('Data Analytics Lab',      'Academic Building', 6::SMALLINT, 'AIDS', 'LABORATORY',      40, 'Floor 6, Academic Building', ARRAY['DESKTOPS','PROJECTOR']),
-    ('Classroom 601',           'Academic Building', 6::SMALLINT, 'AIDS', 'CLASSROOM',       70, 'Floor 6, Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AI & Data Science Lab',   'Academic Building', 6::SMALLINT, 'AIDS', 'LABORATORY',      55, 'Floor 6, Academic Building'),
+    ('Data Analytics Lab',      'Academic Building', 6::SMALLINT, 'AIDS', 'LABORATORY',      40, 'Floor 6, Academic Building'),
+    ('Classroom 601',           'Academic Building', 6::SMALLINT, 'AIDS', 'CLASSROOM',       70, 'Floor 6, Academic Building'),
     -- Shared spaces, open to every department
-    ('Main Auditorium',         'Main Building',     0::SMALLINT, NULL,   'AUDITORIUM',     500, 'Ground Floor, Main Building', ARRAY['PROJECTOR','SOUND_SYSTEM','AC','STAGE']),
-    ('Conference Room',         'Admin Block',       1::SMALLINT, NULL,   'CONFERENCE_ROOM', 50, 'Floor 1, Admin Block',        ARRAY['PROJECTOR','AC','WHITEBOARD']),
-    ('Sports Ground',           'Campus',            0::SMALLINT, NULL,   'SPORTS_GROUND',  800, 'Behind Main Building',        ARRAY['FLOODLIGHTS']),
-    ('Open Air Theatre',        'Campus',            0::SMALLINT, NULL,   'OPEN_AIR',       350, 'Near Canteen',                ARRAY['SOUND_SYSTEM','STAGE'])
-) AS v(venue_name, building, floor, dept_code, venue_type, capacity, location, equipment)
+    ('Main Auditorium',         'Main Building',     0::SMALLINT, NULL,   'AUDITORIUM',     500, 'Ground Floor, Main Building'),
+    ('Conference Room',         'Admin Block',       1::SMALLINT, NULL,   'CONFERENCE_ROOM', 50, 'Floor 1, Admin Block'),
+    ('Sports Ground',           'Campus',            0::SMALLINT, NULL,   'SPORTS_GROUND',  800, 'Behind Main Building'),
+    ('Open Air Theatre',        'Campus',            0::SMALLINT, NULL,   'OPEN_AIR',       350, 'Near Canteen')
+) AS v(venue_name, building, floor, dept_code, venue_type, capacity, location)
 LEFT JOIN departments d ON d.dept_code = v.dept_code
 ON CONFLICT (building, venue_name) DO NOTHING;
+
+-- ------------------------------------------------------------
+-- Equipment (lookup table) and venue_equipment (junction, composite PK).
+-- Populate the lookup from every distinct code used below, then link each
+-- venue to its equipment - this is the 1NF fix for what used to be
+-- venues.equipment TEXT[] (see db/schema.sql section 7a).
+-- ------------------------------------------------------------
+INSERT INTO equipment (equipment_code)
+VALUES
+    ('WORKBENCHES'), ('MOTORS'), ('SAFETY_GEAR'), ('DESKTOPS'), ('PLC_KITS'),
+    ('PROJECTOR'), ('WHITEBOARD'), ('MACHINES'), ('OSCILLOSCOPES'), ('FPGA_KITS'),
+    ('MIC'), ('AC'), ('ROUTERS'), ('SWITCHES'), ('GPU_WORKSTATIONS'),
+    ('SOUND_SYSTEM'), ('STAGE'), ('FLOODLIGHTS')
+ON CONFLICT (equipment_code) DO NOTHING;
+
+INSERT INTO venue_equipment (venue_id, equipment_id)
+SELECT v.venue_id, e.equipment_id
+FROM (VALUES
+    ('Electrical Machines Lab', 'Academic Building', ARRAY['WORKBENCHES','MOTORS','SAFETY_GEAR']),
+    ('PLC & SCADA Lab',         'Academic Building', ARRAY['DESKTOPS','PLC_KITS']),
+    ('Classroom 101',           'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('Mechanical Workshop',     'Academic Building', ARRAY['MACHINES','SAFETY_GEAR']),
+    ('Thermal Engineering Lab', 'Academic Building', ARRAY['WORKBENCHES']),
+    ('Classroom 201',           'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('Electronics Lab',         'Academic Building', ARRAY['OSCILLOSCOPES','WORKBENCHES']),
+    ('VLSI & Embedded Lab',     'Academic Building', ARRAY['DESKTOPS','FPGA_KITS']),
+    ('Seminar Hall B',          'Academic Building', ARRAY['PROJECTOR','MIC','AC']),
+    ('Computer Lab 1',          'Academic Building', ARRAY['DESKTOPS','PROJECTOR','AC']),
+    ('Networking Lab',          'Academic Building', ARRAY['DESKTOPS','ROUTERS','SWITCHES']),
+    ('Seminar Hall A',          'Academic Building', ARRAY['PROJECTOR','MIC','AC']),
+    ('Computer Lab 2',          'Academic Building', ARRAY['DESKTOPS','PROJECTOR','AC']),
+    ('Project Lab',             'Academic Building', ARRAY['DESKTOPS','WHITEBOARD']),
+    ('Classroom 501',           'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AI & Data Science Lab',   'Academic Building', ARRAY['DESKTOPS','GPU_WORKSTATIONS','AC']),
+    ('Data Analytics Lab',      'Academic Building', ARRAY['DESKTOPS','PROJECTOR']),
+    ('Classroom 601',           'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('Main Auditorium',         'Main Building',     ARRAY['PROJECTOR','SOUND_SYSTEM','AC','STAGE']),
+    ('Conference Room',         'Admin Block',       ARRAY['PROJECTOR','AC','WHITEBOARD']),
+    ('Sports Ground',           'Campus',            ARRAY['FLOODLIGHTS']),
+    ('Open Air Theatre',        'Campus',            ARRAY['SOUND_SYSTEM','STAGE'])
+) AS x(venue_name, building, codes)
+JOIN venues v ON v.venue_name = x.venue_name AND v.building = x.building
+JOIN LATERAL unnest(x.codes) AS code ON TRUE
+JOIN equipment e ON e.equipment_code = code
+ON CONFLICT (venue_id, equipment_id) DO NOTHING;
 
 -- ------------------------------------------------------------
 -- Clubs.

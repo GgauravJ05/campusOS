@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-18 | [Phase C.1 — normalize venues.equipment, add the composite-PK example](#phase-c1--normalize-venuesequipment-add-the-composite-pk-example-2026-09-18) | Gaurav |
 | 2026-09-18 | [Phase B — the two real bugs, fixed and proved](#phase-b--the-two-real-bugs-fixed-and-proved-2026-09-18) | Gaurav |
 | 2026-09-18 | [Syllabus alignment — CLAUDE.md, prompt.md, and the full course mapping](#syllabus-alignment--claudemd-promptmd-and-the-full-course-mapping-2026-09-18) | Gaurav |
 | 2026-09-16 | [Refinements — real campus layout, real clubs, one seat per student](#refinements--real-campus-layout-real-clubs-one-seat-per-student-2026-09-16) | Gaurav |
@@ -27,6 +28,43 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase C.1 — normalize venues.equipment, add the composite-PK example (2026-09-18)
+
+First slice of Phase C (DBMS normalization rebuild), scoped small on purpose:
+one violation, fully fixed and documented, rather than the whole schema
+rewrite in one commit.
+
+**What changed.** `venues.equipment TEXT[]` — a 1NF violation (a repeating
+group in one column) — is replaced by two tables: `equipment` (a lookup
+table with a unique code) and `venue_equipment` (the many-to-many junction,
+with `PRIMARY KEY (venue_id, equipment_id)`). This is also the project's
+first **composite primary key** — every other junction table
+(`club_members`, `event_registrations`) uses a surrogate PK plus a separate
+composite `UNIQUE`, which works but isn't the textbook case the syllabus
+names.
+
+**What did not change.** The API: `GET /api/venues` and friends still return
+`equipment: ["AC", "PROJECTOR", ...]` exactly as before — normalizing
+storage is not a reason to break every client. `venue.service.js` now
+assembles that array per request with a `LEFT JOIN LATERAL` + `array_agg`,
+and the equipment filter became one `EXISTS` subquery per requested code
+instead of the non-standard `@>` array-contains operator.
+
+**Docs:** new `docs/DATABASE.md` walks this exact decomposition (the
+violation, the fix, the composite-PK point) and honestly records the two
+1NF/3NF issues **not** yet fixed (`events.eligible_departments`/
+`eligible_years` arrays; `venues.location` and `events.booked_seats` as
+derived-data update anomalies, the latter a deliberate trade-off for the
+FR15 seat lock, not a bug) — tracked as the next Phase C slices.
+`docs/SYLLABUS-MAPPING.md`'s composite-PK and 1NF rows updated to match.
+
+**Tests:** added a coverage-closing case for the equipment-only update path
+(`sets.length === 0` when only `equipment` changes was a new branch this
+introduced). `npm run test:ci` on a freshly seeded database: 668 passed,
+0 skipped, coverage gates hold.
 
 ---
 

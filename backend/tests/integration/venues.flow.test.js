@@ -154,6 +154,24 @@ describeWithDb('venues (database)', () => {
       await request(app).patch(`/api/venues/${lab.venue_id}`).set(auth(itCoordinator)).send({}).expect(200);
     });
 
+    it('replaces a venue\'s equipment with no other field changing, and audits it', async () => {
+      const created = await request(app).post('/api/venues').set(auth(principal)).send({
+        name: uniqueName('Gear Room'), building: 'Annexe', floor: 1, type: 'CLASSROOM', capacity: 30,
+        equipment: ['projector'],
+      }).expect(201);
+      const id = created.body.data.id;
+
+      const updated = await request(app).patch(`/api/venues/${id}`).set(auth(principal))
+        .send({ equipment: ['ac', 'whiteboard'] }).expect(200);
+      expect(updated.body.data.equipment).toEqual(['AC', 'WHITEBOARD']);
+
+      const { rows: [log] } = await db.query(
+        `SELECT action FROM admin_logs WHERE target_type = 'VENUE' AND target_id = $1 ORDER BY log_id DESC LIMIT 1`,
+        [id],
+      );
+      expect(log.action).toBe('VENUE_UPDATED');
+    });
+
     it('answers 404 for an unknown venue', async () => {
       await request(app).get('/api/venues/99999999').set(auth(student)).expect(404);
       await request(app).patch('/api/venues/99999999').set(auth(principal)).send({ capacity: 5 }).expect(404);
