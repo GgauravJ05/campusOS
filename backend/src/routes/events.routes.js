@@ -12,6 +12,7 @@ router.use(authenticate);
 // Static paths come before /:id, or "recommended" would be parsed as an id.
 router.get('/', rules.list, validate, controller.list);
 router.get('/recommended', rules.recommendations, validate, controller.recommended);
+router.get('/my-activity', rules.myActivity, validate, controller.myActivity);
 
 router.get('/:id', rules.getOne, validate, controller.getOne);
 // The service decides who organises an event; every role hits the same route.

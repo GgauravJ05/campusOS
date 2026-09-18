@@ -375,3 +375,79 @@ trigger rejecting a raw overbooking `INSERT` outside the function entirely,
 and `close_past_events()` completing a past event while leaving a future one
 alone. Verified with `npm run test:ci` on a freshly seeded database: 672
 passed, 0 skipped, including the full FR15/FR10 concurrency suites unchanged.
+
+## The remaining SQL query forms ✅ fixed
+
+Four forms the syllabus names had zero occurrences anywhere in the codebase
+before this: `NOT IN`, `UNION`, `MIN`/`MAX`/`AVG`, and a self-join. Each was
+added to a real feature, not a throwaway example query.
+
+**`NOT IN`** — the organiser's "still to mark" shortlist.
+`attendance.service.js`'s roster screen already told you *whether* a student
+was marked (via a `LEFT JOIN` and a `null` status). `stillToMark()` answers
+the same question the other direction, directly:
+
+```sql
+SELECT student_id FROM event_registrations
+ WHERE event_id = $1 AND status = 'RESERVED'
+   AND student_id NOT IN (SELECT student_id FROM attendance WHERE event_id = $1);
+```
+
+Exposed as `meta.unmarkedIds` on `GET /api/events/:id/attendance`.
+
+**`UNION`** — a student's "my activity" feed (`event.service.js`'s
+`myActivity()`, `GET /api/events/my-activity`). "Events I'm registered for"
+and "events I created" are two different relationships to the same table,
+not two conditions on one relationship, which is why this is a `UNION` of
+two `SELECT`s rather than an `OR` inside one join:
+
+```sql
+SELECT e.event_id, e.title, ..., 'ATTENDEE' AS my_role
+  FROM events e JOIN event_registrations r ON r.event_id = e.event_id
+ WHERE r.student_id = $1 AND r.status <> 'CANCELLED'
+UNION
+SELECT e.event_id, e.title, ..., 'ORGANISER' AS my_role
+  FROM events e WHERE e.created_by = $1
+ ORDER BY event_date DESC, event_id DESC;
+```
+
+A club head who also RSVPs to their own event gets both tags on one
+`event_id` — `UNION` (not `UNION ALL`) still keeps both rows here, because
+the two rows differ in `my_role`, so they were never duplicates to begin
+with. Verified directly: `tests/integration/events.flow.test.js`'s "wearing
+both hats" test.
+
+**`MIN`/`MAX`/`AVG`** — a utilisation report exists to answer "which venue
+is busiest, which is quietest, what's typical", and those are exactly what
+these three functions compute, over the same period-filtered per-venue
+figures the report already builds:
+
+```sql
+SELECT MIN(hours) AS min_hours, MAX(hours) AS max_hours, AVG(hours) AS avg_hours
+  FROM (<the same per-venue query already used for the report rows>) per_venue;
+```
+
+Added to `GET /api/reports/venue-utilisation`'s `totals` as `minHours`,
+`maxHours`, `avgHours`, and `busiestVenue`.
+
+**A self-join** — "other upcoming events from the same club" on every
+event's detail page (`event.service.js`'s `relatedEvents()`, added to
+`GET /api/events/:id`'s response):
+
+```sql
+SELECT e2.event_id, e2.title, e2.event_date
+  FROM events e1
+  JOIN events e2 ON e2.club_id = e1.club_id AND e2.event_id <> e1.event_id
+ WHERE e1.event_id = $1 AND e2.status = 'PUBLISHED' AND e2.event_date >= CURRENT_DATE
+ ORDER BY e2.event_date ASC LIMIT 5;
+```
+
+One table joined to itself to compare each event's club against every other
+event's club — the textbook definition of a self-join, not two different
+tables that happen to share a name. Empty for a college-level event with no
+club (`e2.club_id = e1.club_id` is never true when both sides are `NULL`).
+Tested at the SQL level in `tests/integration/schema.test.js` (isolated
+fixtures) and through the API in `events.flow.test.js`.
+
+**Verification:** `npm run test:ci` on a freshly seeded database: 677
+passed, 0 skipped, coverage gates hold.
