@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-18 | [Syllabus alignment — CLAUDE.md, prompt.md, and the full course mapping](#syllabus-alignment--claudemd-promptmd-and-the-full-course-mapping-2026-09-18) | Gaurav |
 | 2026-09-16 | [Refinements — real campus layout, real clubs, one seat per student](#refinements--real-campus-layout-real-clubs-one-seat-per-student-2026-09-16) | Gaurav |
 | 2026-09-16 | [Phase 6 — Dashboards, audit trail & analytics](#phase-6--dashboards-audit-trail--analytics-2026-09-16) | Gaurav |
 | 2026-09-16 | [Phase 5 — Automated reminders](#phase-5--automated-reminders-2026-09-16) | Gaurav |
@@ -25,6 +26,105 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Syllabus alignment — CLAUDE.md, prompt.md, and the full course mapping (2026-09-18)
+
+MMCOE's stated goal for this project is that students apply the fundamental
+knowledge of their **Second Year IT courses — theory and lab both** — not
+that they build an advanced or AI system. The Second Year IT syllabus
+(A.Y. 2025-26, `reference/Final SY IT Syllabus 17.3.25.pdf`) was audited
+course by course, unit by unit, lab by lab against the running code. This
+entry adds the process files and the mapping; it changes no application
+behaviour.
+
+### ⚠️ What you need to do
+
+Read [`CLAUDE.md`](CLAUDE.md) before your next change, and run
+[`prompt.md`](prompt.md)'s checklist before considering any change finished —
+whether you're using an AI assistant or writing code by hand. Nothing else to
+install or configure.
+
+### What was added
+
+- **`CLAUDE.md`** — project instructions every Claude Code session loads
+  automatically. States the prime directive (prefer the syllabus-recognisable
+  construct), the sources of truth, the working rules that used to live only
+  in a private memory file, the database rules (including one global lock
+  order — see below), and the operational traps that keep costing time
+  (fixed ports, PostgreSQL not surviving a restart, DB suites skipping
+  silently, the sign-in rate limit).
+- **`prompt.md`** — the eleven-step checklist to run on every change: which
+  SRS requirement, which syllabus unit, is this the simplest recognisable
+  construct, database checks, OOP/DSA conventions, tests with zero skipped
+  suites, lint and build, the `UPDATES.md` entry, other docs, commit and
+  push, and reporting back precisely.
+- **`docs/SYLLABUS-MAPPING.md`** — the full audit. Fourteen courses, every
+  unit and lab experiment, marked ✅ applied / 🟡 partly / ⬜ not yet / ⛔ out
+  of scope, with the exact file and function for anything applied and how a
+  faculty member can see it. Opens with the strongest fact found: **the
+  syllabus's own PBL topic P5 under B25IT405 describes an "end-to-end event
+  management system … registrations … attendance … notifications, and
+  analytics"** — this project, in the department's own words.
+- The PR template gained two lines: which syllabus course/unit a change
+  applies to, and whether the mapping doc was updated.
+- `reference/Final SY IT Syllabus 17.3.25.pdf` committed so every teammate
+  has it.
+
+### What the audit found
+
+- **Strong:** DBMS integrity constraints, triggers, transactions and row
+  locking; OS Unit 3 (critical sections, mutual exclusion, deadlock
+  prevention) and Unit 5 (protection, authentication); CN Unit 4 (HTTP, REST,
+  cookies, CORS).
+- **Weak:** DSA — no data structure is hand-written anywhere; everything
+  relies on JS built-ins or SQL. OOP — the backend has exactly two classes,
+  both error types (`ApiError`, `ConfigError`).
+- **Missing:** SQL views, HAVING, set operators, NOT IN, AVG/MIN/MAX, stored
+  procedures, cursors, NoSQL, a composite primary key; semantic HTML and
+  hand-written CSS; Bootstrap/jQuery/XHR; hosting, DNS, HTTPS.
+- **Two real bugs**, found by reading the locking code, not by running it:
+  1. **A deadlock.** `club.service.js` `addMember` locks club→user;
+     `user.service.js` `changeRole` locks user→club. Opposite orders on the
+     same two rows is a circular wait.
+  2. **A double broadcast.** `event.service.js` `publishEvent` checks
+     `status === 'APPROVED'` from an unlocked read, takes the lock afterward,
+     and never re-checks — two simultaneous publish requests can both notify
+     every eligible student.
+  3. **The FR10 concurrency test doesn't test FR10's code.**
+     `concurrency.test.js` reimplements the approval logic in raw SQL rather
+     than calling `approveBooking`, and `docs/reviews/REVIEW-SCRIPT.md`
+     presents `rsvp.concurrency.test.js` (which proves FR15, seat capacity)
+     as the FR10 proof. Both are corrected in the next phase, not this one.
+
+### Decisions this entry records
+
+- **NoSQL (DBMS CO5):** PostgreSQL JSONB, not MongoDB — the syllabus names
+  MongoDB specifically, so this is documented in the mapping as a deliberate
+  substitution rather than a full match, with a real job (event feedback) and
+  the SQL vs NoSQL comparison written up rather than skipped.
+- **OOP:** a targeted class design (role hierarchy, exception hierarchy, one
+  domain class), not a rewrite of every service module into classes.
+- **DSA:** hand-written structures inside real features (the waitlist as a
+  queue, the approval inbox as a heap, the venue cascade as a tree), not a
+  standalone demo library.
+- **Removal:** deliberately little. Refresh-token rotation, the database
+  exclusion constraint, rate limiting and the append-only audit trigger stay
+  — they are the OS/DBMS security and integrity syllabus, not accidental
+  complexity. What changes instead is presentation: report queries move from
+  `FILTER (WHERE …)` into plain `GROUP BY`/`HAVING` views, and every
+  mechanism that stays gets a line in the mapping explaining which unit it
+  belongs to.
+
+### Still open
+
+This entry is process and documentation only. The bugs above, the database
+normalization rebuild (approved 2026-09-17), the OOP/DSA/OS work, the
+web/hosting phase, and the PBL documentation (test report, contribution
+matrix, ethics/privacy/sustainability section) are tracked as the next
+phases and will each land with their own `UPDATES.md` entry and an updated
+`docs/SYLLABUS-MAPPING.md`.
 
 ---
 
