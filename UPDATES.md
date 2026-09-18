@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-18 | [Phase C.2 — reporting views, HAVING, and the FILTER-to-CASE rewrite](#phase-c2--reporting-views-having-and-the-filter-to-case-rewrite-2026-09-18) | Gaurav |
 | 2026-09-18 | [Phase C.1b — normalize events.eligible_departments/eligible_years](#phase-c1b--normalize-eventseligible_departmentseligible_years-2026-09-18) | Gaurav |
 | 2026-09-18 | [Phase C.1 — normalize venues.equipment, add the composite-PK example](#phase-c1--normalize-venuesequipment-add-the-composite-pk-example-2026-09-18) | Gaurav |
 | 2026-09-18 | [Phase B — the two real bugs, fixed and proved](#phase-b--the-two-real-bugs-fixed-and-proved-2026-09-18) | Gaurav |
@@ -29,6 +30,43 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase C.2 — reporting views, HAVING, and the FILTER-to-CASE rewrite (2026-09-18)
+
+Third Phase C slice: DBMS Unit 2's "Views" and "HAVING" rows, both confirmed
+zero occurrences in the syllabus audit.
+
+**What changed.** Four new views in `db/schema.sql`: `v_venue_utilisation`,
+`v_club_activity`, `v_event_attendance` (lifetime aggregates, plain
+`GROUP BY`/`CASE` — not PostgreSQL's `FILTER (WHERE ...)` clause or window
+functions, per `CLAUDE.md`'s database rules), and `v_active_venues`, a
+simple single-table view that is genuinely **updatable** — `UPDATE
+v_active_venues SET capacity = ... WHERE venue_id = ...` writes straight
+through to `venues`, verified by hand. `v_club_activity` uses a real
+`HAVING count(DISTINCT e.event_id) > 0` to drop clubs with no events, the
+textbook case for `HAVING` over `WHERE` (the aggregate doesn't exist to
+filter on until after `GROUP BY` runs).
+
+**Why the report API isn't rewritten to select from these views:** a view
+is a parameterless stored `SELECT`, and the FR21 report endpoints take a
+caller-chosen date range — standard SQL has no way to parameterize a view.
+So the views are lifetime-to-date (real, queryable, useful on their own),
+and `reports/metrics.service.js`'s three parameterized queries were instead
+rewritten from `count(x) FILTER (WHERE y)` to `count(CASE WHEN y THEN x
+END)` — functionally identical (both `COUNT` and `SUM` already ignore
+`NULL`), but the plain form every SQL textbook teaches rather than a
+PostgreSQL-specific clause.
+
+**Docs:** `docs/DATABASE.md` gained a "Views" section with the same
+violation/fix structure as the normalization sections. `docs/SYLLABUS-
+MAPPING.md`'s Views and HAVING rows (DBMS Unit 2, both theory and lab 6)
+now read fixed.
+
+**Verification:** `npm run test:ci` on a freshly seeded database: 668
+passed, 0 skipped, coverage gates hold — the FILTER→CASE rewrite changed no
+test, confirming the two forms produce identical results.
 
 ---
 

@@ -121,10 +121,11 @@ such rather than forced.
 ## B25IT401 — Database Management Systems (PCC, 3L+2P) — the strongest course
 
 **Honest summary today:** this is the best-covered course. Constraints,
-triggers, transactions and locking are genuinely strong. Views, HAVING, set
-operators, stored procedures, cursors, a composite primary key, and any NoSQL
-work are **confirmed absent** (checked directly against the schema and code,
-not assumed).
+triggers, transactions and locking are genuinely strong. Composite primary
+keys and views are now real (Phase C: three junction tables, four SQL
+views). HAVING, set operators, stored procedures, cursors, and any NoSQL
+work are still **confirmed absent** (checked directly against the schema and
+code, not assumed) and tracked as the remaining Phase C slices.
 
 ### Theory
 
@@ -136,8 +137,8 @@ not assumed).
 | U2 | DCL (GRANT/REVOKE) | ⬜ | App connects as a single `postgres` role | — |
 | U2 | TCL (transactions) | ✅ | `backend/src/config/db.js` `withTransaction()` — 10+ call sites | Code; not surfaced in the UI |
 | U2 | Joins, ordering, aggregate functions | ✅ | 75+ JOINs across services; `ORDER BY` in every list query | Any listing screen |
-| U2 | GROUP BY / **HAVING** | 🟡 | GROUP BY used in `backend/src/services/reports/metrics.service.js`; **HAVING: zero occurrences** | Planned: Phase C, "clubs with more than N events" |
-| U2 | Views | ⬜ | **Confirmed: zero `CREATE VIEW` anywhere in `db/schema.sql`** | Planned: Phase C — `v_venue_utilisation`, `v_club_activity`, `v_event_attendance` |
+| U2 | GROUP BY / **HAVING** | ✅ | GROUP BY throughout `metrics.service.js` and the new views; `v_club_activity` (`db/schema.sql`) uses `HAVING count(DISTINCT e.event_id) > 0` to drop clubs that have never run an event, the classic "filter on the aggregate, not the raw row" case HAVING exists for | `SELECT * FROM v_club_activity;` — a club with zero events never appears, which a `WHERE` on `e.event_id` could not do (that column doesn't exist until after the GROUP BY runs) |
+| U2 | Views | ✅ **Fixed** | Four views in `db/schema.sql`: `v_venue_utilisation`, `v_club_activity`, `v_event_attendance` (plain `GROUP BY`/`CASE`, no `FILTER (WHERE ...)` or window functions), and `v_active_venues`, a simple **updatable** view | `SELECT * FROM v_venue_utilisation;` in psql; `UPDATE v_active_venues SET capacity = ... WHERE venue_id = ...` writes straight through to `venues` |
 | U2 | Set operations (UNION/INTERSECT/EXCEPT) | ⬜ | **Confirmed: zero occurrences** | Planned: Phase C, a student's "my activity" feed |
 | U2 | Set membership (IN/EXISTS/NOT IN) | 🟡 | `EXISTS`/`NOT EXISTS` used (e.g. `event.service.js`, `dashboard.service.js`); **`NOT IN`: zero** | Planned: Phase C, "registered but not marked present" |
 | U2 | Nested/subqueries | 🟡 | Correlated `EXISTS` subqueries only | — |
@@ -163,29 +164,36 @@ not assumed).
 | 2 | ER diagram → tables | 🟡 | SRS and an ER-style PDF exist; a formal cardinality-annotated ER diagram is planned after Phase C's normalization |
 | 3 | DDL | ✅ | `db/schema.sql` |
 | 4 | DML (insert/select/update/delete, set operators) | 🟡 | No `DELETE` anywhere (everything soft-deletes via `is_active`/status); no set operators yet |
-| 5 | Operators, LIKE, IN/NOT IN, built-ins | 🟡 | LIKE/IN present; NOT IN absent (Phase C closes this) |
-| 6 | GROUP BY, HAVING, EXISTS/NOT EXISTS, **views** | 🟡 | GROUP BY/EXISTS present; HAVING and views planned for Phase C |
+| 5 | Operators, LIKE, IN/NOT IN, built-ins | 🟡 | LIKE/IN present; NOT IN still absent — tracked as the next Phase C slice |
+| 6 | GROUP BY, HAVING, EXISTS/NOT EXISTS, **views** | ✅ | GROUP BY, EXISTS/NOT EXISTS, HAVING (`v_club_activity`) and four views all present, fixed in Phase C |
 | 7 | Subqueries, joins, set operators | 🟡 | Inner/left joins strong; set operators planned |
 | 8 | Nested queries | 🟡 | Correlated EXISTS only |
 | 9–11 | MongoDB CRUD / aggregation+indexing / map-reduce | ⬜ | **Not done as MongoDB.** Covered instead via PostgreSQL JSONB (event feedback, Phase C), documented as a substitution |
 
-**Best gaps closed by Phase C (the largest single phase):**
+**Phase C progress (the largest single phase):**
 
-1. Normalize per the design in `docs/DATABASE.md`: buildings/floors,
-   `venue_equipment` and eligibility junction tables with **composite primary
-   keys**, lookup tables for reference data, derived columns dropped.
-2. **Views**: `v_venue_utilisation`, `v_club_activity`, `v_event_attendance`
-   replacing the report queries, written in plain `GROUP BY`/`HAVING` form.
-3. **Stored function + trigger + cursor**: capacity enforced by a trigger
+1. ✅ Normalized `venues.equipment` and `events.eligible_departments`/
+   `eligible_years` per the design in `docs/DATABASE.md`: three junction
+   tables, two with **composite primary keys**, a lookup table for
+   equipment. `venues.location`/`events.booked_seats` (3NF, one deliberate)
+   remain, tracked as the next slice.
+2. ✅ **Views**: `v_venue_utilisation`, `v_club_activity` (with a real
+   `HAVING`), `v_event_attendance`, and `v_active_venues` (a simple,
+   genuinely **updatable** view) — all four in plain `GROUP BY`/`CASE`/
+   `HAVING` form, no `FILTER (WHERE ...)` or window functions. The report
+   API's own queries were rewritten to the same plain form (views can't take
+   a runtime date-range parameter, so the parameterized report queries stay
+   separate from the views, but now share their SQL style).
+3. ⬜ **Stored function + trigger + cursor**: capacity enforced by a trigger
    (replacing the dropped CHECK), `register_for_event()` as a PL/pgSQL
    function, `close_past_events()` using a cursor.
-4. Missing query forms added to real features: HAVING, NOT IN, UNION, AVG/MIN/MAX,
-   a self-join.
-5. **Event feedback stored as JSONB** with a GIN index — the semi-structured
+4. ⬜ Missing query forms still to add: NOT IN, UNION, AVG/MIN/MAX, a
+   self-join.
+5. ⬜ **Event feedback stored as JSONB** with a GIN index — the semi-structured
    data MongoDB would hold, inside PostgreSQL. `docs/DATABASE.md` carries the
    SQL vs NoSQL / CAP / BASE comparison honestly, including why MongoDB itself
    was not added (avoiding a second database server for a coursework project).
-6. `db/demo/*.sql` — two-psql-session scripts making ACID and locking visible.
+6. ⬜ `db/demo/*.sql` — two-psql-session scripts making ACID and locking visible.
 
 ---
 

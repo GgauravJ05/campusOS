@@ -747,6 +747,88 @@ CREATE TRIGGER trg_admin_logs_immutable
 
 
 -- ============================================================
+-- VIEWS  (DBMS Unit 4 - FR21 reporting, in plain SQL)
+--
+-- Written with ordinary GROUP BY / HAVING / CASE and plain JOINs - not the
+-- FILTER (WHERE ...) clause or window functions PostgreSQL also offers,
+-- which the syllabus does not teach at this level (see CLAUDE.md's database
+-- rules). Each aggregate below is lifetime-to-date: a view is a stored
+-- SELECT with no parameters, so it cannot itself take a runtime date range.
+-- The FR21 report API (reports/metrics.service.js) still needs a
+-- caller-chosen period, so it keeps its own parameterized query rather than
+-- selecting from these views - but it is written in the same plain
+-- CASE/GROUP BY form these views use, not FILTER/window syntax either.
+-- These views are queryable directly (`SELECT * FROM v_venue_utilisation;`)
+-- for a faculty demo of the lifetime totals.
+-- ============================================================
+
+CREATE VIEW v_venue_utilisation AS
+SELECT
+    v.venue_id,
+    v.venue_name,
+    v.building,
+    v.capacity,
+    count(CASE WHEN b.status = 'APPROVED' THEN 1 END)::int  AS approved_bookings,
+    count(CASE WHEN b.status = 'CANCELLED' THEN 1 END)::int AS cancelled_bookings,
+    COALESCE(SUM(CASE WHEN b.status = 'APPROVED'
+                       THEN EXTRACT(EPOCH FROM (b.end_at - b.start_at)) / 3600
+                  END), 0) AS approved_hours
+FROM venues v
+LEFT JOIN bookings b ON b.venue_id = v.venue_id
+WHERE v.is_active
+GROUP BY v.venue_id, v.venue_name, v.building, v.capacity;
+
+CREATE VIEW v_club_activity AS
+SELECT
+    c.club_id,
+    c.club_name,
+    d.dept_code,
+    count(DISTINCT e.event_id)::int AS total_events,
+    count(DISTINCT CASE WHEN e.status IN ('PUBLISHED', 'COMPLETED') THEN e.event_id END)::int AS published_events,
+    count(DISTINCT CASE WHEN e.status = 'CANCELLED' THEN e.event_id END)::int AS cancelled_events,
+    count(CASE WHEN r.status <> 'CANCELLED' THEN r.registration_id END)::int AS total_registrations,
+    COALESCE(SUM(CASE WHEN r.status = 'RESERVED' THEN r.seats END), 0)::int AS seats_filled
+FROM clubs c
+LEFT JOIN departments d ON d.department_id = c.department_id
+LEFT JOIN events e ON e.club_id = c.club_id
+LEFT JOIN event_registrations r ON r.event_id = e.event_id
+WHERE c.is_active
+GROUP BY c.club_id, c.club_name, d.dept_code
+-- A club that has never run an event adds nothing to a "most active club"
+-- report; HAVING drops it after the aggregation, which a WHERE on e.event_id
+-- could not (that column does not exist until the GROUP BY has run).
+HAVING count(DISTINCT e.event_id) > 0;
+
+CREATE VIEW v_event_attendance AS
+SELECT
+    e.event_id,
+    e.title,
+    e.event_date,
+    e.category,
+    COALESCE(c.club_name, d.dept_name, 'College event') AS organiser,
+    count(CASE WHEN r.status = 'RESERVED' THEN r.registration_id END)::int AS registered,
+    count(CASE WHEN a.status = 'PRESENT' THEN a.attendance_id END)::int AS present,
+    count(CASE WHEN a.status = 'ABSENT' THEN a.attendance_id END)::int AS absent,
+    count(CASE WHEN a.status = 'EXCUSED' THEN a.attendance_id END)::int AS excused
+FROM events e
+LEFT JOIN clubs c ON c.club_id = e.club_id
+LEFT JOIN departments d ON d.department_id = e.department_id
+LEFT JOIN event_registrations r ON r.event_id = e.event_id
+LEFT JOIN attendance a ON a.event_id = e.event_id
+WHERE e.status IN ('PUBLISHED', 'COMPLETED')
+GROUP BY e.event_id, e.title, e.event_date, e.category, c.club_name, d.dept_name;
+
+-- A simple, single-table, no-aggregation view is updatable in PostgreSQL:
+-- a change through the view writes straight to the underlying table. Useful
+-- for a coordinator-facing screen that should only ever see active venues,
+-- without duplicating the venues table's columns or write logic.
+CREATE VIEW v_active_venues AS
+SELECT venue_id, venue_name, building, floor, venue_type, capacity, department_id
+  FROM venues
+ WHERE is_active;
+
+
+-- ============================================================
 -- INDEXES
 -- Only indexes backing a query the application actually issues.
 -- ============================================================
