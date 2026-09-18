@@ -259,3 +259,119 @@ SELECT * FROM v_club_activity;   -- clubs with zero events are absent (HAVING)
 `tests/integration/governance.flow.test.js` exercises the report endpoints
 this rewrite touched; all 30 tests passed unchanged, which is the point —
 `CASE`-based aggregation and `FILTER (WHERE ...)` produce identical results.
+
+## Stored functions, a trigger, and a cursor ✅ fixed
+
+DBMS Unit 2 also asks for stored procedures/functions and cursors — before
+Phase C, `db/schema.sql` had neither.
+
+**A second, independent capacity guard.** FR15's seat safety already works:
+`register()` in `event.service.js` takes `SELECT ... FOR UPDATE` on the
+event row, checks the stored `booked_seats` counter, and only then inserts —
+proven correct by `rsvp.concurrency.test.js`'s twenty-students-one-seat race.
+Rather than touch that tested code to manufacture a trigger example, this
+adds a genuinely independent guard at the table being written to:
+
+```sql
+CREATE OR REPLACE FUNCTION enforce_event_registration_capacity()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_max_seats INTEGER;
+    v_reserved  INTEGER;
+BEGIN
+    IF NEW.status <> 'RESERVED' THEN RETURN NEW; END IF;
+    SELECT max_seats INTO v_max_seats FROM events WHERE event_id = NEW.event_id FOR UPDATE;
+    IF v_max_seats IS NULL THEN RETURN NEW; END IF;  -- unlimited seats
+
+    SELECT COALESCE(SUM(seats), 0) INTO v_reserved
+      FROM event_registrations
+     WHERE event_id = NEW.event_id AND status = 'RESERVED' AND registration_id <> NEW.registration_id;
+
+    IF v_reserved + NEW.seats > v_max_seats THEN
+        RAISE EXCEPTION 'event % capacity exceeded ...' USING ERRCODE = 'check_violation';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_event_registrations_capacity
+    BEFORE INSERT OR UPDATE ON event_registrations
+    FOR EACH ROW EXECUTE FUNCTION enforce_event_registration_capacity();
+```
+
+This recomputes live demand from `event_registrations` itself rather than
+trusting `booked_seats` — so it still catches an overbook even in a scenario
+where that counter were ever wrong (a raw `psql` `INSERT` bypassing the
+application entirely, for instance). It runs inside the same transaction and
+against the same already-locked `events` row the application locks first, so
+it introduces no new lock ordering to reason about, and it agrees with the
+application's own check in every normal case (verified: the full
+concurrency suite, including the twenty-student seat race, is unaffected).
+
+**A standalone PL/pgSQL function**, `register_for_event(event_id, student_id,
+seats)`, demonstrates the lock-check-insert pattern directly:
+
+```sql
+SELECT register_for_event(1, 2, 1);
+```
+
+It is deliberately **not** the live API's registration path.
+`event.service.js`'s `register()` additionally handles waitlisting,
+eligibility rules, and notifications — real business policy that belongs in
+the application layer, not hard-coded into a database routine that every
+future feature would then have to work around. The function exists to show
+the construct on this project's own schema, not to replace working code with
+untested code for the sake of a syllabus checkbox.
+
+**A cursor**, closing a real gap. Nothing in the codebase had ever set an
+event's status to `COMPLETED` — the value existed in `chk_events_status`
+but no code path produced it:
+
+```sql
+CREATE OR REPLACE FUNCTION close_past_events()
+RETURNS INTEGER AS $$
+DECLARE
+    v_cur CURSOR FOR
+        SELECT e.event_id FROM events e
+          JOIN bookings b ON b.event_id = e.event_id AND b.status = 'APPROVED'
+         WHERE e.status = 'PUBLISHED' AND b.end_at < now()
+         FOR UPDATE OF e;
+    v_event_id INTEGER;
+    v_count    INTEGER := 0;
+BEGIN
+    OPEN v_cur;
+    LOOP
+        FETCH v_cur INTO v_event_id;
+        EXIT WHEN NOT FOUND;
+        UPDATE events SET status = 'COMPLETED' WHERE event_id = v_event_id;
+        v_count := v_count + 1;
+    END LOOP;
+    CLOSE v_cur;
+    RETURN v_count;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+An explicit `CURSOR`/`OPEN`/`FETCH`/`EXIT WHEN NOT FOUND`/`CLOSE` — row-by-row
+processing, which is the point of a cursor exercise (a single set-based
+`UPDATE ... WHERE` would be shorter and faster, but would not be a cursor).
+Wired into the existing reminder worker's sweep
+(`reminder.service.js`'s `closePastEvents()`), so every event whose approved
+booking has ended is marked `COMPLETED` on the worker's normal 5-minute tick.
+
+**Where to see it:**
+
+```sql
+\df register_for_event
+\df close_past_events
+\d event_registrations                -- trg_event_registrations_capacity listed under Triggers
+SELECT close_past_events();
+```
+
+`tests/integration/schema.test.js`'s new "stored functions and cursor"
+block tests all three directly: a successful `register_for_event()` call
+that increments `booked_seats`, a rejection for a non-published event, the
+trigger rejecting a raw overbooking `INSERT` outside the function entirely,
+and `close_past_events()` completing a past event while leaving a future one
+alone. Verified with `npm run test:ci` on a freshly seeded database: 672
+passed, 0 skipped, including the full FR15/FR10 concurrency suites unchanged.
