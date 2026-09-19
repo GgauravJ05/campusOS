@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-19 | [Phase D.3 — the Booking state-machine class](#phase-d3--the-booking-state-machine-class-2026-09-19) | Gaurav |
 | 2026-09-19 | [Phase D.2 — the role class hierarchy](#phase-d2--the-role-class-hierarchy-2026-09-19) | Gaurav |
 | 2026-09-19 | [Phase D.1 — the exception hierarchy](#phase-d1--the-exception-hierarchy-2026-09-19) | Gaurav |
 | 2026-09-19 | [Phase C.6 — ACID and locking demos you can run in psql](#phase-c6--acid-and-locking-demos-you-can-run-in-psql-2026-09-19) | Gaurav |
@@ -36,6 +37,57 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase D.3 — the Booking state-machine class (2026-09-19)
+
+Third Phase D slice. A booking's lifecycle rules were status checks repeated
+at each call site in `booking.service.js` (`if (!OPEN_STATUSES.includes(...))`,
+`if (... <= Date.now())`, five times over, with slightly different messages).
+They now live once, in `backend/src/domain/Booking.js`:
+
+```
+PENDING --approve--> APPROVED --cancel--> CANCELLED
+PENDING --requestChanges--> MODIFICATION_REQUESTED --cancel--> CANCELLED
+PENDING | MODIFICATION_REQUESTED --reject--> REJECTED
+PENDING | MODIFICATION_REQUESTED --resubmit--> PENDING
+```
+
+- **State is `#private`.** `status` has a getter but no setter; the only way to
+  change it is `approve()`, `reject()`, `requestChanges()`, `resubmit()` or
+  `cancel()`. Each checks the move is legal *from the current state* and that
+  the event has not started, throws otherwise, and returns the booking (so calls
+  chain). A refused move leaves the status untouched.
+- **A table drives it** (`TRANSITIONS`: which states an action may start from,
+  where it ends, what to say when refused), so the rules are readable as data.
+- **The `canX()` questions** (`canApprove`, `canReject`, `canResubmit`,
+  `canCancel`, ...) replace the hand-written `status === 'PENDING' && upcoming`
+  expressions that built `permissions` in `toBooking`. A test checks each is true
+  exactly when its action would succeed, across every state and time.
+- **The service is thinner, not different.** Locking, SQL, notifications and
+  the audit trail stay in `booking.service.js`. It builds `Booking.fromRow(row)`,
+  calls the action, and persists `booking.status` (the SQL now takes the status
+  from the object instead of a literal). Errors keep the same codes and messages
+  (`BOOKING_NOT_PENDING`, `BOOKING_EXPIRED`, `BOOKING_NOT_EDITABLE`,
+  `BOOKING_NOT_LIVE`, `BOOKING_STARTED`), and the state is still checked before
+  the time, as before. API behaviour is unchanged. `LIVE_STATUSES` and
+  `OPEN_STATUSES` are now defined once, on `Booking`.
+
+**Proof:** the bookings, approvals, events and concurrency integration suites -
+including the 20-way race for one venue slot - pass unchanged. New
+`tests/unit/domain.booking.test.js` (47 tests) is a full action x state matrix:
+every legal transition, every illegal one (refused, status unchanged), the time
+guard, the error codes and messages, encapsulation, and the `canX`/action
+agreement. `Booking.js` is at 100% coverage.
+
+**Not done, deliberately:** `rejectCompetitors` still auto-rejects other
+bookings with a bulk `UPDATE`, because loading each loser into an object to call
+`.reject()` would trade one statement for many inside the venue lock, for no
+gain. The auto-rejected rows go through SQL, not this class; the mapping does not
+claim otherwise.
+
+No API, schema or dependency change.
 
 ---
 

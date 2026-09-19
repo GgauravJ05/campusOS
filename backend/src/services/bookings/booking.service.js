@@ -24,6 +24,7 @@
 
 const db = require('../../config/db');
 const ApiError = require('../../utils/ApiError');
+const Booking = require('../../domain/Booking');
 const rbac = require('../rbac');
 const audit = require('../audit.service');
 const settings = require('../settings.service');
@@ -36,9 +37,8 @@ const events = require('../events/event.service');
 const { ROLES } = rbac;
 
 const EVENT_CATEGORIES = Object.freeze(['TECHNICAL', 'CULTURAL', 'SPORTS', 'WORKSHOP', 'SEMINAR', 'PLACEMENT', 'SOCIAL', 'OTHER']);
-const LIVE_STATUSES = Object.freeze(['PENDING', 'APPROVED', 'MODIFICATION_REQUESTED']);
-/** Requests still waiting on someone: the approver (PENDING) or the club (MODIFICATION_REQUESTED). */
-const OPEN_STATUSES = Object.freeze(['PENDING', 'MODIFICATION_REQUESTED']);
+// The lifecycle rules live in domain/Booking.js; these are its status groups.
+const { LIVE_STATUSES, OPEN_STATUSES } = Booking;
 const AUTO_REJECT_REASON = 'Another request for this venue and time was approved first.';
 
 /** Widest possible reach of a neighbouring booking: max buffer (120) + max extension (15). */
@@ -218,8 +218,7 @@ async function canView(actor, row) {
 function toBooking(row, actor) {
   const start = tw.toCampusParts(row.start_at);
   const end = tw.toCampusParts(row.end_at);
-  const live = LIVE_STATUSES.includes(row.status);
-  const upcoming = new Date(row.start_at).getTime() > Date.now();
+  const booking = Booking.fromRow(row);
   return {
     id: row.booking_id,
     status: row.status,
@@ -253,11 +252,11 @@ function toBooking(row, actor) {
     decidedBy: row.approved_by ? { id: row.approved_by, fullName: row.decider_name } : null,
     permissions: {
       // Approve and "request changes" need a request waiting on the approver.
-      canDecide: row.status === 'PENDING' && upcoming && canDecide(actor, row),
+      canDecide: booking.canApprove() && canDecide(actor, row),
       // A request sent back to the club can still be turned down outright.
-      canReject: OPEN_STATUSES.includes(row.status) && upcoming && canDecide(actor, row),
-      canEdit: OPEN_STATUSES.includes(row.status) && upcoming && canEdit(actor, row),
-      canCancel: live && upcoming && canCancel(actor, row),
+      canReject: booking.canReject() && canDecide(actor, row),
+      canEdit: booking.canResubmit() && canEdit(actor, row),
+      canCancel: booking.canCancel() && canCancel(actor, row),
     },
   };
 }
@@ -485,20 +484,18 @@ async function lockBooking(client, bookingId) {
   return row;
 }
 
-/** Locks a booking the actor is about to decide, or explains why they cannot. */
-async function lockForDecision(client, actor, bookingId, allowedStatuses) {
+/**
+ * Locks a booking the actor is about to decide, or explains why they cannot,
+ * then asks the Booking whether `action` is legal from its current state.
+ * Returns the row and the Booking in its new state, for the caller to persist.
+ */
+async function lockForDecision(client, actor, bookingId, action) {
   const row = await lockBooking(client, bookingId);
   if (!row || !canDecide(actor, row)) {
     if (row && (await canView(actor, row))) throw ApiError.forbidden('This request is decided by another approver');
     throw ApiError.notFound('Booking not found');
   }
-  if (!allowedStatuses.includes(row.status)) {
-    throw ApiError.conflict(`This request is already ${row.status.toLowerCase().replace('_', ' ')}`, { code: 'BOOKING_NOT_PENDING' });
-  }
-  if (new Date(row.start_at).getTime() <= Date.now()) {
-    throw ApiError.conflict('This request is for a time that has passed', { code: 'BOOKING_EXPIRED' });
-  }
-  return row;
+  return { row, booking: Booking.fromRow(row)[action]() };
 }
 
 /**
@@ -507,7 +504,7 @@ async function lockForDecision(client, actor, bookingId, allowedStatuses) {
 async function approveBooking(actor, bookingId, { ip } = {}) {
   const outbox = [];
   await db.withTransaction(async (client) => {
-    const row = await lockForDecision(client, actor, bookingId, ['PENDING']);
+    const { row, booking } = await lockForDecision(client, actor, bookingId, 'approve');
 
     const window = { startAt: row.start_at, endAt: row.end_at, bufferMinutes: row.buffer_minutes };
     const conflicting = await findApprovedConflicts(client, row.venue_id, window, { excludeBookingId: row.booking_id });
@@ -516,8 +513,8 @@ async function approveBooking(actor, bookingId, { ip } = {}) {
     }
 
     await client.query(
-      `UPDATE bookings SET status = 'APPROVED', approved_by = $2, decided_at = now() WHERE booking_id = $1`,
-      [row.booking_id, actor.id],
+      `UPDATE bookings SET status = $3, approved_by = $2, decided_at = now() WHERE booking_id = $1`,
+      [row.booking_id, actor.id, booking.status],
     );
     await client.query(`UPDATE events SET status = 'APPROVED' WHERE event_id = $1`, [row.event_id]);
 
@@ -547,12 +544,12 @@ async function rejectBooking(actor, bookingId, { reason }, { ip } = {}) {
   const outbox = [];
   const note = reason.trim();
   await db.withTransaction(async (client) => {
-    const row = await lockForDecision(client, actor, bookingId, OPEN_STATUSES);
+    const { row, booking } = await lockForDecision(client, actor, bookingId, 'reject');
 
     await client.query(
-      `UPDATE bookings SET status = 'REJECTED', rejection_reason = $2, approved_by = $3, decided_at = now()
+      `UPDATE bookings SET status = $4, rejection_reason = $2, approved_by = $3, decided_at = now()
         WHERE booking_id = $1`,
-      [row.booking_id, note, actor.id],
+      [row.booking_id, note, actor.id, booking.status],
     );
     await client.query(`UPDATE events SET status = 'REJECTED' WHERE event_id = $1`, [row.event_id]);
     await noticeToRequester(client, outbox, row, 'REJECTED', { note, deciderName: actor.fullName });
@@ -575,12 +572,12 @@ async function requestChanges(actor, bookingId, { note }, { ip } = {}) {
   const outbox = [];
   const text = note.trim();
   await db.withTransaction(async (client) => {
-    const row = await lockForDecision(client, actor, bookingId, ['PENDING']);
+    const { row, booking } = await lockForDecision(client, actor, bookingId, 'requestChanges');
 
     await client.query(
-      `UPDATE bookings SET status = 'MODIFICATION_REQUESTED', modification_note = $2, approved_by = $3, decided_at = now()
+      `UPDATE bookings SET status = $4, modification_note = $2, approved_by = $3, decided_at = now()
         WHERE booking_id = $1`,
-      [row.booking_id, text, actor.id],
+      [row.booking_id, text, actor.id, booking.status],
     );
     await noticeToRequester(client, outbox, row, 'CHANGES_REQUESTED', { note: text, deciderName: actor.fullName });
     await audit.record({
@@ -620,12 +617,7 @@ async function updateRequest(actor, bookingId, changes) {
       throw ApiError.conflict('This request was changed a moment ago. Reload it and try again', { code: 'BOOKING_CHANGED' });
     }
     if (!canEdit(actor, row)) throw ApiError.forbidden('Only the requester or the club head can edit this request');
-    if (!OPEN_STATUSES.includes(row.status)) {
-      throw ApiError.conflict(`This request is already ${row.status.toLowerCase()} and can no longer be edited`, { code: 'BOOKING_NOT_EDITABLE' });
-    }
-    if (new Date(row.start_at).getTime() <= Date.now()) {
-      throw ApiError.conflict('This request is for a time that has passed', { code: 'BOOKING_EXPIRED' });
-    }
+    const booking = Booking.fromRow(row).resubmit();
 
     const start = tw.toCampusParts(row.start_at);
     const end = tw.toCampusParts(row.end_at);
@@ -664,10 +656,10 @@ async function updateRequest(actor, bookingId, changes) {
       [row.event_id, next.title, next.description, next.category, next.date, next.startTime, next.endTime, next.expectedAttendance],
     );
     await client.query(
-      `UPDATE bookings SET venue_id = $2, start_at = $3, end_at = $4, buffer_minutes = $5, status = 'PENDING',
+      `UPDATE bookings SET venue_id = $2, start_at = $3, end_at = $4, buffer_minutes = $5, status = $6,
                            approved_by = NULL, decided_at = NULL, revision = revision + 1
         WHERE booking_id = $1`,
-      [row.booking_id, venue.venue_id, proposed.startAt, proposed.endAt, bufferMinutes],
+      [row.booking_id, venue.venue_id, proposed.startAt, proposed.endAt, bufferMinutes, booking.status],
     );
 
     await noticeToApprovers(client, {
@@ -686,14 +678,9 @@ async function cancelBooking(actor, bookingId, { ip } = {}) {
     const row = await lockBooking(client, bookingId);
     if (!row || !(await canView(actor, row))) throw ApiError.notFound('Booking not found');
     if (!canCancel(actor, row)) throw ApiError.forbidden('You cannot cancel this booking');
-    if (!LIVE_STATUSES.includes(row.status)) {
-      throw ApiError.conflict(`This booking is already ${row.status.toLowerCase()}`, { code: 'BOOKING_NOT_LIVE' });
-    }
-    if (new Date(row.start_at).getTime() <= Date.now()) {
-      throw ApiError.conflict('An event that has started cannot be cancelled', { code: 'BOOKING_STARTED' });
-    }
+    const booking = Booking.fromRow(row).cancel();
 
-    await client.query(`UPDATE bookings SET status = 'CANCELLED' WHERE booking_id = $1`, [row.booking_id]);
+    await client.query('UPDATE bookings SET status = $2 WHERE booking_id = $1', [row.booking_id, booking.status]);
     await client.query(`UPDATE events SET status = 'CANCELLED' WHERE event_id = $1`, [row.event_id]);
 
     // Phase 4: anyone holding a seat learns in the same transaction, and
