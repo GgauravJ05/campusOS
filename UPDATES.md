@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-19 | [Phase D.4 — the report classes, and writing exports to disk](#phase-d4--the-report-classes-and-writing-exports-to-disk-2026-09-19) | Gaurav |
 | 2026-09-19 | [Test fix — a venues assertion that broke depending on suite order](#test-fix--a-venues-assertion-that-broke-depending-on-suite-order-2026-09-19) | Gaurav |
 | 2026-09-19 | [Phase D.3 — the Booking state-machine class](#phase-d3--the-booking-state-machine-class-2026-09-19) | Gaurav |
 | 2026-09-19 | [Phase D.2 — the role class hierarchy](#phase-d2--the-role-class-hierarchy-2026-09-19) | Gaurav |
@@ -38,6 +39,50 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase D.4 — the report classes, and writing exports to disk (2026-09-19)
+
+Last Phase D slice. FR21's four reports were rendered by a controller with an
+`if (reportKey !== 'audit-trail')` special case and a second `role === 'SUPER_ADMIN'`
+check in the catalogue endpoint. They are now objects:
+
+- **`Report`** (`backend/src/domain/Report.js`) is **abstract**: constructing
+  it throws. `build()` is its pure-virtual method (the base throws "X must
+  implement build()"). `run(actor, filters)` is a template method: check
+  permission, build, wrap the outcome. Description (`key`, `title`, `columns`)
+  is in `#private` state behind read-only getters.
+- **Four subclasses** (`services/reports/catalogue.js`): venue utilisation, club
+  activity, attendance, audit trail. Each overrides `build()`. The audit trail
+  also overrides `isVisibleTo()` and `assertAllowed()` - which is what the two
+  hard-coded `SUPER_ADMIN` checks used to be. The controller no longer knows the
+  audit trail is special.
+- **`ReportResult`** is what `run()` returns: `toJSON()`, `toCsv({ bom })`,
+  `toPdf(stream, meta)`, and **`saveTo(directory, kind, meta)`**, which creates the
+  directory and writes the file with `node:fs` (`writeFile` for CSV/JSON, a write
+  stream for PDF; the promise resolves only once the file is flushed).
+- **A real use for the disk write:** `npm run report:export -- <report>
+  [--format csv|pdf|json] [--from] [--to] [--out DIR]` (`backend/scripts/export-report.js`)
+  runs a report as the Principal and saves it, for a scheduled or one-off export.
+  I ran it for real: a CSV with the Excel BOM, a valid multi-page PDF, JSON, and
+  both error paths exit 1 with a usage message.
+
+**A deliberate deviation from the plan.** The plan said "polymorphic
+`toCsv()`/`toPdf()` subclasses". Those methods do not differ between reports
+(the columns are data), so I put them on the result object instead of giving
+each subclass an identical copy. The polymorphism is where reports genuinely
+differ: `build()` and who may see them. The mapping says this.
+
+**Behaviour unchanged.** Same endpoints, same JSON, CSV and PDF bytes for the
+same data, same 403 for a coordinator asking for the audit trail. The
+`governance.flow` report tests pass untouched, and `tests/unit/domain.report.test.js`
+(29 tests) covers the abstract class, the template order (permission before
+build, and never building when denied), each subclass, the visibility difference,
+all `saveTo` paths (including an unwritable directory) and the CLI argument parser.
+
+**Phase D is now complete:** exception hierarchy (D.1), role hierarchy (D.2),
+`Booking` state machine (D.3), report classes (D.4). No schema or dependency change.
 
 ---
 
