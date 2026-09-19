@@ -494,7 +494,7 @@ async function register(actor, eventId, { seats = 1 } = {}) {
       allowWaitlist: rules.allowWaitlist,
       existingStatus: existing[0]?.status ?? null,
     });
-    if (decision.status) throw new ApiError(decision.status, decision.message, { code: decision.code });
+    if (decision.status) throw ApiError.fromStatus(decision.status, decision.message, { code: decision.code });
 
     let id;
     if (existing[0]) {
