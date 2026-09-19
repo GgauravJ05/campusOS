@@ -5,6 +5,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess } = require('../utils/ApiResponse');
 const events = require('../services/events/event.service');
 const attendance = require('../services/events/attendance.service');
+const feedback = require('../services/events/feedback.service');
 
 const list = asyncHandler(async (req, res) => {
   sendSuccess(res, 200, await events.listEvents(req.user, matchedData(req, { locations: ['query'] })));
@@ -57,7 +58,20 @@ const markAttendance = asyncHandler(async (req, res) => {
   sendSuccess(res, 200, await attendance.mark(req.user, req.params.id, req.body.marks, { ip: req.ip }));
 });
 
+const feedbackForm = asyncHandler(async (req, res) => {
+  sendSuccess(res, 200, await feedback.form(req.user, req.params.id));
+});
+
+const submitFeedback = asyncHandler(async (req, res) => {
+  sendSuccess(res, 200, await feedback.submit(req.user, req.params.id, { rating: req.body.rating, answers: req.body.answers }));
+});
+
+const feedbackSummary = asyncHandler(async (req, res) => {
+  sendSuccess(res, 200, await feedback.summary(req.user, req.params.id));
+});
+
 module.exports = {
+  feedbackForm, submitFeedback, feedbackSummary,
   list, recommended, myActivity, getOne, publish, update, register, cancelRegistration, roster,
   attendanceList, markAttendance,
 };

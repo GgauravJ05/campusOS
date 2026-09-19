@@ -79,8 +79,18 @@ const markAttendance = [
   body('marks.*.status').isIn(ATTENDANCE_STATUSES).withMessage('Choose present, absent or excused'),
 ];
 
+const submitFeedback = [
+  eventId,
+  body('rating').isInt({ min: 1, max: 5 }).withMessage('Rate the event from 1 to 5').toInt(),
+  // Which keys are allowed depends on the event's category, so that check
+  // lives in feedback.service.js; here only the shape is enforced.
+  body('answers').optional().isObject().withMessage('Answers must be an object'),
+];
+
 module.exports = {
   SCOPES,
+  feedbackForm: [eventId],
+  submitFeedback,
   ATTENDANCE_STATUSES,
   attendance: [eventId],
   markAttendance,

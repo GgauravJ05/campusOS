@@ -125,8 +125,10 @@ query form the syllabus names is now genuinely present somewhere in a real
 feature: composite primary keys, views, HAVING, a stored PL/pgSQL function,
 a cursor, UNION, NOT IN, and a self-join (Phase C: three junction tables,
 four SQL views, one function-and-trigger pair, one cursor-driven function,
-one UNION-based endpoint, one NOT IN query, one self-join). Only NoSQL
-(covered instead via JSONB, tracked separately below) remains.
+one UNION-based endpoint, one NOT IN query, one self-join). NoSQL is
+covered instead via PostgreSQL JSONB (event feedback), a deliberate
+substitution documented below - the one place this course does not match the
+syllabus literally.
 
 ### Theory
 
@@ -157,7 +159,7 @@ one UNION-based endpoint, one NOT IN query, one self-join). Only NoSQL
 | U4 | ACID, transactions | ✅ (in code, not visible) | Approval flow updates bookings + events + audit log in one transaction (`booking.service.js`) | Planned: Phase C, `db/demo/*.sql` scripts make this visible in two psql sessions |
 | U4 | Lock-based concurrency control | ✅ (strong) | 25 `SELECT … FOR UPDATE` sites across `booking.service.js`, `event.service.js`, `club.service.js`, `user.service.js`, etc. | Code comments explain the reasoning; `bookings.flow.test.js`'s "gives exactly one winner when 20 competing requests are approved" proves it for FR10 venue bookings, `rsvp.concurrency.test.js` for FR15 seats |
 | U4 | Deadlock handling | ✅ | Deadlock **prevention** by a documented global lock order (`CLAUDE.md`); **a real deadlock was found and fixed in Phase B** (`addMember` vs `changeRole` opposite lock order) | `tests/integration/lockorder.concurrency.test.js` races both concurrently and must not deadlock; `errorHandler.js` maps Postgres code `40P01` to a 409 `DEADLOCK_DETECTED` response |
-| U5 | Big Data, NoSQL, MongoDB, CAP, BASE | ⬜ | No NoSQL dependency exists today | **Decision:** covered via **PostgreSQL JSONB**, not MongoDB itself (see Phase C below) — the syllabus names MongoDB specifically, so this is documented as a deliberate substitution with the same concepts (document storage, GIN indexing, aggregation), not a full match |
+| U5 | Big Data, NoSQL, MongoDB, CAP, BASE | 🟡 **Substituted** | `event_feedback` (`db/schema.sql` §13a): a typed `rating` column plus an `answers JSONB` document whose keys vary by event category (`feedback.service.js`), with a GIN index (`jsonb_path_ops`). **Not MongoDB** — the syllabus names it specifically, so this is a deliberate substitution covering the same concepts (schema-flexible documents, document indexing, aggregation over documents), not a literal match | `POST /api/events/:id/feedback`, `GET /api/events/:id/feedback`; `\d event_feedback` in psql. `docs/DATABASE.md` carries the SQL vs NoSQL / CAP / BASE comparison |
 
 ### Lab experiments
 
@@ -171,7 +173,7 @@ one UNION-based endpoint, one NOT IN query, one self-join). Only NoSQL
 | 6 | GROUP BY, HAVING, EXISTS/NOT EXISTS, **views** | ✅ | GROUP BY, EXISTS/NOT EXISTS, HAVING (`v_club_activity`) and four views all present, fixed in Phase C |
 | 7 | Subqueries, joins, set operators | ✅ | Inner/left joins strong; `UNION` (`myActivity()`) fixed in Phase C |
 | 8 | Nested queries | 🟡 | Correlated EXISTS only |
-| 9–11 | MongoDB CRUD / aggregation+indexing / map-reduce | ⬜ | **Not done as MongoDB.** Covered instead via PostgreSQL JSONB (event feedback, Phase C), documented as a substitution |
+| 9–11 | MongoDB CRUD / aggregation+indexing / map-reduce | 🟡 **Substituted** | **Not done as MongoDB** (no `mongosh`, no `find()` syntax). Same operations on PostgreSQL JSONB: **9** insert/upsert/read/replace a document (`submit()`, `ON CONFLICT DO UPDATE`); **10** aggregation over documents (`jsonb_each_text` + `GROUP BY`, `->>`, `@>`) and a GIN index; **11** the tally in `summary()` is the map-reduce shape (map each document to `(question, answer)` pairs, reduce with `count`), written as SQL |
 
 **Phase C progress (the largest single phase):**
 
@@ -207,7 +209,7 @@ one UNION-based endpoint, one NOT IN query, one self-join). Only NoSQL
    venue report: busiest/quietest/typical venue load); a self-join
    (`relatedEvents()`, `events e1 JOIN events e2 ON e2.club_id = e1.club_id
    AND e2.event_id <> e1.event_id`, added to every event's detail response).
-5. ⬜ **Event feedback stored as JSONB** with a GIN index — the semi-structured
+5. ✅ **Event feedback stored as JSONB** with a GIN index — the semi-structured
    data MongoDB would hold, inside PostgreSQL. `docs/DATABASE.md` carries the
    SQL vs NoSQL / CAP / BASE comparison honestly, including why MongoDB itself
    was not added (avoiding a second database server for a coursework project).
@@ -316,7 +318,7 @@ project is not yet deployed and uses Node's `pg` driver rather than Java/JDBC.
 | Lab | Topic | Status | Where | How to see it |
 | --- | --- | --- | --- | --- |
 | 2 | Multi-page site: navigation, responsive | 🟡 | App has real navigation and is responsive, but has no public Home/About/Contact — it opens straight to login | Planned: Phase G static pages |
-| 3 | Feedback form | ⬜ | No feedback form exists yet | Planned: Phase C — event feedback stored as JSONB, doubling as the DBMS NoSQL substitute |
+| 3 | Feedback form | 🟡 | The backend exists: `POST /api/events/:id/feedback` validates a rating and per-category answers and stores them (also the DBMS NoSQL substitute) | **No screen yet** — the API is built and tested, the React form is not |
 | 4A | JS validation | ✅ | `frontend/src/pages/auth/RegisterPage.jsx`, `frontend/src/lib/password.js` | Submit an invalid form |
 | 5 | Login validation (name/mobile/email) | 🟡 | Email and empty-field validation exist; **no mobile-number validation** despite `users.phone` existing in the schema | Planned: Phase G |
 | 6 | JDBC CRUD | 🟡 (different technology) | Equivalent CRUD done with Node's `pg` pool (`backend/src/config/db.js`) | Argued in the viva as the direct equivalent of JDBC in a different stack |
