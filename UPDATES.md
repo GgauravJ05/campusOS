@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-19 | [Phase C.5 — event feedback in JSONB, the NoSQL substitute](#phase-c5--event-feedback-in-jsonb-the-nosql-substitute-2026-09-19) | Gaurav |
 | 2026-09-18 | [Phase C.4 — the remaining SQL query forms: NOT IN, UNION, MIN/MAX/AVG, a self-join](#phase-c4--the-remaining-sql-query-forms-not-in-union-minmaxavg-a-self-join-2026-09-18) | Gaurav |
 | 2026-09-18 | [Phase C.3 — a stored function, a trigger, and a cursor](#phase-c3--a-stored-function-a-trigger-and-a-cursor-2026-09-18) | Gaurav |
 | 2026-09-18 | [Phase C.2 — reporting views, HAVING, and the FILTER-to-CASE rewrite](#phase-c2--reporting-views-having-and-the-filter-to-case-rewrite-2026-09-18) | Gaurav |
@@ -32,6 +33,56 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase C.5 — event feedback in JSONB, the NoSQL substitute (2026-09-19)
+
+Sixth Phase C slice: DBMS Unit 5 (NoSQL, CAP, BASE) and labs 9-11 (MongoDB).
+
+**What's new.** A student who held a seat can rate an event 1-5 and answer
+follow-up questions that depend on its category (a technical event asks about
+difficulty, a workshop about the materials, a sports event about fair play).
+The rating is a typed column; the answers are one JSONB document per response,
+in a new `event_feedback` table with a GIN index (`jsonb_path_ops`).
+
+- `POST /api/events/:id/feedback` - submit or replace your response. Needs a
+  seat, and the event must have started. Unknown or wrongly-typed answers are
+  rejected with per-field errors.
+- `GET /api/events/:id/feedback/form` - the questions for this event's category.
+- `GET /api/events/:id/feedback` - organiser/faculty summary: response count,
+  average/min/max rating, rating spread, a tally of every answer to every
+  question (`jsonb_each_text` + `GROUP BY`), a `would_repeat` count via `@>`
+  containment, and the free-text comments. Anonymous: no names or emails.
+
+**A decision you should know about: this is JSONB, not MongoDB.** The
+syllabus names MongoDB. We agreed on JSONB instead of running a second
+database server for one table, so `docs/SYLLABUS-MAPPING.md` marks the NoSQL
+unit and labs 9-11 as 🟡 *substituted*, not ✅, and `docs/DATABASE.md` says
+plainly what that costs: the literal `mongosh`/`find()`/`mapReduce()` commands
+are not what runs. It also carries the SQL vs NoSQL table and the CAP/BASE
+explanation - including that CampusOS is single-server (no partition to
+choose under) and that the feedback table is ACID, not BASE, on purpose. If
+your guide insists on the literal tooling, tell us and this is the one table to move.
+
+**Also honest:** WDH lab 3 ("feedback form") is 🟡, not done - the API exists
+and is tested, but there is **no React screen yet**. Backend first, per
+`CLAUDE.md`; the form is a follow-up.
+
+**Removed dead code found while testing:** I first wrote an `EVENT_NOT_HELD`
+check for cancelled events, then found a student gets a 404 for those before
+reaching it (event visibility already hides them), so it could never fire. Deleted
+rather than left as an untested branch.
+
+**Teammates:** rebuild your local database (`db/schema.sql` gained a table and
+an index; `docs` describes the reseed commands). No new dependencies.
+
+**Tests:** new `tests/integration/feedback.flow.test.js` (16): the form,
+storing rating + document, replacing a response, blank comments, rating and
+answer validation, too-early and not-a-registrant refusals, `COMPLETED` accepted
+and `CANCELLED` hidden, a 4-student tally checked against exact counts,
+an empty summary, access control, the `CHECK` rejecting a JSON array, and the
+GIN index existing.
 
 ---
 
