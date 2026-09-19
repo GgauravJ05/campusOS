@@ -57,7 +57,12 @@ describeWithDb('venues (database)', () => {
 
     it('filters by minimum capacity and type', async () => {
       const res = await request(app).get('/api/venues?minCapacity=150&type=SEMINAR_HALL').set(auth(student)).expect(200);
-      expect(res.body.data.map((v) => v.name).sort()).toEqual(['Seminar Hall A', 'Seminar Hall B']);
+      // Other suites create venues in the shared database, so assert what the
+      // filter means rather than that these two are the only matches: both
+      // seeded halls are found, and nothing that does not qualify is.
+      expect(res.body.data.map((v) => v.name)).toEqual(expect.arrayContaining(['Seminar Hall A', 'Seminar Hall B']));
+      expect(res.body.data.every((v) => v.type === 'SEMINAR_HALL' && v.capacity >= 150)).toBe(true);
+      expect(res.body.data.map((v) => v.name)).not.toContain('Classroom 101'); // 70 seats, wrong type
     });
 
     it('requires every requested piece of equipment', async () => {
