@@ -57,4 +57,67 @@ describe('ApiError', () => {
       expect(err.details).toEqual(details);
     });
   });
+
+  describe('the subclass hierarchy', () => {
+    const {
+      BadRequestError, AuthenticationError, ForbiddenError, NotFoundError, ConflictError,
+      SlotUnavailableError, ValidationError, ServiceUnavailableError,
+    } = ApiError;
+
+    it.each([
+      [BadRequestError, 400, 'BAD_REQUEST'],
+      [AuthenticationError, 401, 'UNAUTHORIZED'],
+      [ForbiddenError, 403, 'FORBIDDEN'],
+      [NotFoundError, 404, 'NOT_FOUND'],
+      [ConflictError, 409, 'CONFLICT'],
+      [ServiceUnavailableError, 503, 'SERVICE_UNAVAILABLE'],
+    ])('%p fixes its own status and code', (Type, status, code) => {
+      const err = new Type('boom');
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err).toBeInstanceOf(Error);
+      expect(err).toMatchObject({ statusCode: status, code, message: 'boom', isOperational: true });
+      expect(err.name).toBe(Type.name);
+    });
+
+    it('the static factories return the matching subclass', () => {
+      expect(ApiError.notFound()).toBeInstanceOf(NotFoundError);
+      expect(ApiError.conflict('x')).toBeInstanceOf(ConflictError);
+      expect(ApiError.forbidden()).toBeInstanceOf(ForbiddenError);
+      expect(ApiError.unauthorized()).toBeInstanceOf(AuthenticationError);
+      expect(ApiError.validation('x', [])).toBeInstanceOf(ValidationError);
+      expect(ApiError.badRequest('x')).toBeInstanceOf(BadRequestError);
+      expect(ApiError.unavailable('x')).toBeInstanceOf(ServiceUnavailableError);
+    });
+
+    it('is a multilevel chain: SlotUnavailableError is a ConflictError is an ApiError', () => {
+      const err = new SlotUnavailableError('taken', { conflicts: [{ title: 'Other' }], suggestions: [] });
+      expect(err).toBeInstanceOf(SlotUnavailableError);
+      expect(err).toBeInstanceOf(ConflictError);
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err).toMatchObject({ statusCode: 409, code: 'SLOT_UNAVAILABLE' });
+      expect(err.details).toEqual({ conflicts: [{ title: 'Other' }], suggestions: [] });
+      expect(new SlotUnavailableError().details).toBeUndefined();
+      expect(new SlotUnavailableError().message).toMatch(/already booked/);
+    });
+
+    it('fromStatus picks the subclass for a number, and falls back to ApiError', () => {
+      expect(ApiError.fromStatus(404, 'x')).toBeInstanceOf(NotFoundError);
+      expect(ApiError.fromStatus(409, 'x', { code: 'CUSTOM' }).code).toBe('CUSTOM');
+      const invalid = ApiError.fromStatus(422, 'bad seats', { code: 'INVALID_SEAT_COUNT' });
+      expect(invalid).toBeInstanceOf(ValidationError);
+      expect(invalid.code).toBe('INVALID_SEAT_COUNT');
+      expect(ApiError.fromStatus(422, 'x').code).toBe('VALIDATION_ERROR');
+      const odd = ApiError.fromStatus(418, 'teapot');
+      expect(odd.constructor).toBe(ApiError);
+      expect(odd.statusCode).toBe(418);
+    });
+
+    it('logLevel is overridden polymorphically: client errors warn, outages error', () => {
+      const handle = (err) => err.logLevel;
+      expect(handle(new NotFoundError())).toBe('warn');
+      expect(handle(new SlotUnavailableError())).toBe('warn');
+      expect(handle(new ServiceUnavailableError('down'))).toBe('error');
+      expect(handle(new ApiError(500, 'oops'))).toBe('error');
+    });
+  });
 });

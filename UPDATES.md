@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-19 | [Phase D.1 — the exception hierarchy](#phase-d1--the-exception-hierarchy-2026-09-19) | Gaurav |
 | 2026-09-19 | [Phase C.6 — ACID and locking demos you can run in psql](#phase-c6--acid-and-locking-demos-you-can-run-in-psql-2026-09-19) | Gaurav |
 | 2026-09-19 | [Phase C.5 — event feedback in JSONB, the NoSQL substitute](#phase-c5--event-feedback-in-jsonb-the-nosql-substitute-2026-09-19) | Gaurav |
 | 2026-09-18 | [Phase C.4 — the remaining SQL query forms: NOT IN, UNION, MIN/MAX/AVG, a self-join](#phase-c4--the-remaining-sql-query-forms-not-in-union-minmaxavg-a-self-join-2026-09-18) | Gaurav |
@@ -34,6 +35,60 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase D.1 — the exception hierarchy (2026-09-19)
+
+First Phase D (OOP) slice. The syllabus's inheritance and polymorphism units
+had almost nothing to point at: the backend's only classes were two flat error
+types. `ApiError` is now the root of a real hierarchy:
+
+```
+Error > ApiError > BadRequestError | AuthenticationError | ForbiddenError | NotFoundError
+                 | ConflictError > SlotUnavailableError
+                 | ValidationError | ServiceUnavailableError
+```
+
+- Each subclass fixes its own status and code, so it cannot be built with the
+  wrong one, and callers can catch by type: `instanceof ConflictError` also
+  matches a `SlotUnavailableError`.
+- **`SlotUnavailableError`** is the multilevel case (three levels below `Error`).
+  `booking.service.js` throws it for a taken venue and time, carrying the
+  clashes and the free alternatives; the two throw sites that used to spell
+  `code: 'SLOT_UNAVAILABLE'` by hand now just construct it.
+- **Polymorphism:** `ApiError` has a `logLevel` getter that
+  `ServiceUnavailableError` overrides; `errorHandler.js` calls it without
+  knowing which subclass it has.
+- All ~120 existing `ApiError.notFound(...)`-style calls are unchanged; the
+  factories return the matching subclass. `ApiError.fromStatus(number, ...)`
+  replaces the two places that built an error from a dynamic status.
+- **API behaviour is unchanged**: same statuses, codes and JSON.
+
+**A regression I introduced and fixed before committing:** `fromStatus` first
+passed `{ code }` to `ValidationError`, whose second argument is `details`, so
+the custom code `INVALID_SEAT_COUNT` was silently replaced by
+`VALIDATION_ERROR`. Two existing integration tests caught it; `fromStatus` now
+handles 422 explicitly and a unit test covers it.
+
+**Being honest about size:** the polymorphism here (`logLevel`) is small. The
+substantial case study - role classes replacing `rbac.js`'s conditionals - is
+the next Phase D slice, and the mapping still lists runtime polymorphism as 🟡.
+
+**Naming note:** the 401 class is `AuthenticationError`, not
+`UnauthorizedError`, because `errorHandler.js` already treats a thrown
+`err.name === 'UnauthorizedError'` as an express-jwt failure.
+
+**Tests:** `tests/unit/ApiError.test.js` gained 5 groups (status/code per
+subclass, factories return subclasses, the multilevel chain, `fromStatus`
+including the 422 case, the `logLevel` override). `npm run test:ci` on a
+freshly seeded database: 703 tests, all passing on the runs I kept.
+
+**Known intermittent failure, not caused by this:** `reminders.flow.test.js`
+"sends the two-hour reminder with its own wording" has failed in about 2 of 9
+full runs across this work and passes in isolation and on rerun. I could not
+reproduce it in 6 further runs, so I have not changed it; if you see it, rerun
+before assuming your change broke it.
 
 ---
 

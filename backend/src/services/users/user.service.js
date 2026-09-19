@@ -188,7 +188,7 @@ async function changeRole(actorUser, targetId, { role: newRole, clubId }, { ip }
       newRole,
       club: club && { id: club.club_id, departmentId: club.department_id, isActive: club.is_active },
     });
-    if (denial) throw new ApiError(denial.status, denial.message, { code: denial.code });
+    if (denial) throw ApiError.fromStatus(denial.status, denial.message, { code: denial.code });
 
     const audits = [];
     const previousRole = target.role_key;
