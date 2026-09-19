@@ -338,18 +338,15 @@ async function assertSlotFree(client, venue, input, { bufferMinutes, rules }) {
   if (conflicting.length === 0) return proposed;
 
   const busy = await busyOnDate(client, venue.venue_id, input.date);
-  throw ApiError.conflict('That slot is already booked', {
-    code: 'SLOT_UNAVAILABLE',
-    details: {
-      conflicts: conflicting.map((c) => ({
-        title: c.title, club: c.club_name ?? 'Official event',
-        startTime: tw.toCampusParts(c.start_at).time, endTime: tw.toCampusParts(c.end_at).time,
-      })),
-      suggestions: tw.suggestSlots({
-        date: input.date, durationMinutes: tw.toMinutes(input.endTime) - tw.toMinutes(input.startTime), busy,
-        bufferMinutes, openingTime: rules.openingTime, closingTime: rules.closingTime, preferStart: input.startTime,
-      }),
-    },
+  throw new ApiError.SlotUnavailableError('That slot is already booked', {
+    conflicts: conflicting.map((c) => ({
+      title: c.title, club: c.club_name ?? 'Official event',
+      startTime: tw.toCampusParts(c.start_at).time, endTime: tw.toCampusParts(c.end_at).time,
+    })),
+    suggestions: tw.suggestSlots({
+      date: input.date, durationMinutes: tw.toMinutes(input.endTime) - tw.toMinutes(input.startTime), busy,
+      bufferMinutes, openingTime: rules.openingTime, closingTime: rules.closingTime, preferStart: input.startTime,
+    }),
   });
 }
 
@@ -515,7 +512,7 @@ async function approveBooking(actor, bookingId, { ip } = {}) {
     const window = { startAt: row.start_at, endAt: row.end_at, bufferMinutes: row.buffer_minutes };
     const conflicting = await findApprovedConflicts(client, row.venue_id, window, { excludeBookingId: row.booking_id });
     if (conflicting.length > 0) {
-      throw ApiError.conflict('That slot has already been booked', { code: 'SLOT_UNAVAILABLE' });
+      throw new ApiError.SlotUnavailableError('That slot has already been booked');
     }
 
     await client.query(

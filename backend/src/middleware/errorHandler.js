@@ -68,7 +68,10 @@ function errorHandler(err, req, res, next) {
 
   const logContext = { requestId: req.id, method: req.method, url: req.originalUrl, status, code };
 
-  if (expected && status < 500) {
+  // An ApiError knows its own log level (see ServiceUnavailableError); anything
+  // else falls back to "expected client error" versus "unhandled fault".
+  const level = err instanceof ApiError ? err.logLevel : (expected && status < 500 ? 'warn' : 'error');
+  if (level === 'warn') {
     // An expected client error is not a fault: log the facts, not a stack
     // trace, or real failures drown in routine 401s and 404s.
     logger.warn(logContext, message);
