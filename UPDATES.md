@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-19 | [Phase D.2 — the role class hierarchy](#phase-d2--the-role-class-hierarchy-2026-09-19) | Gaurav |
 | 2026-09-19 | [Phase D.1 — the exception hierarchy](#phase-d1--the-exception-hierarchy-2026-09-19) | Gaurav |
 | 2026-09-19 | [Phase C.6 — ACID and locking demos you can run in psql](#phase-c6--acid-and-locking-demos-you-can-run-in-psql-2026-09-19) | Gaurav |
 | 2026-09-19 | [Phase C.5 — event feedback in JSONB, the NoSQL substitute](#phase-c5--event-feedback-in-jsonb-the-nosql-substitute-2026-09-19) | Gaurav |
@@ -35,6 +36,56 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase D.2 — the role class hierarchy (2026-09-19)
+
+Second Phase D slice, and the syllabus's main inheritance/polymorphism case
+study. `services/rbac.js` used to answer "may this person do X?" with
+`if (actor.role === ROLES.SUPER_ADMIN) ... if (actor.role === ROLES.DEPT_COORDINATOR) ...`
+chains. The rules now live in classes in a new `backend/src/domain/User.js`:
+
+```
+User > Student > ClubMember > ClubHead
+User > Faculty (abstract) > DeptCoordinator | SuperAdmin
+```
+
+- **Runtime polymorphism:** `canViewUser`, `canManageClub`, `canAppointForClub`
+  and `assignableRoles` are methods that `SuperAdmin`, `DeptCoordinator` and the
+  base class each answer differently. Callers hold a `User` and ask.
+- **Template method:** `canManageUser` shares the self/rank checks in `User` and
+  delegates the one step that varies - how far this person's reach extends - to
+  an overridable `reaches(target)`.
+- **Encapsulation:** `id` and `departmentId` are `#private` fields behind
+  read-only getters (assigning throws), and `DeptCoordinator` has a `#private`
+  method. `Faculty` is abstract: constructing it directly throws.
+- **`rbac.js` keeps its API.** Its functions still take a plain `req.user`
+  object and now build the matching class with `fromActor` and ask it, so none
+  of the ~30 call sites changed. `checkRoleChange` (which validates a whole
+  change) keeps its own logic and calls the classes.
+
+**Proof it changed structure, not behaviour:** the 50 pre-existing policy tests
+(`rbac.test.js`, `phase3.policy.test.js`) pass **unchanged**, and the full
+suite is green. A new `tests/unit/domain.user.test.js` (21 tests) covers the OOP
+properties themselves: the inheritance chains, abstractness, one list of
+`User`s answering the same call differently, the template method, encapsulation.
+
+**Honest limits.**
+- JavaScript has no `protected`. `reaches()` is protected by convention and
+  documented as such; the mapping says so rather than claiming it.
+- `ClubMember` and `ClubHead` add almost no policy today (a club head's rights
+  come from being a club's `headId`, which the existing rules already check for
+  any role, and I kept that behaviour rather than change who can do what). Their
+  distinct behaviour is `ClubHead.scopeOver(club)`. They exist so the hierarchy
+  mirrors the five roles the SRS defines, not because there was a lot to
+  override.
+- `isFaculty(role)` still takes a role string, because route middleware calls it
+  with one.
+- An unrecognised role gets the least-privileged base class, matching the old
+  fall-through behaviour.
+
+No API, schema or dependency change.
 
 ---
 

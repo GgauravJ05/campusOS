@@ -4,6 +4,11 @@
  * Role-based access control policy (FR3, FR5). Pure functions - no database,
  * no HTTP - so every rule is unit tested directly.
  *
+ * The per-role rules live in the class hierarchy in `domain/User.js`; the
+ * functions here accept a plain `req.user`-style object, build the matching
+ * class with `fromActor`, and ask it. Only `checkRoleChange`, which validates
+ * a whole change end to end, still has logic of its own.
+ *
  * Hierarchy (rank: lower = more authority):
  *   1 SUPER_ADMIN       Principal & HOD
  *   2 DEPT_COORDINATOR  faculty, scoped to their own department
@@ -17,21 +22,7 @@
  * act on a user of equal or higher rank.
  */
 
-const ROLES = Object.freeze({
-  SUPER_ADMIN: 'SUPER_ADMIN',
-  DEPT_COORDINATOR: 'DEPT_COORDINATOR',
-  CLUB_HEAD: 'CLUB_HEAD',
-  CLUB_MEMBER: 'CLUB_MEMBER',
-  STUDENT: 'STUDENT',
-});
-
-const ROLE_RANK = Object.freeze({
-  SUPER_ADMIN: 1,
-  DEPT_COORDINATOR: 2,
-  CLUB_HEAD: 3,
-  CLUB_MEMBER: 4,
-  STUDENT: 5,
-});
+const { ROLES, RANKS: ROLE_RANK, fromActor, ClubHead } = require('../domain/User');
 
 const FACULTY_ROLES = Object.freeze([ROLES.SUPER_ADMIN, ROLES.DEPT_COORDINATOR]);
 
@@ -50,32 +41,17 @@ function isFaculty(role) {
 
 /** Roles `actor` may hand out. SUPER_ADMIN is never assignable through the API. */
 function assignableRoles(actor) {
-  if (actor.role === ROLES.SUPER_ADMIN) {
-    return [ROLES.DEPT_COORDINATOR, ROLES.CLUB_HEAD, ROLES.CLUB_MEMBER, ROLES.STUDENT];
-  }
-  if (actor.role === ROLES.DEPT_COORDINATOR) {
-    return [ROLES.CLUB_HEAD, ROLES.CLUB_MEMBER, ROLES.STUDENT];
-  }
-  return [];
+  return fromActor(actor).assignableRoles();
 }
 
 /** Whether `actor` may view `target` in user management. */
 function canViewUser(actor, target) {
-  if (actor.role === ROLES.SUPER_ADMIN) return true;
-  if (actor.role === ROLES.DEPT_COORDINATOR) {
-    return actor.departmentId !== null && actor.departmentId === target.departmentId;
-  }
-  return actor.id === target.id;
+  return fromActor(actor).canViewUser(target);
 }
 
 /** Whether `actor` may change `target`'s role or account status. */
 function canManageUser(actor, target) {
-  if (!isFaculty(actor.role) || actor.id === target.id) return false;
-  if (ROLE_RANK[target.role] <= ROLE_RANK[actor.role]) return false;
-  if (actor.role === ROLES.DEPT_COORDINATOR) {
-    return actor.departmentId !== null && actor.departmentId === target.departmentId;
-  }
-  return true;
+  return fromActor(actor).canManageUser(target);
 }
 
 /**
@@ -83,11 +59,7 @@ function canManageUser(actor, target) {
  * college-level clubs; the super admin for any club.
  */
 function canAppointForClub(actor, club) {
-  if (actor.role === ROLES.SUPER_ADMIN) return true;
-  if (actor.role === ROLES.DEPT_COORDINATOR) {
-    return club.departmentId === null || club.departmentId === actor.departmentId;
-  }
-  return false;
+  return fromActor(actor).canAppointForClub(club);
 }
 
 /**
@@ -136,7 +108,7 @@ function checkRoleChange({ actor, target, newRole, club = null }) {
 
 /** Scope of a club head's authority over one club. */
 function clubHeadScope(club) {
-  return club.departmentId === null ? 'COLLEGE' : 'DEPARTMENT';
+  return new ClubHead({ id: null }).scopeOver(club);
 }
 
 /**
@@ -148,11 +120,7 @@ function clubHeadScope(club) {
  * @param {{ departmentId: number | null }} club  the club, or the proposed one when creating
  */
 function canManageClub(actor, club) {
-  if (actor.role === ROLES.SUPER_ADMIN) return true;
-  return actor.role === ROLES.DEPT_COORDINATOR
-    && actor.departmentId !== null
-    && club.departmentId !== null
-    && club.departmentId === actor.departmentId;
+  return fromActor(actor).canManageClub(club);
 }
 
 /**
@@ -163,7 +131,7 @@ function canManageClub(actor, club) {
  * @param {{ departmentId: number | null, headId: number | null }} club
  */
 function canRunClub(actor, club) {
-  return (club.headId !== null && club.headId === actor.id) || canManageClub(actor, club);
+  return fromActor(actor).canRunClub(club);
 }
 
 module.exports = {
