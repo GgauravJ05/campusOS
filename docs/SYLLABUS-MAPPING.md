@@ -80,10 +80,11 @@ the alignment plan.
 **Honest summary today:** the backend is JavaScript. The classes in the
 codebase are the **role hierarchy** (`User` and six subclasses,
 `backend/src/domain/User.js`, Phase D.2), the **`Booking` state-machine
-class** (`domain/Booking.js`, Phase D.3), the **exception hierarchy**
-(`ApiError` and eight subclasses, Phase D.1) and `ConfigError`. `Venue`,
-`Event` and `Club` are still plain objects built from a SQL row; the report
-classes are the remaining Phase D slice. C++-specific topics (pointers, operator overloading,
+class** (`domain/Booking.js`, Phase D.3), the **report classes**
+(`domain/Report.js` and four subclasses, Phase D.4), the **exception
+hierarchy** (`ApiError` and eight subclasses, Phase D.1) and `ConfigError`.
+`Venue`, `Event` and `Club` are still plain objects built from a SQL row.
+Phase D is otherwise complete. C++-specific topics (pointers, operator overloading,
 destructors, templates) have no direct JavaScript equivalent and are noted as
 such rather than forced.
 
@@ -98,10 +99,11 @@ such rather than forced.
 | U3 | Inheritance | ✅ | **Roles:** `User` → `Student` → `ClubMember` → `ClubHead` (multilevel) and `User` → `Faculty` (abstract) → `DeptCoordinator` / `SuperAdmin` (hierarchical). **Exceptions:** `Error` → `ApiError` → `ConflictError` → `SlotUnavailableError` (multilevel), thrown by `booking.service.js` when a venue and time are taken | `tests/unit/ApiError.test.js` "is a multilevel chain"; `err instanceof ConflictError` is also true for a `SlotUnavailableError` |
 | U3 | Runtime polymorphism (virtual functions) | ✅ | **The main case study:** `rbac.js` used to decide `canViewUser`, `canManageClub`, `canAppointForClub` and `assignableRoles` with `if (actor.role === ROLES.X)` chains. Each is now a method that `SuperAdmin`, `DeptCoordinator` and the base `User` **override**; `canManageUser` is a template method whose one varying step, `reaches()`, is overridden. Also `ApiError.logLevel` (overridden by `ServiceUnavailableError`, called by `errorHandler.js`) | `tests/unit/domain.user.test.js` "runtime polymorphism": one list of `User`s, the same call, a different answer per class. The 50 pre-existing `rbac` policy tests pass unchanged |
 | U3 | Operator overloading | ⛔ N/A | Not possible in JavaScript | — |
-| U4 | File I/O | 🟡 | `backend/src/services/reports/format.js` (CSV), `reports/pdf.js` (PDF via pdfkit) | Streamed to HTTP, not to disk. Planned: Phase D writes an export to disk with `fs` |
+| U4 | File I/O | ✅ | `ReportResult.saveTo()` (`domain/Report.js`) creates a directory and writes a report to disk with `node:fs` — `fs.promises.writeFile` for CSV/JSON, a `createWriteStream` for PDF (the promise resolves only when the file is fully flushed). `backend/scripts/export-report.js` uses it as a real command-line export. CSV/PDF are still also streamed to HTTP for the screen | `npm run report:export -- attendance --format pdf --out ./exports`; `tests/unit/domain.report.test.js` "saveTo" (writes, reads back, refuses a bad format, rejects on an unwritable path) |
 | U5 | Exceptions, multiple catch, user-defined exceptions | ✅ | `backend/src/config/db.js` `withTransaction` (try/catch/finally); a user-defined exception **hierarchy** (`ApiError` + 8 subclasses) thrown throughout; callers can catch by type | Textbook-recognisable try/catch/finally with rollback; `instanceof ConflictError` catches a whole family |
 | U5 | Unhandled/unexpected exceptions | ✅ | `backend/src/lifecycle.js` `registerProcessHandlers` (`uncaughtException`, `unhandledRejection`) | Matches the syllabus wording directly |
 | U5 | STL containers/algorithms | 🟡 | `Map`/`Set`/`.sort`/`.filter`/`.reduce` throughout | JS standard-library equivalent, not STL itself |
+| U3 | Abstract classes / pure virtual functions | ✅ (as far as JavaScript allows) | `Report` and `Faculty` are abstract: instantiating either throws `TypeError`. `Report.build()` is the JavaScript stand-in for a pure virtual function — the base throws "X must implement build()" and each of the four reports overrides it. JavaScript has no `abstract` keyword, so both are enforced at run time, not compile time | `tests/unit/domain.report.test.js` "Report (abstract)"; `domain.user.test.js` "Faculty as abstract" |
 | Lab 2, 4, 5 | Classes w/ access modifiers; inheritance case study; static/runtime polymorphism | ✅ | Lab 2: `User` with `#private` fields; Lab 4: the role hierarchy as the case study; Lab 5: static (`fromActor`, `ApiError.fromStatus`) and runtime polymorphism (overridden policy methods) | `backend/src/domain/User.js` |
 | Lab 9 | Exception types | ✅ | See U5 above | — |
 
@@ -115,7 +117,7 @@ such rather than forced.
    inheritance (Phase D.1).
 3. ✅ `Booking` domain class with `#private` state and `approve()`/`reject()`/
    `requestChanges()`/`cancel()` (and `resubmit()`) enforcing legal transitions (Phase D.3).
-4. Abstract `Report` class with polymorphic `toCsv()`/`toPdf()` subclasses.
+4. ✅ Abstract `Report` class with four subclasses, a template-method `run()`, and a `ReportResult` that renders JSON/CSV/PDF and writes to disk with `fs` (Phase D.4). *Deviation from the plan, on purpose:* the polymorphic part is `build()`/`isVisibleTo()`/`assertAllowed()` (what differs between reports); `toCsv()`/`toPdf()` live on the result object, because they do not differ per report and giving each subclass its own copy would have been invented variation.
 
 ---
 

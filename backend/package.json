@@ -15,6 +15,7 @@
     "db:schema": "psql -d $npm_config_db -f ../db/schema.sql",
     "db:seed": "psql -d $npm_config_db -f ../db/seed.sql",
     "db:reset": "psql -d $npm_config_db -f ../db/reset.sql -f ../db/schema.sql -f ../db/seed.sql",
+    "report:export": "node scripts/export-report.js",
     "lock:rebuild": "rm -rf node_modules package-lock.json && npm install"
   },
   "keywords": [],
