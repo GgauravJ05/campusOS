@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-19 | [Test fix — a venues assertion that broke depending on suite order](#test-fix--a-venues-assertion-that-broke-depending-on-suite-order-2026-09-19) | Gaurav |
 | 2026-09-19 | [Phase D.3 — the Booking state-machine class](#phase-d3--the-booking-state-machine-class-2026-09-19) | Gaurav |
 | 2026-09-19 | [Phase D.2 — the role class hierarchy](#phase-d2--the-role-class-hierarchy-2026-09-19) | Gaurav |
 | 2026-09-19 | [Phase D.1 — the exception hierarchy](#phase-d1--the-exception-hierarchy-2026-09-19) | Gaurav |
@@ -37,6 +38,46 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Test fix — a venues assertion that broke depending on suite order (2026-09-19)
+
+While finishing Phase D, full runs of identical code kept failing *different*
+tests (`reminders`, `recommendations`, `venues`, an events seat-cap test). I
+stopped calling that "flaky" and tested a cause.
+
+**What I found.** The suites share one PostgreSQL database and leave rows
+behind, and Jest orders files using timings cached from the previous run, so
+which suites have already written before yours changes between runs on a
+developer's machine. (CI has no cache, which is part of why it looks stable
+there.) I tried pinning the order alphabetically to make failures
+reproducible. It did **not** fix things: the `venues` test then failed 5 of 5
+runs, and one run still failed two unrelated tests. So there are two problems,
+and I only fixed the one I could prove.
+
+**Fixed:** `venues.flow.test.js` "filters by minimum capacity and type" asserted
+that the seeded Seminar Halls A and B were the *only* seminar halls with 150+
+seats. `publish.concurrency.test.js` (mine, Phase B) legitimately leaves a
+200-seat seminar hall behind, so the assertion failed whenever that suite ran
+first. It now asserts what the filter means: both seeded halls are found and
+every result is a seminar hall with 150+ seats. Verified by running the two
+suites in the order that used to fail, on an already-polluted database.
+
+**Not fixed, and still open:**
+- `events.flow` "ranks events in a category..." scores only the soonest 100
+  upcoming events, so it depends on how many other suites have published events
+  first. It already says so in a comment ("assume the freshly seeded database").
+- `reminders.flow` "sends the two-hour reminder..." and `events.flow`
+  "lets the organiser raise the seat cap..." each failed intermittently even in
+  a fixed order; I have not found why.
+
+**What to do if a full run fails on one of these:** reseed and rerun before
+assuming your change broke it (`CLAUDE.md` has the reseed commands). A proper
+fix - each suite cleaning up after itself or using isolated data - is a bigger
+job than this change and would be worth doing separately.
+
+No application code changed.
 
 ---
 
