@@ -27,4 +27,9 @@ router.delete('/:id/registrations/me', rules.cancelRegistration, validate, contr
 router.get('/:id/attendance', rules.attendance, validate, controller.attendanceList);
 router.post('/:id/attendance', rules.markAttendance, validate, controller.markAttendance);
 
+// Post-event feedback: the rating is a column, the answers are JSONB.
+router.get('/:id/feedback/form', rules.feedbackForm, validate, controller.feedbackForm);
+router.get('/:id/feedback', rules.feedbackForm, validate, controller.feedbackSummary);
+router.post('/:id/feedback', rules.submitFeedback, validate, controller.submitFeedback);
+
 module.exports = router;
