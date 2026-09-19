@@ -78,37 +78,38 @@ the alignment plan.
 ## B25IT302 — Object Oriented Programming (PCC, 3L+2P, taught in C++)
 
 **Honest summary today:** the backend is JavaScript. The classes in the
-codebase are the **exception hierarchy** (`ApiError` and eight subclasses,
-`backend/src/utils/ApiError.js`, Phase D.1) and `ConfigError`
-(`backend/src/config/env.js`). Everything else — `User`, `Venue`, `Booking`,
-`Event`, `Club` — is still a plain object built from a SQL row; the domain
-classes are the remaining Phase D slices. C++-specific topics (pointers, operator overloading,
+codebase are the **role hierarchy** (`User` and six subclasses,
+`backend/src/domain/User.js`, Phase D.2), the **exception hierarchy**
+(`ApiError` and eight subclasses, Phase D.1) and `ConfigError`. Everything
+else — `Venue`, `Booking`, `Event`, `Club` — is still a plain object built
+from a SQL row; `Booking` and the report classes are the remaining Phase D
+slices. C++-specific topics (pointers, operator overloading,
 destructors, templates) have no direct JavaScript equivalent and are noted as
 such rather than forced.
 
 | Unit / Lab | Topic | Status | Where | How to see it |
 | --- | --- | --- | --- | --- |
-| U1 | OOP principles: encapsulation, abstraction | 🟡 | `ApiError`, `ConfigError` | Only in the two error classes |
-| U2 | Classes, objects, member functions | 🟡 | `ApiError` constructor + methods | No domain entity is a class. Planned: Phase D `Booking` domain class |
-| U2 | Access modifiers (public/private/protected) | ⬜ | Closures stand in: `backend/src/services/reminders/worker.js` (`timer`, `inFlight`); `frontend/src/lib/api.js` (`session`, `listeners`) | No `#private` field exists yet. Planned: Phase D |
+| U1 | OOP principles: encapsulation, abstraction | ✅ | Encapsulation: `User` keeps `id`/`departmentId` in `#private` fields behind read-only getters. Abstraction: `Faculty` is an abstract class (constructing it throws); callers ask `user.canManageClub(club)` and never see the rule | `tests/unit/domain.user.test.js` "encapsulation", "Faculty as abstract" |
+| U2 | Classes, objects, member functions | ✅ | `domain/User.js`: seven classes with member functions; `services/rbac.js` builds one per request with `fromActor(req.user)` | `backend/src/domain/User.js`. `Booking` is still to come |
+| U2 | Access modifiers (public/private/protected) | ✅ (private, public); 🟡 (protected) | **private:** `#id`, `#departmentId` in `User`, `#ownsDepartment()` in `DeptCoordinator` (a `#private` method); **public:** the getters and policy methods. JavaScript has **no `protected`**, so `reaches()` is protected *by convention only* and documented as such. Closures also stand in elsewhere (`worker.js`, `frontend/src/lib/api.js`) | `user.id = 5` throws `TypeError`; `Object.keys(user)` is empty |
 | U2 | Static members | ✅ | `ApiError.js` `static defaultCodeFor`, `static fromStatus`, and the factories `static badRequest/notFound/…` (each now returns the matching subclass) | Called throughout the services as `ApiError.notFound()` |
 | U2 | Constructors | ✅ | `ApiError`'s parameterized constructor; each subclass's constructor fixes its own status and calls `super(...)` with default arguments; `SlotUnavailableError`'s constructor builds a `details` object from named parts | `new ApiError.NotFoundError()` cannot be built with the wrong status |
 | U2 | Destructors | ⛔ N/A | JS is garbage-collected | Resource cleanup done explicitly instead: `backend/src/lifecycle.js` `createShutdownHandler` |
-| U3 | Inheritance | ✅ (exceptions); 🟡 (domain) | `Error` → `ApiError` → `NotFoundError`/`ConflictError`/… and **`SlotUnavailableError extends ConflictError extends ApiError extends Error`** — a genuine multilevel chain, thrown by `booking.service.js` when a venue and time are taken. Domain entities are still not classes; planned: Phase D role hierarchy (`User` → 5 roles) | `tests/unit/ApiError.test.js` "is a multilevel chain"; `err instanceof ConflictError` is also true for a `SlotUnavailableError` |
-| U3 | Runtime polymorphism (virtual functions) | 🟡 | `ApiError` defines a `logLevel` getter that `ServiceUnavailableError` **overrides**; `errorHandler.js` calls `err.logLevel` without knowing which subclass it holds. Small but real. `normalise` in the same file still dispatches on `instanceof` for non-`ApiError` values. The main case study — replacing `rbac.js`'s role conditionals with overridden methods — is still planned (Phase D) | `tests/unit/ApiError.test.js` "logLevel is overridden polymorphically" |
+| U3 | Inheritance | ✅ | **Roles:** `User` → `Student` → `ClubMember` → `ClubHead` (multilevel) and `User` → `Faculty` (abstract) → `DeptCoordinator` / `SuperAdmin` (hierarchical). **Exceptions:** `Error` → `ApiError` → `ConflictError` → `SlotUnavailableError` (multilevel), thrown by `booking.service.js` when a venue and time are taken | `tests/unit/ApiError.test.js` "is a multilevel chain"; `err instanceof ConflictError` is also true for a `SlotUnavailableError` |
+| U3 | Runtime polymorphism (virtual functions) | ✅ | **The main case study:** `rbac.js` used to decide `canViewUser`, `canManageClub`, `canAppointForClub` and `assignableRoles` with `if (actor.role === ROLES.X)` chains. Each is now a method that `SuperAdmin`, `DeptCoordinator` and the base `User` **override**; `canManageUser` is a template method whose one varying step, `reaches()`, is overridden. Also `ApiError.logLevel` (overridden by `ServiceUnavailableError`, called by `errorHandler.js`) | `tests/unit/domain.user.test.js` "runtime polymorphism": one list of `User`s, the same call, a different answer per class. The 50 pre-existing `rbac` policy tests pass unchanged |
 | U3 | Operator overloading | ⛔ N/A | Not possible in JavaScript | — |
 | U4 | File I/O | 🟡 | `backend/src/services/reports/format.js` (CSV), `reports/pdf.js` (PDF via pdfkit) | Streamed to HTTP, not to disk. Planned: Phase D writes an export to disk with `fs` |
 | U5 | Exceptions, multiple catch, user-defined exceptions | ✅ | `backend/src/config/db.js` `withTransaction` (try/catch/finally); a user-defined exception **hierarchy** (`ApiError` + 8 subclasses) thrown throughout; callers can catch by type | Textbook-recognisable try/catch/finally with rollback; `instanceof ConflictError` catches a whole family |
 | U5 | Unhandled/unexpected exceptions | ✅ | `backend/src/lifecycle.js` `registerProcessHandlers` (`uncaughtException`, `unhandledRejection`) | Matches the syllabus wording directly |
 | U5 | STL containers/algorithms | 🟡 | `Map`/`Set`/`.sort`/`.filter`/`.reduce` throughout | JS standard-library equivalent, not STL itself |
-| Lab 2, 4, 5 | Classes w/ access modifiers; inheritance case study; static/runtime polymorphism | ⬜ | — | Planned: Phase D role hierarchy directly targets these three labs |
+| Lab 2, 4, 5 | Classes w/ access modifiers; inheritance case study; static/runtime polymorphism | ✅ | Lab 2: `User` with `#private` fields; Lab 4: the role hierarchy as the case study; Lab 5: static (`fromActor`, `ApiError.fromStatus`) and runtime polymorphism (overridden policy methods) | `backend/src/domain/User.js` |
 | Lab 9 | Exception types | ✅ | See U5 above | — |
 
 **Best gaps closed by Phase D:**
 
-1. `User` → `Student`/`ClubMember`/`ClubHead`/`DeptCoordinator`/`SuperAdmin`
+1. ✅ `User` → `Student`/`ClubMember`/`ClubHead`/`DeptCoordinator`/`SuperAdmin`
    class hierarchy replacing the role conditionals in `rbac.js` — genuine
-   runtime polymorphism on the project's own case study (Labs 4–5).
+   runtime polymorphism on the project's own case study (Labs 4–5) (Phase D.2).
 2. ✅ `ApiError` → `NotFoundError`/`ConflictError`/`ValidationError` exception
    hierarchy, with `SlotUnavailableError extends ConflictError` for multilevel
    inheritance (Phase D.1).
