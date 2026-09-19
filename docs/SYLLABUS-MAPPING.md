@@ -79,19 +79,19 @@ the alignment plan.
 
 **Honest summary today:** the backend is JavaScript. The classes in the
 codebase are the **role hierarchy** (`User` and six subclasses,
-`backend/src/domain/User.js`, Phase D.2), the **exception hierarchy**
-(`ApiError` and eight subclasses, Phase D.1) and `ConfigError`. Everything
-else — `Venue`, `Booking`, `Event`, `Club` — is still a plain object built
-from a SQL row; `Booking` and the report classes are the remaining Phase D
-slices. C++-specific topics (pointers, operator overloading,
+`backend/src/domain/User.js`, Phase D.2), the **`Booking` state-machine
+class** (`domain/Booking.js`, Phase D.3), the **exception hierarchy**
+(`ApiError` and eight subclasses, Phase D.1) and `ConfigError`. `Venue`,
+`Event` and `Club` are still plain objects built from a SQL row; the report
+classes are the remaining Phase D slice. C++-specific topics (pointers, operator overloading,
 destructors, templates) have no direct JavaScript equivalent and are noted as
 such rather than forced.
 
 | Unit / Lab | Topic | Status | Where | How to see it |
 | --- | --- | --- | --- | --- |
-| U1 | OOP principles: encapsulation, abstraction | ✅ | Encapsulation: `User` keeps `id`/`departmentId` in `#private` fields behind read-only getters. Abstraction: `Faculty` is an abstract class (constructing it throws); callers ask `user.canManageClub(club)` and never see the rule | `tests/unit/domain.user.test.js` "encapsulation", "Faculty as abstract" |
-| U2 | Classes, objects, member functions | ✅ | `domain/User.js`: seven classes with member functions; `services/rbac.js` builds one per request with `fromActor(req.user)` | `backend/src/domain/User.js`. `Booking` is still to come |
-| U2 | Access modifiers (public/private/protected) | ✅ (private, public); 🟡 (protected) | **private:** `#id`, `#departmentId` in `User`, `#ownsDepartment()` in `DeptCoordinator` (a `#private` method); **public:** the getters and policy methods. JavaScript has **no `protected`**, so `reaches()` is protected *by convention only* and documented as such. Closures also stand in elsewhere (`worker.js`, `frontend/src/lib/api.js`) | `user.id = 5` throws `TypeError`; `Object.keys(user)` is empty |
+| U1 | OOP principles: encapsulation, abstraction | ✅ | Encapsulation: `User` keeps `id`/`departmentId`, and `Booking` its `status`, in `#private` fields behind read-only getters; `Booking` is a state machine that refuses illegal transitions. Abstraction: `Faculty` is an abstract class (constructing it throws); callers ask `user.canManageClub(club)` and never see the rule | `tests/unit/domain.user.test.js` "encapsulation", "Faculty as abstract" |
+| U2 | Classes, objects, member functions | ✅ | `domain/User.js`: seven classes with member functions; `services/rbac.js` builds one per request with `fromActor(req.user)`. `domain/Booking.js`: a class whose object holds a booking's state and whose methods (`approve`, `reject`, `requestChanges`, `resubmit`, `cancel`) are the only way to change it | `backend/src/domain/User.js`, `backend/src/domain/Booking.js` |
+| U2 | Access modifiers (public/private/protected) | ✅ (private, public); 🟡 (protected) | **private:** `#id`, `#departmentId` in `User`; `#id`, `#status`, `#startAt` in `Booking` (a booking's status can only be changed by an action method, never assigned); `#ownsDepartment()` in `DeptCoordinator` and `#move()`/`#allows()` in `Booking` (`#private` methods); **public:** the getters and policy methods. JavaScript has **no `protected`**, so `reaches()` is protected *by convention only* and documented as such. Closures also stand in elsewhere (`worker.js`, `frontend/src/lib/api.js`) | `user.id = 5` throws `TypeError`; `Object.keys(user)` is empty |
 | U2 | Static members | ✅ | `ApiError.js` `static defaultCodeFor`, `static fromStatus`, and the factories `static badRequest/notFound/…` (each now returns the matching subclass) | Called throughout the services as `ApiError.notFound()` |
 | U2 | Constructors | ✅ | `ApiError`'s parameterized constructor; each subclass's constructor fixes its own status and calls `super(...)` with default arguments; `SlotUnavailableError`'s constructor builds a `details` object from named parts | `new ApiError.NotFoundError()` cannot be built with the wrong status |
 | U2 | Destructors | ⛔ N/A | JS is garbage-collected | Resource cleanup done explicitly instead: `backend/src/lifecycle.js` `createShutdownHandler` |
@@ -113,8 +113,8 @@ such rather than forced.
 2. ✅ `ApiError` → `NotFoundError`/`ConflictError`/`ValidationError` exception
    hierarchy, with `SlotUnavailableError extends ConflictError` for multilevel
    inheritance (Phase D.1).
-3. `Booking` domain class with `#private` state and `approve()`/`reject()`/
-   `requestChanges()`/`cancel()` enforcing legal transitions.
+3. ✅ `Booking` domain class with `#private` state and `approve()`/`reject()`/
+   `requestChanges()`/`cancel()` (and `resubmit()`) enforcing legal transitions (Phase D.3).
 4. Abstract `Report` class with polymorphic `toCsv()`/`toPdf()` subclasses.
 
 ---
