@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-19 | [Phase C.6 — ACID and locking demos you can run in psql](#phase-c6--acid-and-locking-demos-you-can-run-in-psql-2026-09-19) | Gaurav |
 | 2026-09-19 | [Phase C.5 — event feedback in JSONB, the NoSQL substitute](#phase-c5--event-feedback-in-jsonb-the-nosql-substitute-2026-09-19) | Gaurav |
 | 2026-09-18 | [Phase C.4 — the remaining SQL query forms: NOT IN, UNION, MIN/MAX/AVG, a self-join](#phase-c4--the-remaining-sql-query-forms-not-in-union-minmaxavg-a-self-join-2026-09-18) | Gaurav |
 | 2026-09-18 | [Phase C.3 — a stored function, a trigger, and a cursor](#phase-c3--a-stored-function-a-trigger-and-a-cursor-2026-09-18) | Gaurav |
@@ -33,6 +34,46 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase C.6 — ACID and locking demos you can run in psql (2026-09-19)
+
+Last Phase C slice. The project's strongest DBMS/OS work - transactions, row
+locks, the exclusion constraint, deadlock prevention - was correct but
+invisible: it lived in service code and tests. `db/demo/` makes each of those
+happen in front of a viewer, in `psql`.
+
+**Five demos** (details and how to run them in `db/demo/README.md`):
+
+1. **Atomicity** - two steps in one transaction; the second is refused by
+   `excl_bookings_no_overlap`, so the first vanishes with it.
+2. **Row lock / last seat (FR15)** - B waits on A's `FOR UPDATE`, then sees the
+   committed count and must not book.
+3. **Exclusion constraint (FR10)** - B *waits* for A's decision, then fails
+   with `23P01`; if A rolls back instead, B succeeds.
+4. **Isolation levels** - `READ COMMITTED` re-reads a changed value,
+   `REPEATABLE READ` does not.
+5. **Deadlock** - opposite lock order gives `40P01`; the same order does not.
+   This is the Phase B bug, reproduced on purpose.
+
+**Verified, not just written.** `db/demo/run-demo.sh all` runs every demo
+unattended against a real database, and I checked each output against what its
+comments claim (B's wait of ~2.5 s and `seat_free = f`; `100 -> 150` versus
+`100 -> 100`; the deadlock and the no-deadlock run). The interactive versions
+hold session A open for 20 s by default so you can switch terminals.
+
+**Things to know before you demo.** Which session PostgreSQL aborts in demo 5
+is not predictable - either may print the error. The demos need the schema and
+`seed.sql` applied (they borrow the seeded principal) and touch only rows named
+`ACID Demo...`; `99-cleanup.sql` removes them. There is no automated test for
+these scripts - they are timing-based, so a CI check would be flaky; re-run
+`run-demo.sh all` after any change to `bookings` or `events`.
+
+**Docs:** `docs/SYLLABUS-MAPPING.md` - ACID now points at the demos, deadlock
+gains a live demo, and a new "Isolation levels" row exists (it had no row
+before). No application code or schema changed, so nothing for teammates to
+rebuild.
 
 ---
 
