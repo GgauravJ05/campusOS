@@ -42,7 +42,7 @@ function ClubCard({ club }) {
           <div className="min-w-0 flex-1">
             <h2 className="truncate font-semibold tracking-tight">{club.name}</h2>
             <div className="mt-1 flex flex-wrap gap-1.5">
-              {club.scope === 'COLLEGE' ? <Badge tone="violet">College-level</Badge> : <Badge>{club.department?.code}</Badge>}
+              {club.scope === 'COLLEGE' ? <Badge tone="accent">College-level</Badge> : <Badge>{club.department?.code}</Badge>}
               {!club.isActive && <Badge tone="rose" dot>Disabled</Badge>}
               {club.myPosition && <Badge tone="brand">You: {positionLabel(club.myPosition)}</Badge>}
             </div>

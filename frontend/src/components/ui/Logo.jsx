@@ -7,8 +7,8 @@ export function Logo({ className }) {
     <svg viewBox="0 0 64 64" className={cn('size-9 shrink-0', className)} aria-hidden>
       <defs>
         <linearGradient id={id} x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#6366f1" />
-          <stop offset="1" stopColor="#7c3aed" />
+          <stop stopColor="#005bff" />
+          <stop offset="1" stopColor="#6366f1" />
         </linearGradient>
       </defs>
       <rect width="64" height="64" rx="16" fill={`url(#${id})`} />
