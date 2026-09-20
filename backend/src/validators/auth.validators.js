@@ -8,6 +8,7 @@
 
 const { body } = require('express-validator');
 const { MAX_BYTES } = require('../services/auth/password');
+const { isPersonName } = require('../lib/validation');
 
 const email = () =>
   body('email')
@@ -36,7 +37,8 @@ const register = [
     .bail()
     .trim()
     .isLength({ min: 2, max: 120 }).withMessage('Full name must be 2-120 characters')
-    .matches(/^[\p{L}\p{M}.' -]+$/u).withMessage('Use letters, spaces, dots, apostrophes or hyphens'),
+    .matches(/^[\p{L}\p{M}.' -]+$/u).withMessage('Use letters, spaces, dots, apostrophes or hyphens')
+    .custom(isPersonName).withMessage('Enter your real name (at least two letters)'),
   email(),
   password(),
   body('departmentId').isInt({ min: 1 }).withMessage('Choose your department').toInt(),
