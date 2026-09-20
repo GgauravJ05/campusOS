@@ -58,16 +58,16 @@ the alignment plan.
 | U2 | Sorting (bubble/insertion/quick/merge) | ⬜ | Uses `Array.prototype.sort` throughout | Planned: Phase E, hand-written merge sort for recommendations |
 | U2 | Hashing, collisions, chaining | 🟡 | `backend/src/services/venues/venue.service.js` `getDirectoryMeta` (nested `Map`/`Set`) | JS built-in hash table; no own hash function or collision handling |
 | U3 | Stack ADT, infix/postfix | ⬜ | — | Only the implicit call stack |
-| U3 | Queue ADT | 🟡 | `backend/src/services/events/eligibility.js` `planPromotions` (waitlist FIFO) | Table rows ordered by SQL, not an enqueue/dequeue ADT. Planned: Phase E circular queue |
+| U3 | Queue ADT | ✅ | `backend/src/lib/ds/CircularQueue.js`: a bounded circular queue over a fixed array with `front`/size arithmetic modulo capacity, O(1) `enqueue`/`dequeue`/`peek`, overflow and underflow as exceptions. Used by `planPromotions` (waitlist seat recovery, FR16): each entry is dequeued, promoted if it fits, otherwise **enqueued again**, so the ring genuinely wraps | `tests/unit/ds/circularQueue.test.js` (wrap-around, full/empty, 100 items through a capacity-3 ring); `planPromotions.equivalence.test.js` checks it against the old loop on 3000 random waitlists |
 | U3 | Priority queue / heap | 🟡 | `backend/src/services/reminders/reminder.service.js` `dispatchDue` (earliest-due-first) | SQL `ORDER BY … LIMIT 1`, not a heap. Planned: Phase E binary min-heap |
 | U4 | Trees, traversal | 🟡 | `backend/src/services/venues/venue.service.js` `getDirectoryMeta` | Builds a Building→Floor→Venue tree of nested `Map`s, walked with loops, no traversal algorithm |
 | U4 | BST, AVL, threaded tree, expression tree | ⬜ | — | — |
 | U5 | Graphs, BFS/DFS, MST, shortest path | ⬜ | — | Planned: Phase E, campus graph with Dijkstra/BFS for "nearest free venue" |
-| Lab 1–9 | Sorting/search, stack, circular queue, expression tree, BST, threaded tree, campus graph+MST, Dijkstra, hash table | ⬜ | — | All planned in Phase E, listed in `backend/src/lib/ds/` once written |
+| Lab 1–9 | Sorting/search, stack, circular queue, expression tree, BST, threaded tree, campus graph+MST, Dijkstra, hash table | 🟡 | Circular queue (Lab 3) done: `backend/src/lib/ds/CircularQueue.js`. The rest are in progress in Phase E and land in the same folder | `ls backend/src/lib/ds` |
 
 **Best gaps closed by Phase E** (each structure does a real job in a real screen, not a demo file):
 
-1. Explicit circular-queue ADT for waitlist promotion.
+1. ✅ Explicit circular-queue ADT for waitlist promotion (Phase E.1).
 2. Binary min-heap for the approval inbox (by nearest start time) and reminder dispatch.
 3. Hand-written merge sort + binary search for slot suggestions and recommendation ranking.
 4. Campus graph (buildings as nodes) with BFS/Dijkstra for "nearest free venue".
