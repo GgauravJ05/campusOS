@@ -278,46 +278,39 @@ are declared out of scope rather than forced.
 | --- | --- | --- | --- | --- |
 | U1 | Data link layer, framing, CRC | ⛔ | Not applicable to an application-layer project | — |
 | U2 | IP addressing, subnetting, routing | ⛔ | Only `ip_address INET` columns store client IPs for audit; no routing logic | — |
-| U3 | TCP/UDP, sockets | 🟡 | Express binds a TCP socket implicitly; no raw socket code | `backend/server.js` |
+| U3 | TCP/UDP, sockets | 🟡 | Express binds a TCP socket implicitly; no raw socket code. `docs/NETWORK.md` §1 maps the three ports (5173, 5050, 55432) onto the TCP/IP layers and shows the TCP connect step in a `curl -v` capture | `backend/server.js`, `docs/NETWORK.md` |
 | U4 | HTTP methods and status codes | ✅ | GET/POST/PATCH/PUT/DELETE across `backend/src/routes/`; codes 200/201/204/400/401/403/404/409/422/429/503 in `backend/src/utils/ApiError.js` | Browser DevTools Network tab |
 | U4 | Client-server model, REST | ✅ | `frontend/src/lib/api.js` (client) ↔ `backend/src/routes/*.routes.js` (server) | Any page load |
 | U4 | Cookies, headers | ✅ | httpOnly `SameSite=Strict` refresh cookie; `Authorization: Bearer`; `X-Request-Id`; helmet security headers | DevTools Application/Network tabs |
-| U4 | CORS | ✅ | `backend/src/app.js`; dev proxy avoids CORS in local dev | Cross-origin request blocked/allowed as configured |
+| U4 | CORS | ✅ | `backend/src/app.js`: an explicit origin allow-list with credentials. `docs/NETWORK.md` §3 shows a real **preflight** (`OPTIONS` → `204` with `Allow-Methods`/`Allow-Headers`/`Max-Age`) and an unlisted origin refused with `403` | `docs/NETWORK.md` |
 | U4 | SMTP / MIME | ✅ | `backend/src/services/mail/mailer.js` sends `text` + `html` multipart mail via nodemailer | OTP verification emails |
-| U4 | DNS, TLS/HTTPS | ⬜ | Project runs on `localhost`; not yet deployed | Planned: Phase G deployment with a real domain and HTTPS |
+| U4 | DNS, TLS/HTTPS | ⛔ | Runs on `localhost`; the project will not be deployed, so there is no domain, DNS record or public certificate. `docs/NETWORK.md` covers the parts that are real: HTTP, headers, cookies, CORS, status codes | — |
 | U5 | Wireless, MANET | ⛔ | Not applicable | — |
 
-**Best gaps closed by Phase G:** deploy with a real domain, DNS records and a
-TLS certificate (closes the DNS/HTTPS row above and doubles as the WDH hosting
-lab); a short "Network" section in the documentation showing `curl -v` of a
-login (TCP handshake, request/response headers, status codes) and the app's
-ports mapped onto the TCP/IP layers.
+**Phase G:** the network section is `docs/NETWORK.md` (a real `curl -v` login, a CORS preflight, status codes, ports on the TCP/IP layers). **Deployment, DNS and HTTPS were dropped by team decision** and are declared out of scope above, not left as "planned".
 
 ---
 
 ## B25IT404 — Foundation of Web Technology (OE, 3L, theory)
 
 **Honest summary today:** strong on modern JavaScript/fetch/JSON/REST because
-that is the whole frontend. Weak on the syllabus's specific choice of
-**Bootstrap** and **jQuery**, since the project uses React + Tailwind CSS
-instead — a genuine stack mismatch, addressed with a separate static page
-rather than by rewriting the app.
+that is the whole frontend. The syllabus's own choice of **Bootstrap** and
+**jQuery** does not match the app's React + Tailwind stack, so they live on a
+separate static page (`frontend/public/about/`) rather than in a rewrite. That
+page is small: one page, no modals or carousels.
 
 | Unit | Topic | Status | Where | How to see it |
 | --- | --- | --- | --- | --- |
-| U1 | HTML structure, semantic HTML5 | 🟡 | `frontend/index.html`; JSX has `header`/`nav`/`main`/`section`/`aside` but **zero `footer`, `article`, `figure`** | Inspect element. Planned: Phase G semantic pass |
+| U1 | HTML structure, semantic HTML5 | ✅ | Shared components now emit `footer` (app shell and sign-in layout), `article` (each event and venue card), `section` (every `Card`, with an `as` prop to choose), `figure`/`figcaption` (an event's seat meter and its caption), `time` with `datetime` (event dates), plus the existing `header`/`nav`/`main`/`aside`/`dl`. The public page `frontend/public/about/index.html` adds `address`, an inline SVG `figure`, and headings in order | `frontend/src/components/ui/semantics.test.jsx`; inspect any events page |
 | U1 | Forms and tables | ✅ | 11 `<form>`, 2 `<table>` across pages | Reports page, all forms |
-| U2 | CSS: selectors, box model, Flexbox/Grid, responsive | 🟡 | Nearly all styling is Tailwind utility classes; one hand-written `index.css` (70 lines) | Planned: Phase G, a hand-written CSS block (selectors, box model, one `@media` breakpoint, a grid layout) so plain CSS is visible in source, not only as class names |
-| U3 | Bootstrap (grid, modals, carousels) | ⬜ | Not used — React + Tailwind instead | Planned: Phase G, a separate static Bootstrap landing/about/contact page |
+| U2 | CSS: selectors, box model, Flexbox/Grid, responsive | ✅ | `frontend/public/about/campus.css` is plain hand-written CSS, commented by topic: custom properties, element/class/id/child/descendant/attribute/adjacent-sibling selectors, pseudo-classes and pseudo-elements, `box-sizing` and the box model, **CSS Grid** (`auto-fit`/`minmax`), **Flexbox** (footer), three `@media` blocks (768 px, 480 px, `prefers-reduced-motion`) and a print stylesheet. The React app itself is still styled with Tailwind utilities, which is disclosed rather than hidden | Open `/about/index.html`, resize the window |
+| U3 | Bootstrap (grid, modals, carousels) | 🟡 | `frontend/public/about/index.html` uses Bootstrap 5.3.3 (navbar with collapse, grid `row`/`col-md-*`, buttons, card, accordion, badge, form validation classes), copied into `public/about/vendor/` so the page works offline and no npm dependency is added. **Not used:** modals and carousels | `/about/index.html` |
 | U4 | JS DOM, events, JSON, promises/async | ✅ | `frontend/src/lib/api.js` (fetch, `JSON.stringify`/`.json()`, try/catch, single-flight token refresh) | Any API call in DevTools |
-| U4 | jQuery | ⬜ | Not used | Planned: Phase G, one jQuery interaction on the static page |
+| U4 | jQuery | ✅ | `frontend/public/about/about.js`: selectors, `.on()` delegated events, `.data()`, `.toggle()`, `.toggleClass()`, `.text()`, `.each()`, `.trigger()`. Two interactions: the feature filter and the contact-form validation. jQuery 3.7.1 is vendored | Click the audience buttons on `/about/index.html` |
 | U5 | AJAX, consuming REST services | ✅ (via `fetch`, not XHR) | `lib/api.js` | — |
-| U5 | XMLHttpRequest specifically | ⬜ | Project uses `fetch` everywhere | Planned: Phase G, an `XMLHttpRequest` call to `/api/health` on the static page |
+| U5 | XMLHttpRequest specifically | ✅ | `about.js` `checkApi` opens `GET /api/health` with a raw `XMLHttpRequest`: `open`, `setRequestHeader`, `timeout`, `onload`/`onerror`/`ontimeout`, `JSON.parse(responseText)`. The rest of the project keeps using `fetch` | DevTools Network, Type column reads `xhr` |
 
-**Best gaps closed by Phase G:** a small static Bootstrap + jQuery + XHR page
-(landing/about/contact) that does not touch the React application, closing
-Units 3–4 without a stack rewrite; a semantic-HTML and hand-written-CSS pass
-on the existing app.
+**Phase G (done):** a static Bootstrap + jQuery + XHR page (`frontend/public/about/`) that does not touch the React application, plus a semantic-HTML pass on the app and hand-written CSS on that page.
 
 ---
 
@@ -329,13 +322,13 @@ project is not yet deployed and uses Node's `pg` driver rather than Java/JDBC.
 
 | Lab | Topic | Status | Where | How to see it |
 | --- | --- | --- | --- | --- |
-| 2 | Multi-page site: navigation, responsive | 🟡 | App has real navigation and is responsive, but has no public Home/About/Contact — it opens straight to login | Planned: Phase G static pages |
+| 2 | Multi-page site: navigation, responsive | 🟡 | `/about/index.html` is a public single page with sections (Features, Status, FAQ, Contact), a responsive navbar and smooth anchors. It is one page, not several, and the app still opens on the sign-in screen at `/` | `/about/index.html` |
 | 3 | Feedback form | 🟡 | The backend exists: `POST /api/events/:id/feedback` validates a rating and per-category answers and stores them (also the DBMS NoSQL substitute) | **No screen yet** — the API is built and tested, the React form is not |
 | 4A | JS validation | ✅ | `frontend/src/pages/auth/RegisterPage.jsx`, `frontend/src/lib/password.js` | Submit an invalid form |
-| 5 | Login validation (name/mobile/email) | 🟡 | Email and empty-field validation exist; **no mobile-number validation** despite `users.phone` existing in the schema | Planned: Phase G |
+| 5 | Login validation (name/mobile/email) | ✅ | Hand-written `normaliseMobile` (Indian 10-digit mobile: starts 6-9, optional `+91`/`91`/`0`), `isPersonName` (letters, at least two) and `isEmail`, in **two copies on purpose**: `frontend/public/about/validate.js` for instant feedback, and `backend/src/lib/validation.js`, the authoritative check used by `PATCH /api/users/me` (phone, name) and by registration (name). The old phone rule accepted `1234567`; it no longer does | `frontend/src/about.validate.test.js`, `backend/tests/unit/validation.test.js` (same table), `users.flow.test.js` |
 | 6 | JDBC CRUD | 🟡 (different technology) | Equivalent CRUD done with Node's `pg` pool (`backend/src/config/db.js`) | Argued in the viva as the direct equivalent of JDBC in a different stack |
-| 7 | Bootstrap landing page | ⬜ | See B25IT404 above | Planned: Phase G |
-| 8 | Hosting terms: DNS, hosting types, cPanel | ⬜ | **Not deployed anywhere** | Planned: Phase G — deploy to free tiers, document DNS records and hosting type chosen |
+| 7 | Bootstrap landing page | ✅ | `frontend/public/about/index.html` with Bootstrap and the hand-written `campus.css`; see U3 above | `/about/index.html` (note the explicit `index.html`; `/about/` alone falls through to the React app in the dev server) |
+| 8 | Hosting terms: DNS, hosting types, cPanel | ⛔ | **Out of scope by team decision: the project is not deployed.** Nothing here claims otherwise | — |
 | **PBL P5** | End-to-end event management system | ✅ | **The entire project** | See the quote at the top of this document |
 
 ---
