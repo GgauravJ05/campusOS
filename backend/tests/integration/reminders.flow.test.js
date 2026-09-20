@@ -322,6 +322,7 @@ describeWithDb('reminder sweep (FR19)', () => {
       await reminders.sweep();
 
       await db.query(`UPDATE system_settings SET setting_value = '24' WHERE setting_key = 'reminder.first_offset_hours'`);
+      settings.invalidate(); // direct SQL bypasses the cache's write-invalidation
       try {
         expect(await settings.getReminderRules()).toMatchObject({ firstOffsetHours: 24 });
         await reminders.sweep();
@@ -331,15 +332,18 @@ describeWithDb('reminder sweep (FR19)', () => {
         expect(new Date(twoDay.scheduled_for).getTime()).toBe(start.getTime() - DAY);
       } finally {
         await db.query(`UPDATE system_settings SET setting_value = '48' WHERE setting_key = 'reminder.first_offset_hours'`);
+        settings.invalidate(); // direct SQL bypasses the cache's write-invalidation
       }
     });
 
     it('falls back to the offsets the requirement names when a setting is nonsense', async () => {
       await db.query(`UPDATE system_settings SET setting_value = 'soon' WHERE setting_key = 'reminder.second_offset_hours'`);
+      settings.invalidate(); // direct SQL bypasses the cache's write-invalidation
       try {
         expect(await settings.getReminderRules()).toMatchObject({ secondOffsetHours: 2 });
       } finally {
         await db.query(`UPDATE system_settings SET setting_value = '2' WHERE setting_key = 'reminder.second_offset_hours'`);
+        settings.invalidate(); // direct SQL bypasses the cache's write-invalidation
       }
     });
   });
