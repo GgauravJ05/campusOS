@@ -9,6 +9,9 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Phase H.3 — ethics, privacy and sustainability](#phase-h3--ethics-privacy-and-sustainability-2026-09-20) | Gaurav |
+| 2026-09-20 | [Phase H.2 — contribution matrix template](#phase-h2--contribution-matrix-template-2026-09-20) | Gaurav |
+| 2026-09-20 | [Phase H.1 — the test report](#phase-h1--the-test-report-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase G.5 — the network write-up, and Phase G complete](#phase-g5--the-network-write-up-and-phase-g-complete-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase G.4 — mobile and name validation](#phase-g4--mobile-and-name-validation-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase G.3 — a public Bootstrap, jQuery and XHR page](#phase-g3--a-public-bootstrap-jquery-and-xhr-page-2026-09-20) | Gaurav |
@@ -58,6 +61,62 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Phase H.3 — ethics, privacy and sustainability (2026-09-20)
+
+**Course:** B25IT304 (the 5% ethics/environment/legal line).
+
+**What changed:** new `docs/ETHICS-PRIVACY-SUSTAINABILITY.md`. It lists the
+personal data held and why, applies the DPDP Act 2023 principles, and says
+plainly where CampusOS falls short. It is not legal advice, and it says so.
+
+**Gaps it records (found by reading the code, not fixed here):** no privacy
+notice or consent screen; no data export or account erasure; no purge of expired
+codes and tokens; unencrypted backups; the audit trail is append-only, which
+conflicts with erasing the IPs in it. Also states that the recommendation and
+approval logic uses no machine learning, and that sustainability savings are
+intended, not measured.
+
+**One thing to review:** §7 discloses that parts of the code were written with an
+AI coding assistant and reviewed by the team. It is true (the commits carry the
+co-author line), but it is the team's call whether and how to say it; edit or
+remove it if you disagree.
+
+**Teammates must do:** read it, correct anything you know to be wrong, and have the
+college's data-protection lead look before any real use.
+
+## Phase H.2 — contribution matrix template (2026-09-20)
+
+**What changed:** new `docs/CONTRIBUTIONS.md`: team table, module ownership,
+course-wise lead, individual statements, and a list of evidence to check the
+matrix against. **It is intentionally blank.** Nothing in it is a guess.
+
+**Worth knowing:** `git shortlog` shows two accounts behind 71 of 73 non-bot
+commits. The file tells members whose contribution is real but invisible in the
+log to say so, and not to change the matrix to match the log.
+
+**Teammates must do:** every member fills their own row and statement before
+submission; the mentor reviews.
+
+## Phase H.1 — the test report (2026-09-20)
+
+**What changed:** new `docs/TEST-REPORT.md`, built from `jest --json` and
+`vitest --reporter=json` on a freshly reseeded database: 58 backend suites
+(1,013 tests) and 14 frontend files (227), all passed, none skipped; coverage
+98.7/91.0/99.5/99.4 backend and 94.0/88.3/91.3/95.6 frontend against the gates;
+a requirement-to-suite table for FR1-FR21; the concurrency proofs; the NFRs with
+a verdict each; and a section on what was **not** tested.
+New `backend/scripts/latency-probe.js` (a small response-time probe, not a load
+test). `docs/reviews/REVIEW-SCRIPT.md` had stale numbers (845 tests, 18 tables)
+and is corrected; its skip-warning example is now a measured one
+(`684 passed, 329 skipped` with the database down).
+
+**Findings the report records:**
+- The **global rate limit is 300 requests per 15 minutes per address**, which the probe hit. Behind a shared campus network address that would throttle everyone together. Configurable (`RATE_LIMIT_MAX`), not changed.
+- **Not verified:** 500 concurrent users, availability, real browsers and devices, an accessibility audit.
+- Still open: the FR17 ranking test needs a freshly reseeded database.
+
+**Teammates must do:** nothing. Rerun the commands in section 9 before quoting the numbers.
 
 ## Phase G.5 — the network write-up, and Phase G complete (2026-09-20)
 
