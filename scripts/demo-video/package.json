@@ -1,0 +1,9 @@
+{
+  "name": "campusos-demo-video",
+  "private": true,
+  "type": "module",
+  "description": "Records the CampusOS demo video. A separate tool, not part of the app: kept out of backend/ and frontend/ so neither gains a dependency.",
+  "dependencies": {
+    "playwright-core": "^1.49.0"
+  }
+}
