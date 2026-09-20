@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Contribution matrix: Gaurav's row filled in](#contribution-matrix-gauravs-row-filled-in-2026-09-20) | Gaurav |
 | 2026-09-20 | [Pre-review audit: docs brought in line with the code](#pre-review-audit-docs-brought-in-line-with-the-code-2026-09-20) | Gaurav |
 | 2026-09-20 | [Docker removed, and a spelling fix](#docker-removed-and-a-spelling-fix-2026-09-20) | Gaurav |
 | 2026-09-20 | [Admin Block and Campus rooms, one-floor booking](#admin-block-and-campus-rooms-one-floor-booking-2026-09-20) | Gaurav |
@@ -68,6 +69,19 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Contribution matrix: Gaurav's row filled in (2026-09-20)
+
+At Gaurav's request `docs/CONTRIBUTIONS.md` now lists him first (whole project, full
+stack), as owner (`1`) of every module in the ownership table, and as lead of every
+course in the course-wise table. He also has a **draft** individual statement written
+from the repository history, marked for him to rewrite in his own words. The other
+eleven rows are still blank on purpose. The evidence note now quotes the current
+commit counts (74 + 11 of 87 non-bot commits from two accounts that appear to be
+his) and asks him to confirm the two accounts are both his. Roll number left empty:
+it is not recorded anywhere I can check.
+
+**Open:** other members fill their own rows; the mentor reviews before submission.
 
 ## Pre-review audit: docs brought in line with the code (2026-09-20)
 
