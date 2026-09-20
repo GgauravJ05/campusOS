@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Phase E.2 — merge sort and binary search](#phase-e2--merge-sort-and-binary-search-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.1 — a circular queue behind the waitlist](#phase-e1--a-circular-queue-behind-the-waitlist-2026-09-20) | Gaurav |
 | 2026-09-20 | [UI palette — Framer Modern](#ui-palette--framer-modern-2026-09-20) | Gaurav |
 | 2026-09-19 | [Phase D.4 — the report classes, and writing exports to disk](#phase-d4--the-report-classes-and-writing-exports-to-disk-2026-09-19) | Gaurav |
@@ -41,6 +42,49 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase E.2 — merge sort and binary search (2026-09-20)
+
+Second Phase E slice.
+
+- **`mergeSort`** (`lib/ds/mergeSort.js`): top-down, O(n log n), **stable**
+  (a tie takes the left item), returns a new array. Now ranks recommendations
+  (`event.service.js`) and orders slot suggestions.
+- **`lowerBound` / `binarySearch`** (`lib/ds/binarySearch.js`): O(log n) on a
+  sorted array, by a key function. `lowerBound` is the primitive ("first index
+  whose key is >= target").
+- **Where they matter: `suggestSlots`** (the "try these times instead" list when a
+  slot is taken). It used to test every candidate window against every busy
+  booking. It now merge-sorts the day's bookings once and keeps a running
+  maximum of their end times, then binary-searches that for the first booking
+  that could still reach a candidate, checking only the few after it with the
+  exact `conflicts` rule.
+
+**The part I was careful about.** `conflicts()` uses the *larger* of the two
+bookings' buffers and counts approved overruns, so "conflicts" is not monotone
+along a sorted list, and a naive binary search on it could give wrong answers on
+unusual data. Searching a **running maximum of end times** (monotone for any
+input, overlapping or not) with a **conservative reach** (largest buffer + largest
+overrun) only decides where to start looking; the exact rule still decides every
+clash. So the result cannot differ from the old scan.
+
+**Proof, including that the proof can fail.** A new test compares the new
+`suggestSlots` with the old implementation on 3000 seeded random days - disjoint
+*and* overlapping bookings, random buffers and overruns, shuffled input order.
+I then deliberately broke the reach bound and confirmed that test fails, and
+restored it. The 14 existing `suggestSlots` tests pass unchanged.
+
+**Honest limits.**
+- A venue has a handful of bookings a day, so this is O(log n) against a tiny n:
+  correct and demonstrable, not a measurable speed-up. The mapping does not claim
+  one.
+- Only merge sort is implemented. The syllabus also lists bubble, insertion and
+  quick sort; I did not add them for their own sake. A few trivial `.sort()` calls
+  on ids and equipment names deliberately stay on the built-in.
+
+No API, schema or dependency change.
 
 ---
 

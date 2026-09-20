@@ -54,8 +54,8 @@ the alignment plan.
 | U1 | Complexity, Big-O, frequency count | 🟡 | `backend/src/services/bookings/booking.service.js` `findApprovedConflicts` | SQL narrows candidates before an O(n) JS check; no complexity is documented |
 | U1 | Linked lists (singly/doubly/circular) | ⬜ | — | — |
 | U2 | Linear search | 🟡 | `backend/src/services/scheduling/timeWindow.js` `suggestSlots` | Scans candidate windows against busy bookings using `Array.some` |
-| U2 | Binary search | ⬜ | — | Planned: Phase E, over sorted busy-booking windows |
-| U2 | Sorting (bubble/insertion/quick/merge) | ⬜ | Uses `Array.prototype.sort` throughout | Planned: Phase E, hand-written merge sort for recommendations |
+| U2 | Binary search | ✅ | `backend/src/lib/ds/binarySearch.js` (`lowerBound`, `binarySearch`, both O(log n)). `timeWindow.js` `suggestSlots` merge-sorts the day's busy bookings, keeps a running maximum of their end times (monotone even when bookings overlap), and binary-searches it for the first booking that could still reach a candidate window; only that neighbourhood is then checked with the exact `conflicts` rule | `tests/unit/ds/suggestSlots.equivalence.test.js`: identical answers to the old linear scan on 3000 random days (disjoint *and* overlapping bookings, shuffled input); breaking the search bound makes it fail |
+| U2 | Sorting (bubble/insertion/quick/merge) | 🟡 | **Merge sort** hand-written in `backend/src/lib/ds/mergeSort.js` (O(n log n), stable, returns a new array) and used for recommendation ranking (`event.service.js` `recommendations`) and slot suggestions (`suggestSlots`). Bubble, insertion and quick sort are **not** implemented — the syllabus lists them, the project needs only one. A few trivial `.sort()` calls on ids and equipment names remain on the built-in | `tests/unit/ds/mergeSort.test.js` (stability, agrees with the built-in on 500 random arrays, 5000-element input) |
 | U2 | Hashing, collisions, chaining | 🟡 | `backend/src/services/venues/venue.service.js` `getDirectoryMeta` (nested `Map`/`Set`) | JS built-in hash table; no own hash function or collision handling |
 | U3 | Stack ADT, infix/postfix | ⬜ | — | Only the implicit call stack |
 | U3 | Queue ADT | ✅ | `backend/src/lib/ds/CircularQueue.js`: a bounded circular queue over a fixed array with `front`/size arithmetic modulo capacity, O(1) `enqueue`/`dequeue`/`peek`, overflow and underflow as exceptions. Used by `planPromotions` (waitlist seat recovery, FR16): each entry is dequeued, promoted if it fits, otherwise **enqueued again**, so the ring genuinely wraps | `tests/unit/ds/circularQueue.test.js` (wrap-around, full/empty, 100 items through a capacity-3 ring); `planPromotions.equivalence.test.js` checks it against the old loop on 3000 random waitlists |
@@ -63,13 +63,13 @@ the alignment plan.
 | U4 | Trees, traversal | 🟡 | `backend/src/services/venues/venue.service.js` `getDirectoryMeta` | Builds a Building→Floor→Venue tree of nested `Map`s, walked with loops, no traversal algorithm |
 | U4 | BST, AVL, threaded tree, expression tree | ⬜ | — | — |
 | U5 | Graphs, BFS/DFS, MST, shortest path | ⬜ | — | Planned: Phase E, campus graph with Dijkstra/BFS for "nearest free venue" |
-| Lab 1–9 | Sorting/search, stack, circular queue, expression tree, BST, threaded tree, campus graph+MST, Dijkstra, hash table | 🟡 | Circular queue (Lab 3) done: `backend/src/lib/ds/CircularQueue.js`. The rest are in progress in Phase E and land in the same folder | `ls backend/src/lib/ds` |
+| Lab 1–9 | Sorting/search, stack, circular queue, expression tree, BST, threaded tree, campus graph+MST, Dijkstra, hash table | 🟡 | Done so far: sorting and searching (Lab 1: `mergeSort.js`, `binarySearch.js`) and the circular queue (Lab 3: `CircularQueue.js`). The rest are in progress in Phase E and land in the same folder | `ls backend/src/lib/ds` |
 
 **Best gaps closed by Phase E** (each structure does a real job in a real screen, not a demo file):
 
 1. ✅ Explicit circular-queue ADT for waitlist promotion (Phase E.1).
 2. Binary min-heap for the approval inbox (by nearest start time) and reminder dispatch.
-3. Hand-written merge sort + binary search for slot suggestions and recommendation ranking.
+3. ✅ Hand-written merge sort + binary search for slot suggestions and recommendation ranking (Phase E.2).
 4. Campus graph (buildings as nodes) with BFS/Dijkstra for "nearest free venue".
 5. Chained hash table for a settings/venue lookup cache (shared with Phase F's LRU cache).
 

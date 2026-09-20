@@ -10,6 +10,9 @@
  */
 
 const CAMPUS_UTC_OFFSET = '+05:30';
+const mergeSort = require('../../lib/ds/mergeSort');
+const { lowerBound } = require('../../lib/ds/binarySearch');
+
 const MINUTE_MS = 60 * 1000;
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -150,6 +153,7 @@ function suggestSlots({
 }) {
   const open = toMinutes(openingTime);
   const close = toMinutes(closingTime);
+  const clashes = clashChecker(busy, bufferMinutes);
   const candidates = [];
 
   for (let start = open; start + durationMinutes <= close; start += stepMinutes) {
@@ -157,17 +161,56 @@ function suggestSlots({
     const endTime = fromMinutes(start + durationMinutes);
     const window = { startAt: toInstant(date, startTime), endAt: toInstant(date, endTime), bufferMinutes };
     if (window.startAt.getTime() <= now.getTime()) continue;
-    if (busy.some((booking) => conflicts(window, booking))) continue;
+    if (clashes(window)) continue;
     candidates.push({ startTime, endTime, start });
   }
 
   // Closest to what the user asked for first.
   const anchor = preferStart && isValidTime(preferStart) ? toMinutes(preferStart) : open;
-  return candidates
-    .sort((a, b) => Math.abs(a.start - anchor) - Math.abs(b.start - anchor) || a.start - b.start)
-    .slice(0, limit)
-    .sort((a, b) => a.start - b.start)
+  const nearest = mergeSort(
+    candidates,
+    (a, b) => Math.abs(a.start - anchor) - Math.abs(b.start - anchor) || a.start - b.start,
+  ).slice(0, limit);
+  return mergeSort(nearest, (a, b) => a.start - b.start)
     .map(({ startTime, endTime }) => ({ startTime, endTime }));
+}
+
+/**
+ * Builds a function that says whether a proposed window clashes with any
+ * booking in `busy`, without testing every booking every time.
+ *
+ * The bookings are merge-sorted by start once, and a running maximum of their
+ * end times is kept. That running maximum only ever rises, so it is sorted
+ * even if the bookings overlap, and a binary search on it finds the first
+ * booking that could still be reaching into the window. A booking can reach
+ * past its own end by at most its buffer plus its approved overrun, so
+ * anything ending earlier than that before the window cannot clash and is
+ * skipped without being looked at. From there it scans forward only while
+ * bookings start before the window could touch them, and applies the exact
+ * `conflicts` rule to those few. The answer is identical to `busy.some(...)`;
+ * only the number of bookings examined changes (O(log n + k) instead of O(n)).
+ */
+function clashChecker(busy, proposedBufferMinutes) {
+  const ordered = mergeSort(busy, (a, b) => new Date(a.startAt) - new Date(b.startAt));
+  const starts = ordered.map((booking) => new Date(booking.startAt).getTime());
+  const runningLatestEnd = [];
+  let latest = -Infinity;
+  for (const booking of ordered) {
+    latest = Math.max(latest, new Date(booking.endAt).getTime());
+    runningLatestEnd.push(latest);
+  }
+  const reachMinutes = Math.max(proposedBufferMinutes || 0, ...ordered.map((b) => b.bufferMinutes || 0))
+    + Math.max(0, ...ordered.map((b) => b.extensionMinutes || 0));
+  const reach = reachMinutes * MINUTE_MS;
+
+  return (window) => {
+    const windowStart = new Date(window.startAt).getTime();
+    const windowEnd = new Date(window.endAt).getTime();
+    for (let i = lowerBound(runningLatestEnd, windowStart - reach); i < ordered.length && starts[i] < windowEnd + reach; i += 1) {
+      if (conflicts(window, ordered[i])) return true;
+    }
+    return false;
+  };
 }
 
 module.exports = {
