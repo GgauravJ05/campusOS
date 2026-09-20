@@ -305,5 +305,18 @@ describeWithDb('user management (database)', () => {
       const res = await request(app).patch('/api/users/me').set(auth(student)).send({ academicYear: 9, phone: 'call me' });
       expect(res.status).toBe(422);
     });
+
+    it('holds a phone number to the Indian mobile format and a name to real letters', async () => {
+      const student = await live.createVerifiedStudent(app);
+      const short = await request(app).patch('/api/users/me').set(auth(student)).send({ phone: '12345' });
+      expect(short.status).toBe(422);
+      expect(short.body.error.details.map((d) => d.field)).toContain('phone');
+      const wrongStart = await request(app).patch('/api/users/me').set(auth(student)).send({ phone: '5876543210' });
+      expect(wrongStart.status).toBe(422);
+      const dots = await request(app).patch('/api/users/me').set(auth(student)).send({ fullName: '..' });
+      expect(dots.status).toBe(422);
+      await request(app).patch('/api/users/me').set(auth(student)).send({ phone: '98765 43210' }).expect(200);
+      await request(app).patch('/api/users/me').set(auth(student)).send({ phone: null }).expect(200); // clearing is allowed
+    });
   });
 });
