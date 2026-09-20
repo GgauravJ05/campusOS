@@ -588,11 +588,17 @@ describeWithDb('events and RSVP (database)', () => {
 
   // -------------------------------------------------------------------------
   describe('recommendations (FR17)', () => {
-    // Ranking is scored over the soonest 100 upcoming events, so these
-    // assertions assume the freshly seeded database CI runs against. On a
-    // local database reused across many runs, reset it first:
-    //   dropdb campusos_test && createdb campusos_test && psql -f db/schema.sql -f db/seed.sql
+    // Ranking is scored over the soonest 100 upcoming events, and every suite
+    // leaves its events behind in the shared database, so on a reused database
+    // this test's events can fall outside that window and never be scored.
+    // Rather than depend on the database being freshly seeded, the test clears
+    // the field first: other upcoming published events are cancelled. That is
+    // safe here because every other test creates the events it needs itself.
     it('ranks events in a category the student has registered for above the rest', async () => {
+      await db.query(
+        `UPDATE events SET status = 'CANCELLED'
+          WHERE status = 'PUBLISHED' AND event_date >= CURRENT_DATE`,
+      );
       const fan = await live.createVerifiedStudent(app, { fullName: 'Sports Fan' });
       const attended = await publishedEvent({ category: 'SPORTS', date: day(40), title: 'Past Interest' });
       await rsvp(fan, attended.eventId).expect(201);
@@ -616,8 +622,8 @@ describeWithDb('events and RSVP (database)', () => {
       expect(items[0].reason).toMatch(/sports/);
       const placement = items.find((e) => e.title.startsWith('Placement Talk'));
       expect(placement.score).toBeLessThan(items[0].score);
-      // On a clean database that top event is the one this test published.
-      expect(items.map((e) => e.id)).toContain(sports.eventId);
+      // With the field cleared, the top event is the one this test published.
+      expect(items[0].id).toBe(sports.eventId);
     });
 
     it('never recommends an event the student is already registered for', async () => {

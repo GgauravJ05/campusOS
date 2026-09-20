@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Test fix — the FR17 ranking test no longer needs a fresh database](#test-fix--the-fr17-ranking-test-no-longer-needs-a-fresh-database-2026-09-20) | Gaurav |
 | 2026-09-20 | [Feedback screen on the event page](#feedback-screen-on-the-event-page-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase H.3 — ethics, privacy and sustainability](#phase-h3--ethics-privacy-and-sustainability-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase H.2 — contribution matrix template](#phase-h2--contribution-matrix-template-2026-09-20) | Gaurav |
@@ -62,6 +63,32 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Test fix — the FR17 ranking test no longer needs a fresh database (2026-09-20)
+
+**Cause:** `recommendations()` scores only the soonest 100 upcoming published
+events. Every suite leaves its events behind, so on a reused database the test's
+own events fell outside that window and were never scored. It failed from the
+second full run without a reseed.
+
+**Fix (test only, no application change):** before creating its events, the test
+cancels every other upcoming published event, so it controls the field it is
+ranking, and it now asserts the top item is the event it published (it used to
+assert only that it was somewhere in the list).
+
+**Verified:** reproduced first (run 2 without a reseed failed), then five runs in a
+row without a reseed pass this test; one full run on a freshly reseeded database:
+58 suites passed.
+
+**Still open, and worth knowing:** the same accumulation makes the approval-inbox,
+venue-visibility and my-activity tests fail from about the fourth run without a
+reseed. I ran the same five-run sequence with this fix reverted: the same tests
+fail at the same run, so this change did not cause it. Proper fix would be a
+cleanup of leftover rows per run (or a guarded reset of `*_test` databases in the
+Jest global setup); not done, since it is a larger change than was asked.
+Until then: reseed before a full run, as `CLAUDE.md` says.
+
+**Teammates must do:** nothing.
 
 ## Feedback screen on the event page (2026-09-20)
 
