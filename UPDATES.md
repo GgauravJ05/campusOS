@@ -9,6 +9,10 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Phase G.5 — the network write-up, and Phase G complete](#phase-g5--the-network-write-up-and-phase-g-complete-2026-09-20) | Gaurav |
+| 2026-09-20 | [Phase G.4 — mobile and name validation](#phase-g4--mobile-and-name-validation-2026-09-20) | Gaurav |
+| 2026-09-20 | [Phase G.3 — a public Bootstrap, jQuery and XHR page](#phase-g3--a-public-bootstrap-jquery-and-xhr-page-2026-09-20) | Gaurav |
+| 2026-09-20 | [Phase G.1 — semantic HTML in the app](#phase-g1--semantic-html-in-the-app-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase F.5 — the deadlock case study, and Phase F complete](#phase-f5--the-deadlock-case-study-and-phase-f-complete-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase F.4 — shell scripts for reset, backup and demo](#phase-f4--shell-scripts-for-reset-backup-and-demo-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase F.3 — an LRU cache with hit/miss counters](#phase-f3--an-lru-cache-with-hitmiss-counters-2026-09-20) | Gaurav |
@@ -54,6 +58,76 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Phase G.5 — the network write-up, and Phase G complete (2026-09-20)
+
+**Syllabus:** B25IT403 Computer Network, Units 3–4.
+
+**What changed:** new `docs/NETWORK.md`: the three ports on the TCP/IP layers, a
+real `curl -v` of a login annotated line by line (tokens redacted), a real CORS
+preflight and the refusal of an unlisted origin, the status codes the API
+returns (each one checked with `curl`), and what to open in DevTools.
+
+**Decision:** **deployment was dropped, as you asked.** DNS, hosting types and a
+public certificate are now marked out of scope in the mapping (not "planned"),
+and the write-up says the project is not deployed. Nothing claims otherwise.
+
+**Phase G summary:** G.1 semantic HTML, G.2 hand-written CSS (in G.3's
+`campus.css`), G.3 the public page, G.4 validation, G.5 this. Still not covered in
+the web courses: Bootstrap modals and carousels, a multi-page site, JDBC (the
+`pg` driver is the argued equivalent), hosting.
+
+**Teammates must do:** nothing.
+
+## Phase G.4 — mobile and name validation (2026-09-20)
+
+**Syllabus:** B25IT405 Website Development and Hosting, Lab 5.
+
+**What changed:** hand-written `normaliseMobile` (Indian 10-digit number, starts
+6–9, optional `+91`/`91`/`0`), `isPersonName` (letters, at least two) in
+`backend/src/lib/validation.js`. `PATCH /api/users/me` now uses them for `phone`
+and `fullName`, and registration for `fullName`. **Behaviour change:** a phone
+like `1234567` used to be accepted and now gets a 422; `..` is no longer a valid
+name. Stored values are kept exactly as typed (existing tests expect
+`+91 98765 43210`). The browser copy is in G.3.
+
+**Why two copies:** the public page is a plain script with no build step, so it
+cannot import the server's file; the server must not trust the browser. Both
+have the same test table.
+
+**Teammates must do:** nothing. Existing stored phone numbers are not
+re-validated; they only fail if edited.
+
+## Phase G.3 — a public Bootstrap, jQuery and XHR page (2026-09-20)
+
+**Syllabus:** B25IT404 Units 2–5 and B25IT405 Labs 2 and 7.
+
+**What changed:** `frontend/public/about/` (open **`/about/index.html`**, with the
+explicit filename, since `/about/` alone falls through to the React app in the
+dev server): `index.html` (Bootstrap), `campus.css` (hand-written, commented by
+topic), `about.js` (jQuery filter and form; a raw `XMLHttpRequest` to
+`/api/health`), `validate.js`. Bootstrap 5.3.3 and jQuery 3.7.1 are **copied
+into `vendor/`** rather than added to `package.json` or loaded from a CDN, so no
+npm dependency was added and the page works offline. Reason: the syllabus names
+both. ESLint ignores `vendor/` and knows the page's globals.
+
+**Honest notes:** the contact form has no server endpoint and says so on the
+page; it validates and shows a message, it sends nothing. Checked in a browser:
+the XHR reads the live API as online, the filter shows 2 of 6 cards, invalid
+input shows four messages, valid input shows none.
+
+**Teammates must do:** nothing.
+
+## Phase G.1 — semantic HTML in the app (2026-09-20)
+
+**Syllabus:** B25IT404 Unit 1.
+
+**What changed:** `Card` renders a `section` (new `as` prop); event and venue
+cards are `article`s; an event's seat meter is a `figure` captioned by the seats
+left; event dates use `time datetime`; the app shell and sign-in layout have a
+`footer`. New `semantics.test.jsx`. No visual change; 181 frontend tests pass.
+
+**Teammates must do:** nothing.
 
 ## Phase F.5 — the deadlock case study, and Phase F complete (2026-09-20)
 
