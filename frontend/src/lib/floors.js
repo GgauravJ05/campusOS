@@ -38,7 +38,11 @@ export const anchorId = (key) => `floor-${String(key).toLowerCase().replace(/[^a
  * floor, rooms are split by kind (classrooms, labs, seminar halls...) and each
  * kind is in natural order, so AC 401 to AC 404 read in sequence.
  *
- * @returns {{ key: string, building: string, floor: number, title: string, subtitle: string,
+ * `chip` is the short label for the jump bar: the floor for the primary building
+ * ("4th floor"), and the building for any other ("Admin Block", "Campus"), so two
+ * buildings' first floors are never both labelled "1st floor".
+ *
+ * @returns {{ key: string, building: string, floor: number, title: string, chip: string, subtitle: string,
  *   count: number, sections: { type: string, label: string, venues: object[] }[] }[]}
  */
 export function groupVenuesByFloor(venues, primaryBuilding = 'Academic Building') {
@@ -50,6 +54,8 @@ export function groupVenuesByFloor(venues, primaryBuilding = 'Academic Building'
   }
 
   const buildingRank = (name) => (name === primaryBuilding ? 0 : 1)
+  const floorsIn = new Map()
+  for (const group of groups.values()) floorsIn.set(group.building, (floorsIn.get(group.building) ?? 0) + 1)
   return [...groups.values()]
     .sort((a, b) => buildingRank(a.building) - buildingRank(b.building)
       || a.building.localeCompare(b.building)
@@ -66,6 +72,8 @@ export function groupVenuesByFloor(venues, primaryBuilding = 'Academic Building'
         building: group.building,
         floor: group.floor,
         title: floorLabel(group.floor),
+        chip: group.building === primaryBuilding ? floorLabel(group.floor)
+          : floorsIn.get(group.building) > 1 ? `${group.building}, ${floorLabel(group.floor)}` : group.building,
         subtitle: [group.building, departments.length === 1 ? departments[0] : null].filter(Boolean).join(' · '),
         count: group.venues.length,
         sections: [...byType.entries()]
