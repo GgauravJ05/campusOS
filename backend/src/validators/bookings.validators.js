@@ -2,6 +2,7 @@
 
 const { body, param, query } = require('express-validator');
 const { EVENT_CATEGORIES } = require('../services/bookings/booking.service');
+const { POLICIES } = require('../lib/os/scheduler');
 
 const bookingId = param('id').isInt({ min: 1 }).withMessage('Invalid booking id').toInt();
 const STATUSES = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED', 'MODIFICATION_REQUESTED'];
@@ -64,4 +65,10 @@ const update = [
   }),
 ];
 
-module.exports = { check, create, list, update, requestChanges, getOne: [bookingId], decide: [bookingId], reject };
+const inbox = [
+  query('policy').optional().isIn(POLICIES).withMessage(`Choose one of ${POLICIES.join(', ')}`),
+  query('baseMinutes').optional().isInt({ min: 1, max: 120 }).toInt(),
+  query('perCompetitorMinutes').optional().isInt({ min: 0, max: 60 }).toInt(),
+];
+
+module.exports = { inbox, check, create, list, update, requestChanges, getOne: [bookingId], decide: [bookingId], reject };

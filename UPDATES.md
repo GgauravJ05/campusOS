@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Phase F.2 — CPU scheduling policies for the approval inbox](#phase-f2--cpu-scheduling-policies-for-the-approval-inbox-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase F.1 — seats as a counting semaphore](#phase-f1--seats-as-a-counting-semaphore-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.6 — a hash table, and Phase E complete](#phase-e6--a-hash-table-and-phase-e-complete-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.5 — the campus graph and "nearest free venue"](#phase-e5--the-campus-graph-and-nearest-free-venue-2026-09-20) | Gaurav |
@@ -48,6 +49,54 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase F.2 — CPU scheduling policies for the approval inbox (2026-09-20)
+
+Second Phase F slice. OS Unit 2 / Lab 3: given processes with an arrival time and a
+burst, order them under FCFS, SJF and priority, and compute each one's **waiting
+time** (start - arrival) and **turnaround time** (finish - arrival).
+
+- **`schedule(processes, policy)`** (`backend/src/lib/os/scheduler.js`): non-preemptive
+  FCFS, SJF and priority on a simulated clock. The ready queue is the E.3 min-heap
+  ordered by the policy; when nothing is ready the clock jumps to the next arrival;
+  ties break by arrival then id, so it is deterministic.
+- **`GET /api/bookings/inbox`** (faculty only; `?policy=fcfs|sjf|priority`, default
+  FCFS) treats the pending requests in your inbox as processes and the approver as
+  the CPU. It returns them in that policy's order with each request's projected
+  wait and turnaround, and a `comparison` of all three policies' average wait and
+  turnaround on the same queue. Scoped like the existing decisions view.
+- **Backend only**, no screen.
+
+**Read this before you demo it: the burst is an assumption.** CampusOS does not record
+how long an approval takes, so I model review time as a base plus extra for every
+*competing* request for the same venue and time (defaults 5 + 5 minutes; a contested
+slot needs comparing). Both numbers are query parameters, and every response repeats
+them with a note saying "modelled, not measured". *Arrival* is real (when it was
+submitted) and *priority* is real (minutes until the event starts). If you time real
+approvals, replace the model.
+
+**What it shows.** On a real queue the three policies give visibly different orders
+and averages: SJF puts quick, uncontested requests ahead of a contested slot (lowest
+average wait); priority puts the soonest event first; FCFS is fair to arrival order.
+The comparison field lets you show SJF's average wait is never above FCFS's (a theorem
+when everything has already arrived).
+
+**Not implemented, and why.** Round robin and preemptive policies: an approver cannot
+be pre-empted mid-decision, so there is nothing for them to act on. The mapping
+says so rather than claiming the row.
+
+**Proof.** The scheduler reproduces the textbook numbers (FCFS average wait 10.25 and
+SJF 7 for bursts 6/8/7/3 arriving together; 7.75 for the classic staggered SJF set)
+and, over 1,000 random job sets, every policy runs each job exactly once, one at a
+time, never before its arrival, with SJF never worse than FCFS. My own first
+expected value for the staggered case (6.5) was wrong; working it by hand gave 7.75,
+which is the well-known answer, so the test was fixed, not the scheduler. The endpoint
+tests assert the relative order of five requests the test creates (so other suites'
+pending requests cannot interfere) and pass three times in a row on one database.
+
+No schema or dependency change.
 
 ---
 
