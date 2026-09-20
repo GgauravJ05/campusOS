@@ -365,17 +365,13 @@ This course's rubric is reproduced and checked against the repository in
 | Weight | Criterion | State |
 | --- | --- | --- |
 | 5% | Idea inception | ✅ SRS, Week 0 slides, Review 1 deck |
-| 60% | Outcomes — individual and team | Product: ✅ strong (21/21 FRs, 845 tests). Individual: ⬜ **no per-member contribution record exists** |
-| 10% | Documentation (incl. final report) | 🟡 requirements documented; **no final project report, no test report** |
+| 60% | Outcomes — individual and team | Product: ✅ strong (21/21 FRs, 1,240 tests). Individual: 🟡 **a blank template exists (`docs/CONTRIBUTIONS.md`); the team has not filled it in** |
+| 10% | Documentation (incl. final report) | 🟡 requirements, `docs/TEST-REPORT.md`, `docs/NETWORK.md`, `docs/DEADLOCK-CASE-STUDY.md`, `docs/DATABASE.md`; **still no final project report** |
 | 10% | Demonstration (presentation, UI, usability) | 🟡 review script exists; no usability evaluation, no final deck |
 | 10% | Contest participation / publication | ⬜ nothing yet |
-| 5% | Environment/social/ethics/safety/legal | 🟡 security counts as safety; nothing on data privacy or sustainability yet |
+| 5% | Environment/social/ethics/safety/legal | 🟡 `docs/ETHICS-PRIVACY-SUSTAINABILITY.md` covers privacy (DPDP Act 2023), security, accessibility and sustainability, and lists what is **not** yet done (no consent notice, export, erasure or retention) |
 
-**Closed by Phase H:** a test report built from the 845 automated tests; a
-contribution-matrix *template* (structure only — content requires the team);
-an ethics/privacy/sustainability section covering India's DPDP Act 2023,
-security-as-safety, accessibility-as-social-impact, and venue-utilisation
-analytics as a sustainability argument.
+**Phase H (done):** `docs/TEST-REPORT.md` (from a real run: 1,013 backend and 227 frontend tests, coverage, concurrency proofs, a measured response-time probe, and a section of what was **not** tested); `docs/CONTRIBUTIONS.md` (structure only, **deliberately blank**, because only the team knows who did what); `docs/ETHICS-PRIVACY-SUSTAINABILITY.md`. The last two rubric lines still need the team: filling in the matrix, and a final project report and deck. Contest participation is untouched.
 
 ---
 

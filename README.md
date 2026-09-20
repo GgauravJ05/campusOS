@@ -163,6 +163,12 @@ docs/        SRS, diagrams, workflows, weekly reports
 | Frontend guide        | [`frontend/README.md`](frontend/README.md)            |
 | Workflows             | [`docs/workflows/`](docs/workflows/)                  |
 | Change log / builds   | [`UPDATES.md`](UPDATES.md)                            |
+| Syllabus mapping      | [`docs/SYLLABUS-MAPPING.md`](docs/SYLLABUS-MAPPING.md) |
+| Test report           | [`docs/TEST-REPORT.md`](docs/TEST-REPORT.md)          |
+| Network write-up      | [`docs/NETWORK.md`](docs/NETWORK.md)                  |
+| Deadlock case study   | [`docs/DEADLOCK-CASE-STUDY.md`](docs/DEADLOCK-CASE-STUDY.md) |
+| Ethics and privacy    | [`docs/ETHICS-PRIVACY-SUSTAINABILITY.md`](docs/ETHICS-PRIVACY-SUSTAINABILITY.md) |
+| Contribution matrix (template) | [`docs/CONTRIBUTIONS.md`](docs/CONTRIBUTIONS.md) |
 
 ---
 
