@@ -11,7 +11,7 @@ import { useDebouncedValue, useDocumentTitle } from '@/lib/hooks'
 
 const GROUP_TONES = {
   ACCESS: 'zinc',
-  ROLES: 'violet',
+  ROLES: 'accent',
   VENUES: 'blue',
   BOOKINGS: 'amber',
   CLUBS: 'emerald',

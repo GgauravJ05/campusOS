@@ -123,7 +123,7 @@ export default function ClubDetailPage() {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{club.name}</h1>
-            {club.scope === 'COLLEGE' ? <Badge tone="violet">College-level</Badge> : <Badge>{club.department?.code}</Badge>}
+            {club.scope === 'COLLEGE' ? <Badge tone="accent">College-level</Badge> : <Badge>{club.department?.code}</Badge>}
             {!club.isActive && <Badge tone="rose" dot>Disabled</Badge>}
           </div>
           <p className="mt-1.5 max-w-2xl text-[15px] text-zinc-500 dark:text-zinc-400">{club.description || 'No description yet.'}</p>
