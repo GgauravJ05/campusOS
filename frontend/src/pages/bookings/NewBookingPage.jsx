@@ -69,7 +69,9 @@ function ChoiceButton({ selected, onClick, children, className }) {
 
 function VenueStep({ meta, selection, onChange }) {
   const building = meta.buildings.find((b) => b.name === selection.building)
-  const floor = building?.floors.find((f) => f.floor === selection.floor)
+  // A building with one floor (Campus, Admin Block) has nothing to choose between, so that step is skipped.
+  const oneFloor = building?.floors.length === 1
+  const floor = oneFloor ? building.floors[0] : building?.floors.find((f) => f.floor === selection.floor)
 
   return (
     <div className="space-y-7">
@@ -77,7 +79,7 @@ function VenueStep({ meta, selection, onChange }) {
         <h2 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">1. Building</h2>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {meta.buildings.map((b) => (
-            <ChoiceButton key={b.name} selected={selection.building === b.name} onClick={() => onChange({ building: b.name, floor: null, venueId: null })}>
+            <ChoiceButton key={b.name} selected={selection.building === b.name} onClick={() => onChange({ building: b.name, floor: b.floors.length === 1 ? b.floors[0].floor : null, venueId: null })}>
               <span className="flex items-center gap-3">
                 <Building2 className="size-5 text-zinc-400" aria-hidden />
                 <span>
@@ -90,7 +92,11 @@ function VenueStep({ meta, selection, onChange }) {
         </div>
       </section>
 
-      {building && (
+      {building && oneFloor && (
+        <p className="animate-fade-in text-xs text-zinc-500">{building.name} has a single floor, so its rooms are listed directly.</p>
+      )}
+
+      {building && !oneFloor && (
         <section className="animate-fade-in">
           <h2 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">2. Floor</h2>
           <div className="flex flex-wrap gap-2">
@@ -105,7 +111,7 @@ function VenueStep({ meta, selection, onChange }) {
 
       {floor && (
         <section className="animate-fade-in">
-          <h2 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">3. Venue</h2>
+          <h2 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">{oneFloor ? '2' : '3'}. Venue</h2>
           <div className="grid gap-2 sm:grid-cols-2">
             {floor.venues.map((v) => (
               <ChoiceButton key={v.id} selected={selection.venueId === v.id} onClick={() => onChange({ venueId: v.id })}>

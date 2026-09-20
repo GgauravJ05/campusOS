@@ -425,6 +425,19 @@ describeWithDb('database schema', () => {
     });
   });
 
+  describe('shared spaces', () => {
+    it('has Conference Room and Syndicate Room on the Admin Block\'s one floor, and four spaces on Campus', async () => {
+      const { rows } = await pool.query(
+        `SELECT building, floor, string_agg(venue_name, ', ' ORDER BY venue_name) AS names
+           FROM venues WHERE building IN ('Admin Block', 'Campus', 'Main Building') GROUP BY building, floor ORDER BY building`,
+      );
+      expect(rows).toEqual([
+        { building: 'Admin Block', floor: 1, names: 'Conference Room, Syndicate Room' },
+        { building: 'Campus', floor: 0, names: 'Atmayou Kuti, FMCII Hall, Main Building Entry Space, Sports Ground' },
+      ]); // no "Main Building" any more: it was merged into Campus
+    });
+  });
+
   describe('user credentials', () => {
     it('refuses an account with neither a password nor an OAuth identity', async () => {
       const { rows: [role] } = await pool.query(`SELECT role_id FROM roles WHERE role_key = 'STUDENT'`);

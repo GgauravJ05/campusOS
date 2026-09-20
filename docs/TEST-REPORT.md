@@ -40,14 +40,14 @@ real browsers (the component tests run in jsdom), and anything at production sca
 
 | | Suites | Tests | Passed | Failed | Skipped |
 | --- | --- | --- | --- | --- | --- |
-| Backend (Jest) | 59 | 1029 | 1029 | 0 | 0 |
-| Frontend (Vitest) | 15 | 246 | 246 | 0 | 0 |
-| **Total** | **74** | **1275** | **1275** | **0** | **0** |
+| Backend (Jest) | 59 | 1030 | 1030 | 0 | 0 |
+| Frontend (Vitest) | 15 | 247 | 247 | 0 | 0 |
+| **Total** | **74** | **1277** | **1277** | **0** | **0** |
 
 The backend's database suites skip themselves silently when PostgreSQL is
 unreachable, so "0 skipped" is a real check here, not a default. Measured with
-the database unreachable: `700 passed, 329 skipped, 1029 total`, and the total
-still reads 1029, which is why the pass count must be checked.
+the database unreachable: `701 passed, 329 skipped, 1030 total`, and the total
+still reads 1030, which is why the pass count must be checked.
 
 ### Coverage
 
@@ -106,7 +106,7 @@ Every file is listed in `backend/tests/`; the per-file counts come from `jest --
 | `lib/lib` | 12 |
 | `pages/clubs/clubs.flows` | 12 |
 | `pages/bookings/approvals.flows` | 10 |
-| `pages/bookings/bookings.flows` | 10 |
+| `pages/bookings/bookings.flows` | 11 |
 | `pages/venues/venues.flows` | 10 |
 | `lib/campusTime` | 9 |
 | `lib/floors` | 8 |
@@ -217,9 +217,9 @@ says little about the real database size.
 # the test run rebuilds the *_test database itself (see CLAUDE.md), no reseed needed
 
 # backend
-cd backend && npm run test:ci          # expect: 59 suites, 1029 passed, 0 skipped
+cd backend && npm run test:ci          # expect: 59 suites, 1030 passed, 0 skipped
 # frontend
-cd frontend && npx vitest run --coverage   # expect: 15 files, 246 passed
+cd frontend && npx vitest run --coverage   # expect: 15 files, 247 passed
 
 # response-time probe (raise the limits only for this measurement)
 cd backend

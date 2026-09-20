@@ -12,13 +12,14 @@ describe('groupVenuesByFloor', () => {
     venue('AC 401', 4, 'CLASSROOM', { department: IT }),
     venue('MB 407', 4, 'LABORATORY', { department: IT }),
     venue('AC 101', 1, 'CLASSROOM'),
-    venue('Main Auditorium', 0, 'AUDITORIUM', { building: 'Main Building' }),
+    venue('FMCII Hall', 0, 'AUDITORIUM', { building: 'Campus' }),
     venue('Sports Ground', 0, 'SPORTS_GROUND', { building: 'Campus' }),
+    venue('Syndicate Room', 1, 'CONFERENCE_ROOM', { building: 'Admin Block' }),
   ]
 
   it('orders the academic building floor by floor, then the other buildings', () => {
     expect(groupVenuesByFloor(venues).map((g) => `${g.building}/${g.floor}`)).toEqual([
-      'Academic Building/1', 'Academic Building/4', 'Campus/0', 'Main Building/0',
+      'Academic Building/1', 'Academic Building/4', 'Admin Block/1', 'Campus/0',
     ])
   })
 
