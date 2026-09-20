@@ -11,6 +11,7 @@ const rbac = require('../rbac');
 const audit = require('../audit.service');
 const settings = require('../settings.service');
 const tw = require('../scheduling/timeWindow');
+const { Tree } = require('../../lib/ds/Tree');
 
 const { ROLES } = rbac;
 
@@ -141,18 +142,32 @@ async function getDirectoryMeta() {
     settings.getSchedulingRules(),
   ]);
 
-  const buildings = new Map();
+  // The cascade is a tree: campus > building > floor > venue (lib/ds/Tree.js).
+  const tree = new Tree({ kind: 'campus' });
   for (const v of venues) {
-    if (!buildings.has(v.building)) buildings.set(v.building, new Map());
-    const floors = buildings.get(v.building);
-    if (!floors.has(v.floor)) floors.set(v.floor, []);
-    floors.get(v.floor).push({ id: v.venue_id, name: v.venue_name, type: v.venue_type, capacity: v.capacity });
+    const building = tree.root.findChild((n) => n.name === v.building)
+      ?? tree.root.addChild({ kind: 'building', name: v.building });
+    const floor = building.findChild((n) => n.floor === v.floor)
+      ?? building.addChild({ kind: 'floor', floor: v.floor });
+    floor.addChild({ kind: 'venue', id: v.venue_id, name: v.venue_name, type: v.venue_type, capacity: v.capacity });
+  }
+
+  // How many venues sit under each node. A node's count depends on its
+  // children's, so this is a postorder walk: children are always counted first.
+  const venueCount = new Map();
+  for (const node of tree.postorder()) {
+    venueCount.set(node, node.value.kind === 'venue' ? 1 : node.children.reduce((sum, c) => sum + venueCount.get(c), 0));
   }
 
   return {
-    buildings: [...buildings].map(([name, floors]) => ({
-      name,
-      floors: [...floors].map(([floor, list]) => ({ floor, venues: list })),
+    buildings: tree.root.children.map((building) => ({
+      name: building.value.name,
+      venueCount: venueCount.get(building),
+      floors: building.children.map((floor) => ({
+        floor: floor.value.floor,
+        venueCount: venueCount.get(floor),
+        venues: floor.children.map(({ value }) => ({ id: value.id, name: value.name, type: value.type, capacity: value.capacity })),
+      })),
     })),
     types: VENUE_TYPES,
     equipment: equipmentRows.map((r) => r.equipment_code),
