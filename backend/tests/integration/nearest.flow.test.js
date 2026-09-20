@@ -64,7 +64,7 @@ describeWithDb('nearest free venue (database)', () => {
     const res = await nearest({ from: 'Campus', ...window(62), minCapacity: 100, limit: 6 }).expect(200);
     const { venues } = res.body.data;
     // The four spaces on "Campus" itself come first at 0 m, tightest fit first...
-    expect(venues.slice(0, 4).map((v) => v.name)).toEqual(['Atmayou Kuti', 'Main Building Entry Space', 'FMCII Hall', 'Sports Ground']);
+    expect(venues.slice(0, 4).map((v) => v.name)).toEqual(['Atmayog Kuti', 'Main Building Entry Space', 'FMCII Hall', 'Sports Ground']);
     expect(venues.slice(0, 4).every((v) => v.walkingMetres === 0 && v.building === 'Campus')).toBe(true);
     // ...and anything that needs a walk comes after, over the shorter Admin Block route.
     expect(venues.slice(4).every((v) => v.walkingMetres === 200 && v.route[1] === 'Admin Block')).toBe(true);

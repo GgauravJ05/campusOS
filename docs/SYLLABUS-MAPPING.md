@@ -176,7 +176,7 @@ syllabus literally.
 
 | Lab | Topic | Status | Note |
 | --- | --- | --- | --- |
-| 1 | Install/configure MySQL | 🟡 | Project uses **PostgreSQL**, not MySQL — same relational concepts, different product. `docker-compose.yml` + README document the equivalent setup |
+| 1 | Install/configure MySQL | 🟡 | Project uses **PostgreSQL**, not MySQL — same relational concepts, different product. the root README documents the equivalent setup |
 | 2 | ER diagram → tables | 🟡 | SRS and an ER-style PDF exist; a formal cardinality-annotated ER diagram is planned after Phase C's normalization |
 | 3 | DDL | ✅ | `db/schema.sql` |
 | 4 | DML (insert/select/update/delete, set operators) | 🟡 | No `DELETE` anywhere (everything soft-deletes via `is_active`/status); no set operators yet |

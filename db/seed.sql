@@ -162,7 +162,7 @@ FROM (VALUES
     -- PLACEHOLDERS: replace them with the real ones.
     ('Conference Room',           'Admin Block', 1::SMALLINT, NULL, 'CONFERENCE_ROOM',  50, 'Floor 1, Admin Block'),
     ('Syndicate Room',            'Admin Block', 1::SMALLINT, NULL, 'CONFERENCE_ROOM',  20, 'Floor 1, Admin Block'),
-    ('Atmayou Kuti',              'Campus',      0::SMALLINT, NULL, 'OPEN_AIR',        100, 'Campus'),
+    ('Atmayog Kuti',              'Campus',      0::SMALLINT, NULL, 'OPEN_AIR',        100, 'Campus'),
     ('Main Building Entry Space', 'Campus',      0::SMALLINT, NULL, 'OPEN_AIR',        150, 'Campus, at the Main Building entrance'),
     ('FMCII Hall',                'Campus',      0::SMALLINT, NULL, 'AUDITORIUM',      500, 'Campus'),
     ('Sports Ground',             'Campus',      0::SMALLINT, NULL, 'SPORTS_GROUND',   800, 'Campus')

@@ -433,7 +433,7 @@ describeWithDb('database schema', () => {
       );
       expect(rows).toEqual([
         { building: 'Admin Block', floor: 1, names: 'Conference Room, Syndicate Room' },
-        { building: 'Campus', floor: 0, names: 'Atmayou Kuti, FMCII Hall, Main Building Entry Space, Sports Ground' },
+        { building: 'Campus', floor: 0, names: 'Atmayog Kuti, FMCII Hall, Main Building Entry Space, Sports Ground' },
       ]); // no "Main Building" any more: it was merged into Campus
     });
   });
