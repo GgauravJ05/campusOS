@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Phase F.1 — seats as a counting semaphore](#phase-f1--seats-as-a-counting-semaphore-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.6 — a hash table, and Phase E complete](#phase-e6--a-hash-table-and-phase-e-complete-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.5 — the campus graph and "nearest free venue"](#phase-e5--the-campus-graph-and-nearest-free-venue-2026-09-20) | Gaurav |
 | 2026-09-20 | [Test fixes — the two real causes of "flaky" full runs](#test-fixes--the-two-real-causes-of-flaky-full-runs-2026-09-20) | Gaurav |
@@ -47,6 +48,46 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase F.1 — seats as a counting semaphore (2026-09-20)
+
+First Phase F (OS) slice. Operating Systems Unit 3 teaches counting semaphores
+with `wait()` (P) and `signal()` (V) and a queue of blocked processes. An event's
+seats are exactly that, but the code never said so.
+
+- **`SeatSemaphore`** (`backend/src/domain/SeatSemaphore.js`): the value is the free
+  seats (null = unlimited). `tryAcquire`/`acquireOrWait` are **P**: take the seats
+  or block onto the waitlist. `release` is **V**: free seats and wake the waiting
+  students who now fit, oldest first. The blocked queue is the E.1 circular queue.
+- **It now runs the decisions.** `checkReservation` (may I have a seat, or must I
+  wait?) and `planPromotions` (who does a cancellation wake?) in `eligibility.js`
+  are built on it. API behaviour is unchanged.
+
+**The point worth understanding for the viva: this class does no locking, and says
+so.** A semaphore is only correct if `wait` and `signal` are atomic (two students
+both seeing "one seat left" is the classic race). Here that atomicity is the
+database's `SELECT ... FOR UPDATE` on the event row, taken in `event.service.js`
+before the semaphore is consulted. So: the *row lock* is the mutex around the
+semaphore's operations, and the *semaphore* is the counting logic inside it. I did
+not touch the locking, which the twenty-students-one-seat concurrency test proves.
+
+**A deliberate difference from the textbook.** A textbook semaphore wakes the first
+waiter and stops, so a big request at the front blocks everyone behind it.
+`release` skips a party too large to fit and keeps going, and the big party keeps
+its place and wakes once enough seats accumulate (a test walks through this).
+Registrations are one seat today, so the two behaviours coincide.
+
+**Proof.** The existing `planPromotions` tests and the 3,000-case comparison with
+the old loop pass unchanged. New `tests/unit/os/seatSemaphore.test.js` (17 tests)
+covers P and V, and runs 2,000 random sequences checking three invariants: seats
+are conserved, the value never goes negative, and nobody is left blocked who could
+have been woken. `planPromotions` now clamps a negative input (it comes from
+subtraction on database columns, and the semaphore rightly refuses one) so an
+impossible state cannot turn into a 500.
+
+No API, schema or dependency change.
 
 ---
 

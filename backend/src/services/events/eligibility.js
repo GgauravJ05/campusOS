@@ -15,7 +15,7 @@
  */
 
 const rbac = require('../rbac');
-const CircularQueue = require('../../lib/ds/CircularQueue');
+const SeatSemaphore = require('../../domain/SeatSemaphore');
 
 const { ROLES } = rbac;
 
@@ -115,8 +115,10 @@ function checkReservation(actor, event, { seats = 1, allowWaitlist = false, now 
   const ineligible = checkEligibility(actor, event);
   if (ineligible) return deny(403, ineligible.code, ineligible.message);
 
+  // P(): take the seats if they are free, otherwise block (join the waitlist)
+  // or, when the waitlist is off, be refused.
   const { seatsLeft } = seatState(event);
-  if (seatsLeft !== null && seats > seatsLeft) {
+  if (!new SeatSemaphore({ available: seatsLeft }).tryAcquire(seats)) {
     if (!allowWaitlist) {
       return deny(409, 'EVENT_FULL', seatsLeft === 0
         ? 'This event is fully booked'
@@ -137,29 +139,13 @@ function checkReservation(actor, event, { seats = 1, allowWaitlist = false, now 
  * @returns {{ promote: Array<{ registrationId: number, seats: number }>, seatsUsed: number }}
  */
 function planPromotions(waitlist, seatsAvailable) {
-  if (seatsAvailable === null) {
-    return { promote: [...waitlist], seatsUsed: waitlist.reduce((n, w) => n + w.seats, 0) };
-  }
-  if (waitlist.length === 0) return { promote: [], seatsUsed: 0 };
-
-  // The waitlist is a circular queue (lib/ds/CircularQueue.js). One pass takes
-  // each entry from the front: if it fits it is promoted, if not it goes back
-  // to the rear, so it keeps waiting and nothing is dropped.
-  const queue = new CircularQueue(waitlist.length);
-  waitlist.forEach((entry) => queue.enqueue(entry));
-
-  const promote = [];
-  let remaining = seatsAvailable;
-  for (let turns = queue.size; turns > 0 && remaining > 0; turns -= 1) {
-    const entry = queue.dequeue();
-    if (entry.seats <= remaining) {
-      promote.push(entry);
-      remaining -= entry.seats;
-    } else {
-      queue.enqueue(entry);
-    }
-  }
-  return { promote, seatsUsed: seatsAvailable - remaining };
+  // The event's seats as a counting semaphore (domain/SeatSemaphore.js) with
+  // nothing free and the waitlist as its blocked queue; freeing seats is V().
+  const semaphore = new SeatSemaphore({ available: seatsAvailable === null ? null : 0, waiting: waitlist });
+  // Clamped: the number comes from subtraction on database columns, and the
+  // semaphore (rightly) refuses a negative count of freed seats.
+  const promote = semaphore.release(seatsAvailable === null ? 0 : Math.max(0, seatsAvailable));
+  return { promote, seatsUsed: promote.reduce((n, w) => n + w.seats, 0) };
 }
 
 /**
