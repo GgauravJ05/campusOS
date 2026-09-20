@@ -2,6 +2,7 @@
 
 const { body, param, query } = require('express-validator');
 const { ROLES } = require('../services/rbac');
+const { isIndianMobile, isPersonName } = require('../lib/validation');
 
 const userIdParam = param('id').isInt({ min: 1 }).withMessage('Invalid user id').toInt();
 
@@ -21,11 +22,12 @@ const updateMe = [
     .optional()
     .isString().trim()
     .isLength({ min: 2, max: 120 }).withMessage('Full name must be 2-120 characters')
-    .matches(/^[\p{L}\p{M}.' -]+$/u).withMessage('Use letters, spaces, dots, apostrophes or hyphens'),
+    .matches(/^[\p{L}\p{M}.' -]+$/u).withMessage('Use letters, spaces, dots, apostrophes or hyphens')
+    .custom(isPersonName).withMessage('Enter your real name (at least two letters)'),
   body('phone')
     .optional({ values: 'null' })
     .isString().trim()
-    .matches(/^\+?[0-9 ()-]{7,20}$/).withMessage('Enter a valid phone number'),
+    .custom(isIndianMobile).withMessage('Enter a 10-digit Indian mobile number, for example +91 98765 43210'),
   body('academicYear').optional().isInt({ min: 1, max: 5 }).withMessage('Academic year must be 1-5').toInt(),
 ];
 
