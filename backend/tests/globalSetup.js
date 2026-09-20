@@ -85,7 +85,7 @@ module.exports = async function globalSetup() {
     }
     console.warn(
       `\n  Skipping database-backed tests: ${reason}.` +
-      '\n  Run `docker compose up -d` from the repository root to include them.\n',
+      '\n  Start PostgreSQL (`brew services start postgresql@16`) to include them.\n',
     );
   } finally {
     await pool.end().catch(() => {});

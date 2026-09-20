@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Docker removed, and a spelling fix](#docker-removed-and-a-spelling-fix-2026-09-20) | Gaurav |
 | 2026-09-20 | [Admin Block and Campus rooms, one-floor booking](#admin-block-and-campus-rooms-one-floor-booking-2026-09-20) | Gaurav |
 | 2026-09-20 | [Floor-wise Clubs and Venues, real rooms, and Gaurav demo accounts](#floor-wise-clubs-and-venues-real-rooms-and-gaurav-demo-accounts-2026-09-20) | Gaurav |
 | 2026-09-20 | [Test runs rebuild their own database](#test-runs-rebuild-their-own-database-2026-09-20) | Gaurav |
@@ -67,16 +68,38 @@ build history. Every change that lands gets an entry (see
 
 ---
 
+## Docker removed, and a spelling fix (2026-09-20)
+
+**Spelling:** "Atmayou Kuti" is **Atmayog Kuti** (seed, tests, README, and the entry
+below).
+
+**Docker:** deleted `docker-compose.yml`, `backend/Dockerfile` and
+`backend/.dockerignore`; removed the Docker image job from
+`.github/workflows/release.yml` (the web-app build job stays) and the `docker`
+ecosystem from `.github/dependabot.yml`. The README and `backend/README.md` now
+give the native PostgreSQL setup as *the* setup (it was the "No Docker?" fallback),
+and the `.env.example` comment, the test-skip message and `CLAUDE.md` no longer
+mention Docker. `ci.yml` still uses a PostgreSQL *service container*: that is how
+GitHub Actions provides a database and is not a Docker file in this repository, so
+it stays.
+
+**Note:** the compose file used to apply `schema.sql` and `seed.sql` automatically
+and to start a second database on 55433 for tests; now use `scripts/db-reset.sh`
+or the psql commands in the README, and the tests rebuild `campusos_test` themselves.
+
+**Teammates must do:** if you used `docker compose`, switch to Homebrew PostgreSQL
+on 55432 (README, Getting Started).
+
 ## Admin Block and Campus rooms, one-floor booking (2026-09-20)
 
 **Asked for:** Admin Block with two options on its one floor (Conference Room,
 Syndicate Room); "Campus" and "Main Building" merged into one building called
-**Campus** holding Atmayou Kuti, Main Building Entry Space, FMCII Hall and Sports
+**Campus** holding Atmayog Kuti, Main Building Entry Space, FMCII Hall and Sports
 Ground (you listed four although you said three; you chose "only your four", so
 **Main Auditorium and Open Air Theatre are removed**).
 
 **Seed:** Admin Block floor 1 = Conference Room, Syndicate Room (new).
-Campus floor 0 = Atmayou Kuti, Main Building Entry Space, FMCII Hall, Sports
+Campus floor 0 = Atmayog Kuti, Main Building Entry Space, FMCII Hall, Sports
 Ground. There is no "Main Building" building any more. **Placeholders, please
 replace:** the type and capacity of the three new Campus spaces (open-air 100 and
 150, FMCII Hall an auditorium of 500 seats, kept from the old Main Auditorium,

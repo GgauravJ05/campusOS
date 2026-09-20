@@ -33,35 +33,15 @@ Colleges currently manage campus clubs, special interest groups (SIGs), venue al
 
 ## 🚀 Getting Started
 
-**Prerequisites:** Node.js 24 LTS, and Docker **or** a local PostgreSQL 15+
-(see the no-Docker instructions below).
+**Prerequisites:** Node.js 24 LTS and PostgreSQL 15+ (on macOS: Homebrew
+`postgresql@16`). The project expects the database on port **55432**, so it never
+collides with a PostgreSQL you already run.
 
 ```bash
 git clone https://github.com/GgauravJ05/campusOS.git
 cd campusOS
 
-# 1. Database - schema and seed data are applied automatically
-docker compose up -d
-
-# 2. API
-cd backend
-cp .env.example .env      # edit JWT_SECRET
-npm install
-npm run dev               # http://localhost:5050
-
-# 3. Web app (separate terminal)
-cd frontend
-npm install
-npm run dev               # http://localhost:5173
-```
-
-<details>
-<summary><strong>No Docker? Run PostgreSQL natively (macOS / Homebrew)</strong></summary>
-
-The project expects the database on port **55432**, so it never collides
-with a PostgreSQL you already run. To get that without Docker:
-
-```bash
+# 1. Database (macOS / Homebrew; on Linux use your package manager)
 brew install postgresql@16
 export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
 
@@ -80,14 +60,24 @@ for db in campusos campusos_test; do
   psql -h localhost -p 55432 -U postgres -d $db -v ON_ERROR_STOP=1 -f db/schema.sql
   psql -h localhost -p 55432 -U postgres -d $db -v ON_ERROR_STOP=1 -f db/seed.sql
 done
+# (or, for a database you can throw away:  scripts/db-reset.sh campusos_demo)
+
+# 2. API
+cd backend
+cp .env.example .env      # edit JWT_SECRET
+npm install
+npm run dev               # http://localhost:5050
+
+# 3. Web app (separate terminal)
+cd frontend
+npm install
+npm run dev               # http://localhost:5173
 ```
 
 Then set `TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:55432/campusos_test`
 in `backend/.env`. You do not need to reseed it: the test run rebuilds any
 database whose name ends in `_test` from `db/schema.sql` and `db/seed.sql`
 before it starts (set `TEST_DATABASE_KEEP=1` to skip that and keep the data).
-
-</details>
 
 Check the API is healthy:
 
@@ -120,7 +110,7 @@ the screen tells you which account you are in:
 The seed follows the real campus: six departments, one floor of the academic
 building each — **1 Electrical, 2 Mechanical, 3 ENTC, 4 IT, 5 Computer,
 6 AI & DS** — with shared spaces beside them: the **Admin Block** (Conference Room and
-Syndicate Room, both on its one floor) and **Campus** (Atmayou Kuti, Main
+Syndicate Room, both on its one floor) and **Campus** (Atmayog Kuti, Main
 Building Entry Space, FMCII Hall and Sports Ground; the old "Main Building" and
 "Campus" are one place now). Every floor has classrooms **AC x01 to x04** (AC 401 to AC 404
 on the 4th floor); the 4th floor also has the rooms **MB 405** (seminar hall),

@@ -108,8 +108,8 @@ Don't duplicate these documents' content here. Read them.
   login), web app `5173`, PostgreSQL `55432`. `backend/.env`'s `PORT` and
   `frontend/.env.local`'s `VITE_API_PROXY_TARGET` must both change if you
   ever move the API port.
-- **PostgreSQL is Homebrew `postgresql@16`, not Docker**, unless the user
-  explicitly asks for Docker. It does not survive a laptop restart on its
+- **PostgreSQL is Homebrew `postgresql@16`.** The repository has no Docker
+  files (removed on request); do not add any. It does not survive a laptop restart on its
   own: `brew services start postgresql@16`, then `pg_isready -h localhost -p
   55432` before doing anything else.
 - **Database-backed test suites silently skip themselves when PostgreSQL is
