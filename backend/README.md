@@ -8,7 +8,7 @@ Node.js 24 LTS / Express 5 / PostgreSQL 16.
 From the repository root:
 
 ```bash
-docker compose up -d          # PostgreSQL on 55432 (dev) and 55433 (test)
+# PostgreSQL on port 55432 first: see "Getting Started" in the root README
 cd backend
 cp .env.example .env          # then edit JWT_SECRET
 npm install
@@ -27,11 +27,10 @@ curl localhost:5050/api/health/ready  # database is reachable too
 > default is 5050 everywhere; if you change `PORT` here, change
 > `VITE_API_PROXY_TARGET` in `frontend/.env.local` to match.
 
-Compose applies `db/schema.sql` and `db/seed.sql` automatically the first
-time the volume is created. Every seeded account uses the password
+Apply `db/schema.sql` and `db/seed.sql` to the database first. Every seeded account uses the password
 `Campus@123`; sign in as `gaurav.principal@mmcoe.edu.in` for the super-admin role.
 
-### Without Docker
+### Creating the database
 
 Install PostgreSQL 15+ locally, then:
 
