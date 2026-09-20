@@ -62,7 +62,10 @@ describe('venues by floor', () => {
     expect(within(fourth).getAllByRole('link').map((a) => a.textContent.match(/(AC|MB) \d+/)[0]))
       .toEqual(['AC 401', 'AC 402', 'MB 407', 'MB 414', 'MB 405'])
 
-    await user.click(within(screen.getByRole('navigation', { name: 'Jump to a floor' })).getByRole('button', { name: /4th floor/ }))
+    const jump = within(screen.getByRole('navigation', { name: 'Jump to a floor' }))
+    // Other buildings are labelled by building, not by a floor that another building shares.
+    expect(jump.getAllByRole('button').map((b) => b.textContent.replace(/\d+$/, ''))).toEqual(['1st floor', '4th floor', 'Main Building'])
+    await user.click(jump.getByRole('button', { name: /4th floor/ }))
     expect(scrolled).toEqual(['floor-academic-building-4'])
   })
 })

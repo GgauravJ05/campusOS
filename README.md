@@ -129,7 +129,7 @@ college-level chapters and teams.
 
 ```bash
 cd backend && npm test      # 1,030 tests: unit + API flows (DB suites need PostgreSQL)
-cd frontend && npm test     # 247 tests: components and user journeys
+cd frontend && npm test     # 248 tests: components and user journeys
 ```
 
 Every pull request runs both suites in CI, including the database suites against a real PostgreSQL.
