@@ -5,6 +5,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess } = require('../utils/ApiResponse');
 const venues = require('../services/venues/venue.service');
 const bookings = require('../services/bookings/booking.service');
+const nearest = require('../services/venues/nearest.service');
 
 const list = asyncHandler(async (req, res) => {
   const { items, meta } = await venues.listVenues(req.user, matchedData(req, { locations: ['query'] }));
@@ -13,6 +14,10 @@ const list = asyncHandler(async (req, res) => {
 
 const meta = asyncHandler(async (_req, res) => {
   sendSuccess(res, 200, await venues.getDirectoryMeta());
+});
+
+const nearestFree = asyncHandler(async (req, res) => {
+  sendSuccess(res, 200, await nearest.nearestFreeVenues(matchedData(req, { locations: ['query'] })));
 });
 
 const getOne = asyncHandler(async (req, res) => {
@@ -36,4 +41,4 @@ const checkSlot = asyncHandler(async (req, res) => {
   sendSuccess(res, 200, await bookings.checkAvailability(req.user, matchedData(req, { locations: ['body'] })));
 });
 
-module.exports = { list, meta, getOne, create, update, availability, checkSlot };
+module.exports = { list, meta, nearestFree, getOne, create, update, availability, checkSlot };

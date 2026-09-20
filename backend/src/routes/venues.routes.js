@@ -13,6 +13,8 @@ router.use(authenticate);
 
 router.get('/', rules.list, validate, controller.list);
 router.get('/meta', controller.meta);
+// Free venues for a window, nearest first by walking distance from a building.
+router.get('/nearest', rules.nearest, validate, controller.nearestFree);
 // Live "is this slot free?" for the time-slot picker (FR7). Read-only.
 router.post('/check-availability', bookingRules.check, validate, controller.checkSlot);
 router.post('/', requireRole(...FACULTY_ROLES), rules.create, validate, controller.create);
