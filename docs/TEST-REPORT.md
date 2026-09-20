@@ -40,14 +40,14 @@ real browsers (the component tests run in jsdom), and anything at production sca
 
 | | Suites | Tests | Passed | Failed | Skipped |
 | --- | --- | --- | --- | --- | --- |
-| Backend (Jest) | 58 | 1013 | 1013 | 0 | 0 |
+| Backend (Jest) | 59 | 1025 | 1025 | 0 | 0 |
 | Frontend (Vitest) | 14 | 234 | 234 | 0 | 0 |
-| **Total** | **72** | **1247** | **1247** | **0** | **0** |
+| **Total** | **73** | **1259** | **1259** | **0** | **0** |
 
 The backend's database suites skip themselves silently when PostgreSQL is
 unreachable, so "0 skipped" is a real check here, not a default. Measured with
-the database unreachable: `684 passed, 329 skipped, 1013 total`, and the total
-still reads 1013, which is why the pass count must be checked.
+the database unreachable: `696 passed, 329 skipped, 1025 total`, and the total
+still reads 1025, which is why the pass count must be checked.
 
 ### Coverage
 
@@ -88,7 +88,7 @@ Durations are wall-clock for that file in the run above (28.4 s of test time in 
 | `integration/rsvp.concurrency` | 4 | seat race |
 | `integration/publish.concurrency` | 1 | double-publish race |
 | `integration/lockorder.concurrency` | 1 | deadlock regression |
-| `unit/*` (39 files) | 667 | policies, RBAC, validators, domain classes, data structures, OS models, config |
+| `unit/*` (40 files) | 679 | policies, RBAC, validators, domain classes, data structures, OS models, config |
 
 Every file is listed in `backend/tests/`; the per-file counts come from `jest --json`.
 
@@ -195,7 +195,7 @@ says little about the real database size.
 1. **Deadlock** between `addMember` and `changeRole` (fixed; `docs/DEADLOCK-CASE-STUDY.md`).
 2. **Double broadcast** on simultaneous publish (fixed).
 3. **A test that did not test its own requirement:** the FR10 proof re-implemented the transaction in raw SQL instead of calling the service. Removed and replaced by the real 20-way race.
-4. **Test-suite instability, and what is still open.** Four causes were fixed: a one-request-per-server pattern in the test helper (one long-lived server now), a 90-minute rounding boundary in a reminder test, a venue assertion that depended on suite order, and the FR17 recommendation-ranking test, which scored only the soonest 100 events and so failed from the **second** run on a reused database (it now clears the field first; verified over five runs with no reseed). **Still open:** every suite leaves its rows behind, and from about the **fourth** run without a reseed the approval-inbox, venue-visibility and my-activity tests start to fail because their 100-row list windows fill up. Measured with and without the FR17 fix: the same tests fail at the same run, so the fix did not cause them. Reseed before a full run (`scripts/db-reset.sh campusos_test`); CI always starts clean.
+4. **Test-suite instability, and what is still open.** Four causes were fixed: a one-request-per-server pattern in the test helper (one long-lived server now), a 90-minute rounding boundary in a reminder test, a venue assertion that depended on suite order, and the FR17 recommendation-ranking test, which scored only the soonest 100 events and so failed from the **second** run on a reused database (it now clears the field first; verified over five runs with no reseed). Every suite leaves its rows behind, and from about the **fourth** run without a reseed the approval-inbox, venue-visibility and my-activity tests used to fail because their 100-row list windows filled up. **Fixed later the same day:** the Jest global setup now rebuilds any `*_test` database before each run; six consecutive full runs with no manual reseed all passed (1,025 backend tests: 1,013 plus 12 for the new guard).
 5. **Global rate limit versus the 500-user requirement (open risk).** The API allows 300 requests per 15 minutes **per address** (`RATE_LIMIT_MAX`). The probe hit this: with the default, every request after the 300th returned 429. If a college network presents all users as one address, they would share that budget. Not a problem on a laptop; it would be one behind a shared network address, and the value is configurable.
 6. **Phone validation was loose** (`1234567` was accepted). Fixed in Phase G.4. The React profile form does not check the format itself and shows the server's message instead.
 7. **No data retention:** expired OTPs, refresh tokens and notifications are never purged (`docs/ETHICS-PRIVACY-SUSTAINABILITY.md`).
@@ -213,11 +213,10 @@ says little about the real database size.
 ## 9. How to reproduce
 
 ```
-# database (see CLAUDE.md)
-scripts/db-reset.sh campusos_test
+# the test run rebuilds the *_test database itself (see CLAUDE.md), no reseed needed
 
 # backend
-cd backend && npm run test:ci          # expect: 58 suites, 1013 passed, 0 skipped
+cd backend && npm run test:ci          # expect: 59 suites, 1025 passed, 0 skipped
 # frontend
 cd frontend && npx vitest run --coverage   # expect: 14 files, 234 passed
 

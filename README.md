@@ -83,8 +83,9 @@ done
 ```
 
 Then set `TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:55432/campusos_test`
-in `backend/.env`. To start over, drop and recreate the database and re-apply
-the two files above - some suites assume the freshly seeded data.
+in `backend/.env`. You do not need to reseed it: the test run rebuilds any
+database whose name ends in `_test` from `db/schema.sql` and `db/seed.sql`
+before it starts (set `TEST_DATABASE_KEEP=1` to skip that and keep the data).
 
 </details>
 

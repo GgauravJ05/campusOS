@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Test runs rebuild their own database](#test-runs-rebuild-their-own-database-2026-09-20) | Gaurav |
 | 2026-09-20 | [Test fix — the FR17 ranking test no longer needs a fresh database](#test-fix--the-fr17-ranking-test-no-longer-needs-a-fresh-database-2026-09-20) | Gaurav |
 | 2026-09-20 | [Feedback screen on the event page](#feedback-screen-on-the-event-page-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase H.3 — ethics, privacy and sustainability](#phase-h3--ethics-privacy-and-sustainability-2026-09-20) | Gaurav |
@@ -63,6 +64,36 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Test runs rebuild their own database (2026-09-20)
+
+**Problem:** every suite leaves its rows behind, and several tests read lists that
+only look at the newest 100 rows. A test database reused across runs slowly
+stopped matching what the tests expect: the FR17 test failed from the second run,
+the approval-inbox, venue-visibility and my-activity tests from about the fourth.
+
+**Fix:** `backend/tests/globalSetup.js` now runs `db/reset.sql`, `schema.sql` and
+`seed.sql` before every run, so each run starts from the same rows. **Guard:** it
+only does this when the database name ends in `_test` (it deletes everything);
+anything else is never touched (checked with a scratch database whose data
+survived a run). `TEST_DATABASE_KEEP=1` skips the rebuild to keep data while
+debugging. A reset that fails halts the run loudly instead of appearing as
+"skipping"; a server that is down still skips, as before. New unit test for the
+guard (12 cases).
+
+**Also fixed while here:** `db/reset.sql` was stale. It listed tables to drop by
+hand and had missed the newer tables, views and functions, so `npm run db:reset`
+could not have rebuilt the current schema. It now drops the whole `public`
+schema, so it cannot go stale again. It deletes everything in that database's
+`public` schema, so use it only on a CampusOS database.
+
+**Verified:** six consecutive full runs with no reseed between them: 1,025 tests
+passed each time (before, the fourth run failed). With the database down:
+`696 passed, 329 skipped`.
+
+**Teammates must do:** nothing; you no longer need to reseed before running tests.
+`CLAUDE.md`, `README.md` and `prompt.md` are updated. CI is unaffected (it
+starts clean anyway).
 
 ## Test fix — the FR17 ranking test no longer needs a fresh database (2026-09-20)
 
