@@ -220,6 +220,10 @@ export function AppShell() {
         <main id="main" key={location.pathname} className="mx-auto w-full max-w-6xl animate-fade-in px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
           <Outlet />
         </main>
+
+        <footer className="mx-auto w-full max-w-6xl border-t border-zinc-200/80 px-4 py-6 text-xs text-zinc-500 sm:px-6 lg:px-10 dark:border-zinc-800">
+          <p>CampusOS · Team A6 · Marathwada Mitra Mandal&apos;s College of Engineering, Pune</p>
+        </footer>
       </div>
     </div>
   )

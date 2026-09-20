@@ -1,9 +1,10 @@
 import { AlertCircle, CheckCircle2, Info, TriangleAlert } from 'lucide-react'
 import { cn, initials } from '@/lib/utils'
 
-export function Card({ className, children, ...props }) {
+/** A bordered panel. `as` picks the element: <section> by default, <article> for a self-contained item. */
+export function Card({ as: Element = 'section', className, children, ...props }) {
   return (
-    <div
+    <Element
       className={cn(
         'rounded-2xl border border-zinc-200/80 bg-white shadow-soft dark:border-zinc-800 dark:bg-zinc-900/60',
         className,
@@ -11,7 +12,7 @@ export function Card({ className, children, ...props }) {
       {...props}
     >
       {children}
-    </div>
+    </Element>
   )
 }
 
