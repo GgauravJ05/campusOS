@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Phase E.1 — a circular queue behind the waitlist](#phase-e1--a-circular-queue-behind-the-waitlist-2026-09-20) | Gaurav |
 | 2026-09-20 | [UI palette — Framer Modern](#ui-palette--framer-modern-2026-09-20) | Gaurav |
 | 2026-09-19 | [Phase D.4 — the report classes, and writing exports to disk](#phase-d4--the-report-classes-and-writing-exports-to-disk-2026-09-19) | Gaurav |
 | 2026-09-19 | [Test fix — a venues assertion that broke depending on suite order](#test-fix--a-venues-assertion-that-broke-depending-on-suite-order-2026-09-19) | Gaurav |
@@ -40,6 +41,36 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase E.1 — a circular queue behind the waitlist (2026-09-20)
+
+First Phase E (DSA) slice. The DSA course had no hand-written structure in the
+project at all; everything leaned on JavaScript's built-ins. `backend/src/lib/ds/`
+is where they now live, each doing a real job rather than sitting in a demo file.
+
+**`CircularQueue`** is a bounded FIFO queue over a fixed-size array: `front` and
+the rear slot are computed modulo the capacity, so a slot freed at the front is
+reused at the rear. `enqueue`, `dequeue` and `peek` are all O(1); overflow and
+underflow throw `RangeError` instead of failing silently. Its storage is `#private`.
+
+**Where it is used.** `planPromotions` (FR16 seat recovery: which waitlisted
+students fit into the seats a cancellation freed). The waitlist is loaded into the
+queue, then each entry is dequeued: promoted if it fits, otherwise **enqueued
+again**, so a party too big to fit keeps waiting and nothing is lost. That
+re-enqueue is what makes the wrap-around real rather than decorative.
+
+**Proof it is behaviour-preserving.** The existing `planPromotions` tests pass
+untouched, and a new test compares it against the old loop on 3000 random
+waitlists and seat counts (seeded, so a failure is reproducible).
+
+**Honest note on value.** For a waitlist of a few dozen people, an array would
+have been fine; this is here because the syllabus asks for the structure and the
+waitlist is its natural home, not because the old code was slow. The mapping says
+what it does, not that it was needed.
+
+No API, schema or dependency change.
 
 ---
 
