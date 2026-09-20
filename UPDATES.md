@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [The demo video and its recorder](#the-demo-video-and-its-recorder-2026-09-20) | Gaurav |
 | 2026-09-20 | [Venues jump chips labelled by building](#venues-jump-chips-labelled-by-building-2026-09-20) | Gaurav |
 | 2026-09-20 | [Contribution matrix: Gaurav's row filled in](#contribution-matrix-gauravs-row-filled-in-2026-09-20) | Gaurav |
 | 2026-09-20 | [Pre-review audit: docs brought in line with the code](#pre-review-audit-docs-brought-in-line-with-the-code-2026-09-20) | Gaurav |
@@ -70,6 +71,34 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## The demo video and its recorder (2026-09-20)
+
+**What:** `scripts/demo-video/` records a narrated demo of about 3 minutes 13 seconds
+(1080p) with one command, `scripts/demo-video/run.sh`, into
+`scripts/demo-video/out/CampusOS-demo.mp4`. The video itself is **not committed**
+(`out/` is git-ignored); regenerate it, or copy it from the machine that made it.
+
+**How it is made:** a throwaway database (`campusos_video`), an API on 5055 and a web
+app on 5275 (the everyday app on 5050/5173 is untouched), demo data seeded through the
+API, then Chrome is driven through 14 scenes (title, public page, login, student,
+seats, venues and clubs by floor, booking with a clash, approvals, organiser
+feedback, student feedback, reports and audit, dark mode, closing), one captioned
+screenshot per step, spoken with the macOS voice `Aman`, joined by `ffmpeg`. It is a
+walkthrough of real screenshots, not a screen recording with mouse movement.
+
+**Checked:** all 32 frames were reviewed on contact sheets. Three problems were found
+and fixed (the mobile-number caption showed the wrong fields, the approval frame was
+captured before the list refreshed, and the closing card said 1,277 tests instead of
+1,278); the changed frames were re-viewed. **Not checked:** the narration was not
+listened to by me (audio is present, mean level -19.7 dB); play it once. Sign-in in
+the recorder is the same API call the login form makes, not typing into a page.
+
+**Dependency:** `playwright-core` in `scripts/demo-video/package.json` only, driving
+the Chrome you already have (no browser download). Neither `backend/` nor `frontend/`
+gains a dependency. It needs macOS for `say`.
+
+**Teammates must do:** nothing.
 
 ## Venues jump chips labelled by building (2026-09-20)
 
