@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Phase E.6 — a hash table, and Phase E complete](#phase-e6--a-hash-table-and-phase-e-complete-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.5 — the campus graph and "nearest free venue"](#phase-e5--the-campus-graph-and-nearest-free-venue-2026-09-20) | Gaurav |
 | 2026-09-20 | [Test fixes — the two real causes of "flaky" full runs](#test-fixes--the-two-real-causes-of-flaky-full-runs-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.4 — a tree for the venue cascade](#phase-e4--a-tree-for-the-venue-cascade-2026-09-20) | Gaurav |
@@ -46,6 +47,53 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase E.6 — a hash table, and Phase E complete (2026-09-20)
+
+Last Phase E slice.
+
+- **`HashTable`** (`lib/ds/HashTable.js`): separate chaining (each bucket is a
+  singly linked list of `{ key, value, next }`), **FNV-1a** as the hash function,
+  and automatic doubling when the load factor passes 0.75. `get`/`set`/`delete`
+  are O(1) on average. `update(key, fn, initial)` is the counting idiom and
+  `stats()` reports load factor and longest chain. Storage is `#private`; keys are
+  compared with `===`. Iteration is bucket order, not insertion order.
+- **Used by** `registrationHistory` (recommendations): it tallies registrations
+  per category and de-duplicates the clubs a student has joined, which is
+  counting-by-key and de-duplication, the two things a hash table is for. The
+  recommendation integration tests pass unchanged.
+
+**What this is honest about.** JavaScript's `Map` already is a hash table, so this
+is not a speed-up; it is the syllabus structure, written by hand and put on a task
+that suits it. The mapping says so.
+
+**A deviation from the plan.** The plan called for a hash-table *cache* for
+settings or venue lookups. I did not build one now: a cache needs an invalidation
+rule, and the tests change `system_settings` straight in the database, so a naive
+cache would serve stale values and break them. Phase F builds an LRU cache with
+explicit invalidation *on top of this table*.
+
+**Proof.** The hash function matches the published FNV-1a 32-bit test vectors.
+Collision handling is exercised by forcing every key into one bucket (including
+deleting from the head, middle and tail of a chain, and resizing from capacity 1
+while everything collides); a randomised test runs 20,000 mixed operations
+against a `Map`; and a distribution test asserts no chain exceeds 11 for 10,000
+keys.
+
+## Phase E as a whole
+
+Seven structures/algorithms in `backend/src/lib/ds/`, each doing a job:
+`CircularQueue` (waitlist), `mergeSort` and `binarySearch` (slot suggestions,
+ranking), `MinHeap` (top-K), `Tree` (venue cascade), `Graph` with BFS and Dijkstra
+(nearest free venue), `HashTable` (recommendation history). Each is tested against
+an independent reference (the old code, the built-in sort, Floyd-Warshall, `Map`).
+**Not implemented, on purpose:** stack, doubly/standalone linked lists, BST/AVL/
+threaded/expression trees, DFS, MST, and the sorts other than merge sort; nothing
+here needs them. `docs/SYLLABUS-MAPPING.md` lists every gap.
+
+No API, schema or dependency change.
 
 ---
 

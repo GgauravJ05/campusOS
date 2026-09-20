@@ -29,6 +29,7 @@ const notifications = require('../notifications/notification.service');
 const templates = require('../mail/templates');
 const policy = require('./eligibility');
 const selectSmallest = require('../../lib/ds/selectSmallest');
+const { HashTable } = require('../../lib/ds/HashTable');
 
 const { ROLES } = rbac;
 
@@ -718,13 +719,21 @@ async function registrationHistory(actor) {
       WHERE r.student_id = $1 AND r.status <> 'CANCELLED'`,
     [actor.id],
   );
-  const categoryCounts = {};
-  const clubIds = new Set();
+  // Tally registrations per category and collect the distinct clubs, each with
+  // a hash table (lib/ds/HashTable.js): the counting-by-key and de-duplication
+  // jobs hash tables are for.
+  const categoryCounts = new HashTable();
+  const clubs = new HashTable();
   for (const row of rows) {
-    categoryCounts[row.category] = (categoryCounts[row.category] || 0) + 1;
-    if (row.club_id) clubIds.add(row.club_id);
+    categoryCounts.update(row.category, (n) => n + 1, 0);
+    if (row.club_id) clubs.set(row.club_id, true);
   }
-  return { categoryCounts, clubIds: [...clubIds], departmentId: actor.departmentId, total: rows.length };
+  return {
+    categoryCounts: Object.fromEntries(categoryCounts.entries()),
+    clubIds: clubs.keys(),
+    departmentId: actor.departmentId,
+    total: rows.length,
+  };
 }
 
 /**
