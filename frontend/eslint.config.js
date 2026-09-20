@@ -5,7 +5,8 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage']),
+  // Bootstrap and jQuery are third-party files copied in as they were published.
+  globalIgnores(['dist', 'coverage', 'public/about/vendor']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -25,6 +26,11 @@ export default defineConfig([
     files: ['**/*.test.{js,jsx}', 'src/test/**'],
     languageOptions: { globals: { ...globals.browser, ...globals.node, ...globals.vitest } },
     rules: { 'react-refresh/only-export-components': 'off' },
+  },
+  {
+    // The public page's own scripts: plain browser scripts, with jQuery and one global they publish.
+    files: ['public/about/*.js'],
+    languageOptions: { sourceType: 'script', globals: { ...globals.browser, jQuery: 'readonly', CampusValidate: 'readonly' } },
   },
   {
     files: ['vite.config.js'],

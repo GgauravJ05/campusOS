@@ -1,0 +1,138 @@
+/*
+ * Hand-written CSS for the public page (B25IT404 Unit 2, B25IT405 Lab 2 and 7).
+ * Bootstrap supplies the grid and components; everything here is plain CSS so the
+ * selectors, box model, Flexbox, Grid and media queries are visible in source.
+ * Colours are the project palette (reference/color-palatte.jpg).
+ */
+
+/* ---- Custom properties (variables) ------------------------------------------ */
+:root {
+  --blue: #005bff;        /* brand-600 */
+  --blue-tint: #e6f0ff;   /* brand-50 */
+  --navy: #0f172a;        /* zinc-950 */
+  --indigo: #6366f1;      /* accent */
+  --slate: #475569;       /* body text on white, 7.6:1 */
+  --radius: 0.75rem;
+  --gap: 1.5rem;
+}
+
+/* ---- Element selectors and the box model ------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }   /* width includes padding and border */
+
+html { scroll-behavior: smooth; scroll-padding-top: 4.5rem; }   /* anchors clear the fixed navbar */
+
+body {
+  margin: 0;
+  color: var(--navy);
+  background-color: #fff;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.6;
+}
+
+h1, h2, h3 { line-height: 1.2; letter-spacing: -0.02em; }
+p { color: var(--slate); }
+
+/* ---- Class and id selectors -------------------------------------------------- */
+.brand-mark {
+  display: inline-block;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, var(--blue), var(--indigo));
+}
+
+.hero {
+  padding: 8rem 0 5rem;              /* padding: top | left-right | bottom */
+  color: #fff;
+  background:
+    radial-gradient(circle at 15% 20%, rgb(0 91 255 / 0.55), transparent 45%),
+    radial-gradient(circle at 85% 80%, rgb(99 102 241 / 0.45), transparent 40%),
+    var(--navy);
+}
+.hero p { color: #cbd5e1; max-width: 38rem; }
+
+#status-card { border: 1px solid var(--blue-tint); border-left: 0.35rem solid var(--blue); }
+
+/* ---- CSS Grid: an auto-fitting card layout ------------------------------------ */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));   /* as many 16rem+ columns as fit */
+  gap: var(--gap);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+/* Descendant, child, attribute and pseudo-class selectors */
+.feature-grid > li { display: flex; }                 /* child selector */
+.feature-card {
+  flex: 1;
+  padding: 1.5rem;                                     /* the box: content + padding + border + margin */
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  background: #fff;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.feature-card:hover { transform: translateY(-3px); box-shadow: 0 0.75rem 1.5rem rgb(15 23 42 / 0.1); }
+.feature-card h3 { margin-top: 0; font-size: 1.125rem; }         /* descendant selector */
+.feature-card[data-audience="faculty"] { border-top: 0.25rem solid var(--indigo); }   /* attribute selector */
+.feature-card[data-audience="student"] { border-top: 0.25rem solid var(--blue); }
+.feature-card[data-audience="club"]    { border-top: 0.25rem solid #0d9488; }
+
+/* Adjacent-sibling selector and pseudo-elements */
+h2 + p { margin-top: -0.25rem; }
+.section-title::after {
+  content: "";
+  display: block;
+  width: 3rem;
+  height: 0.25rem;
+  margin-top: 0.5rem;
+  border-radius: 0.25rem;
+  background: var(--blue);
+}
+
+/* ---- Flexbox: the footer row -------------------------------------------------- */
+.site-footer {
+  color: #cbd5e1;
+  background-color: var(--navy);
+}
+.site-footer .footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--gap);
+  padding: 2.5rem 0;
+}
+.site-footer address { margin: 0; font-style: normal; }
+.site-footer a { color: #93c5fd; }
+.site-footer a:hover, .site-footer a:focus-visible { color: #fff; }
+
+/* Form states (Bootstrap adds is-valid / is-invalid; the message sits under the field) */
+.field-error { min-height: 1.25rem; margin: 0.25rem 0 0; font-size: 0.875rem; color: #b91c1c; }
+
+/* Keyboard focus must be visible everywhere */
+:focus-visible { outline: 3px solid var(--indigo); outline-offset: 2px; }
+
+/* ---- Media queries: responsive breakpoints ------------------------------------ */
+@media (max-width: 768px) {
+  .hero { padding: 6rem 0 3rem; }
+  .hero h1 { font-size: 2rem; }
+  .site-footer .footer-row { flex-direction: column; }
+}
+
+@media (max-width: 480px) {
+  .feature-grid { grid-template-columns: 1fr; }         /* a single column on phones */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .feature-card { transition: none; }
+}
+
+@media print {
+  .navbar, #contact-form, .site-footer { display: none; }
+  .hero { color: #000; background: none; }
+}

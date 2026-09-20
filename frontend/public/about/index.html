@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="CampusOS: clubs, venues, events and approvals for MMCOE Pune in one place.">
+  <meta name="theme-color" content="#005bff">
+  <title>About CampusOS</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="vendor/bootstrap.min.css">
+  <link rel="stylesheet" href="campus.css">
+</head>
+<body>
+  <header>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top" style="background-color: var(--navy)" aria-label="Main">
+      <div class="container">
+        <a class="navbar-brand fw-semibold" href="#top"><span class="brand-mark" aria-hidden="true"></span>CampusOS</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav-links"
+                aria-controls="nav-links" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="nav-links">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+            <li class="nav-item"><a class="nav-link" href="#status">Status</a></li>
+            <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
+            <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+            <li class="nav-item"><a class="btn btn-primary ms-md-3" href="/login">Sign in</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <section class="hero" id="top">
+      <div class="container">
+        <p class="text-uppercase fw-semibold mb-2" style="color: #93c5fd">MMCOE Smart Campus Platform</p>
+        <h1 class="display-4 fw-bold">Your campus, beautifully organised.</h1>
+        <p class="lead">Clubs request venues, faculty approve, events go live, and students never miss what matters.</p>
+        <a class="btn btn-primary btn-lg me-2" href="/login">Sign in</a>
+        <a class="btn btn-outline-light btn-lg" href="#features">See what it does</a>
+      </div>
+    </section>
+  </header>
+
+  <main>
+    <section id="features" class="py-5">
+      <div class="container">
+        <h2 class="section-title">What CampusOS does</h2>
+        <p>Three groups use it, and each gets what they need.</p>
+
+        <div id="feature-filter" class="btn-group mb-2" role="group" aria-label="Filter features by audience">
+          <button type="button" class="btn btn-outline-primary active" data-audience="all" aria-pressed="true">Everyone</button>
+          <button type="button" class="btn btn-outline-primary" data-audience="student" aria-pressed="false">Students</button>
+          <button type="button" class="btn btn-outline-primary" data-audience="club" aria-pressed="false">Clubs</button>
+          <button type="button" class="btn btn-outline-primary" data-audience="faculty" aria-pressed="false">Faculty</button>
+        </div>
+        <p class="small mb-4" id="feature-count" aria-live="polite">6 shown</p>
+
+        <ul class="feature-grid">
+          <li><article class="feature-card" data-audience="student">
+            <h3>Find and join events</h3>
+            <p class="mb-0">Browse by category, see the seats left, reserve a spot and join the waitlist when it is full.</p>
+          </article></li>
+          <li><article class="feature-card" data-audience="student">
+            <h3>Reminders that matter</h3>
+            <p class="mb-0">A notice two days before and again two hours before every event you registered for.</p>
+          </article></li>
+          <li><article class="feature-card" data-audience="club">
+            <h3>Conflict-free venues</h3>
+            <p class="mb-0">Request a hall or lab and see the calendar. Two clubs can never hold the same room at the same time.</p>
+          </article></li>
+          <li><article class="feature-card" data-audience="club">
+            <h3>Attendance and feedback</h3>
+            <p class="mb-0">Mark who turned up and collect feedback after the event.</p>
+          </article></li>
+          <li><article class="feature-card" data-audience="faculty">
+            <h3>Clear approvals</h3>
+            <p class="mb-0">One inbox for pending requests, ordered by the rule you choose, with every decision recorded.</p>
+          </article></li>
+          <li><article class="feature-card" data-audience="faculty">
+            <h3>Reports and audit</h3>
+            <p class="mb-0">Venue use, club activity and attendance, exportable as CSV or PDF, plus a tamper-proof audit trail.</p>
+          </article></li>
+        </ul>
+
+        <figure class="mt-5 mb-0">
+          <svg viewBox="0 0 640 120" class="w-100" role="img" aria-labelledby="arch-title arch-desc">
+            <title id="arch-title">How CampusOS is built</title>
+            <desc id="arch-desc">A browser talks to the web server on port 5173, which forwards API calls to the Express API on port 5050, which reads and writes PostgreSQL on port 55432.</desc>
+            <g font-family="system-ui, sans-serif" font-size="14" text-anchor="middle">
+              <rect x="8" y="30" width="160" height="60" rx="10" fill="#e6f0ff" stroke="#005bff"/>
+              <text x="88" y="56" fill="#0f172a" font-weight="600">Browser</text><text x="88" y="76" fill="#475569">React app</text>
+              <rect x="240" y="30" width="160" height="60" rx="10" fill="#e6f0ff" stroke="#005bff"/>
+              <text x="320" y="56" fill="#0f172a" font-weight="600">API :5050</text><text x="320" y="76" fill="#475569">Node + Express</text>
+              <rect x="472" y="30" width="160" height="60" rx="10" fill="#e6f0ff" stroke="#005bff"/>
+              <text x="552" y="56" fill="#0f172a" font-weight="600">Database :55432</text><text x="552" y="76" fill="#475569">PostgreSQL</text>
+              <path d="M168 60h72M400 60h72" stroke="#6366f1" stroke-width="2"/>
+              <path d="M232 54l8 6-8 6M464 54l8 6-8 6" fill="none" stroke="#6366f1" stroke-width="2"/>
+            </g>
+          </svg>
+          <figcaption class="small text-center mt-2">Figure 1. The three tiers. The web app is served on port 5173 and proxies <code>/api</code> to the API.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="status" class="py-5" style="background-color: var(--blue-tint)">
+      <div class="container">
+        <h2 class="section-title">Is it running?</h2>
+        <p>This page asks the API directly using an <code>XMLHttpRequest</code> to <code>/api/health</code>.</p>
+        <div class="card shadow-sm" id="status-card">
+          <div class="card-body d-flex flex-wrap align-items-center gap-3">
+            <span id="api-status" class="badge text-bg-secondary fs-6" role="status">Checking…</span>
+            <span id="api-detail" class="flex-grow-1">Waiting for the API…</span>
+            <button type="button" id="api-recheck" class="btn btn-sm btn-outline-primary">Check again</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="py-5">
+      <div class="container">
+        <h2 class="section-title">Questions</h2>
+        <div class="accordion mt-4" id="faq-list">
+          <div class="accordion-item">
+            <h3 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#q1" aria-expanded="true" aria-controls="q1">Who can sign in?</button></h3>
+            <div id="q1" class="accordion-collapse collapse show" data-bs-parent="#faq-list"><div class="accordion-body">Anyone with an <strong>@mmcoe.edu.in</strong> address. New accounts verify their email with a six-digit code.</div></div>
+          </div>
+          <div class="accordion-item">
+            <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q2" aria-expanded="false" aria-controls="q2">What happens if two clubs want the same hall?</button></h3>
+            <div id="q2" class="accordion-collapse collapse" data-bs-parent="#faq-list"><div class="accordion-body">Faculty see both requests together. Approving one is decided inside a database lock, so the second cannot also be approved for an overlapping time.</div></div>
+          </div>
+          <div class="accordion-item">
+            <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q3" aria-expanded="false" aria-controls="q3">Is this an official college system?</button></h3>
+            <div id="q3" class="accordion-collapse collapse" data-bs-parent="#faq-list"><div class="accordion-body">No. It is a second-year project by Team A6, built as coursework under the guidance of Mrs. Nishanti Naidu.</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="py-5 bg-light">
+      <div class="container">
+        <h2 class="section-title">Get in touch</h2>
+        <div class="row g-5 mt-1">
+          <div class="col-md-7">
+            <form id="contact-form" novalidate aria-describedby="contact-note">
+              <p id="contact-note" class="small">All fields are required. This form checks your answers in the browser and does not send them anywhere.</p>
+              <div class="mb-3">
+                <label for="name" class="form-label">Full name</label>
+                <input type="text" class="form-control" id="name" name="name" autocomplete="name" placeholder="Asha Kulkarni" aria-describedby="name-error" required>
+                <p class="field-error" id="name-error" role="alert"></p>
+              </div>
+              <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" autocomplete="email" placeholder="asha@mmcoe.edu.in" aria-describedby="email-error" required>
+                <p class="field-error" id="email-error" role="alert"></p>
+              </div>
+              <div class="mb-3">
+                <label for="mobile" class="form-label">Mobile number</label>
+                <input type="tel" class="form-control" id="mobile" name="mobile" autocomplete="tel" placeholder="+91 98765 43210" aria-describedby="mobile-error" required>
+                <p class="field-error" id="mobile-error" role="alert"></p>
+              </div>
+              <div class="mb-3">
+                <label for="message" class="form-label">Message</label>
+                <textarea class="form-control" id="message" name="message" rows="4" maxlength="600" aria-describedby="message-error message-count" required></textarea>
+                <div class="d-flex justify-content-between">
+                  <p class="field-error" id="message-error" role="alert"></p>
+                  <span class="small text-secondary" id="message-count">0 / 500</span>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">Check my details</button>
+              <div id="contact-result" class="alert mt-3" role="status" style="display: none"></div>
+            </form>
+          </div>
+
+          <aside class="col-md-5" aria-label="Where to find us">
+            <h3 class="h5">Team A6</h3>
+            <address>
+              Department of Information Technology<br>
+              Marathwada Mitra Mandal&rsquo;s College of Engineering<br>
+              Karvenagar, Pune, Maharashtra<br>
+              <a href="https://mmcoe.edu.in">mmcoe.edu.in</a>
+            </address>
+            <p class="small">Project guide: Mrs. Nishanti Naidu.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-row">
+      <p class="mb-0"><small>&copy; <span id="year">2026</span> Team A6, MMCOE Pune. Built for course B25IT304, Project Based Learning.</small></p>
+      <p class="mb-0"><small><a href="/login">Sign in</a> &middot; <a href="#top">Back to top</a></small></p>
+    </div>
+  </footer>
+
+  <script src="vendor/jquery.min.js"></script>
+  <script src="vendor/bootstrap.bundle.min.js"></script>
+  <script src="validate.js"></script>
+  <script src="about.js"></script>
+</body>
+</html>
