@@ -15,6 +15,7 @@
  */
 
 const rbac = require('../rbac');
+const CircularQueue = require('../../lib/ds/CircularQueue');
 
 const { ROLES } = rbac;
 
@@ -139,14 +140,24 @@ function planPromotions(waitlist, seatsAvailable) {
   if (seatsAvailable === null) {
     return { promote: [...waitlist], seatsUsed: waitlist.reduce((n, w) => n + w.seats, 0) };
   }
+  if (waitlist.length === 0) return { promote: [], seatsUsed: 0 };
+
+  // The waitlist is a circular queue (lib/ds/CircularQueue.js). One pass takes
+  // each entry from the front: if it fits it is promoted, if not it goes back
+  // to the rear, so it keeps waiting and nothing is dropped.
+  const queue = new CircularQueue(waitlist.length);
+  waitlist.forEach((entry) => queue.enqueue(entry));
+
   const promote = [];
   let remaining = seatsAvailable;
-  for (const entry of waitlist) {
+  for (let turns = queue.size; turns > 0 && remaining > 0; turns -= 1) {
+    const entry = queue.dequeue();
     if (entry.seats <= remaining) {
       promote.push(entry);
       remaining -= entry.seats;
+    } else {
+      queue.enqueue(entry);
     }
-    if (remaining === 0) break;
   }
   return { promote, seatsUsed: seatsAvailable - remaining };
 }
