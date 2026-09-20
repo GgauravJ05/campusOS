@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Phase F.4 — shell scripts for reset, backup and demo](#phase-f4--shell-scripts-for-reset-backup-and-demo-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase F.3 — an LRU cache with hit/miss counters](#phase-f3--an-lru-cache-with-hitmiss-counters-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase F.2 — CPU scheduling policies for the approval inbox](#phase-f2--cpu-scheduling-policies-for-the-approval-inbox-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase F.1 — seats as a counting semaphore](#phase-f1--seats-as-a-counting-semaphore-2026-09-20) | Gaurav |
@@ -52,6 +53,29 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Phase F.4 — shell scripts for reset, backup and demo (2026-09-20)
+
+**Syllabus:** B25IT402 Operating Systems, Lab 1 (shell scripting).
+
+**What changed:** new `scripts/` with `lib.sh` (shared functions, defaults,
+named exit codes), `db-reset.sh`, `db-backup.sh` and `demo.sh`. `backups/` is
+git-ignored. There is no separate seed script: `db-reset.sh --no-seed` and the
+default cover both.
+
+**Safety:** `db-reset.sh` drops a database, so it requires a name, validates it
+as a plain identifier, and refuses anything except `campusos_test` and
+`campusos_demo` unless `--yes` is added. Your real `campusos` database is not
+touched by any script by default.
+
+**Verified by running them:** usage errors (exit 2), the refusal (5),
+PostgreSQL down via `PGPORT=1` (4), a missing database (2), a bad KEEP (2),
+retention keeping only the newest N, and a backup restored into a new database
+(17 users back). Testing caught a real bug: `pg_dump` has no `-X` flag.
+
+**Teammates must do:** nothing. Needs `bash`, `psql`, `pg_dump`, `gzip`.
+
+**Open:** no automated test for the scripts; Bash only.
 
 ## Phase F.3 — an LRU cache with hit/miss counters (2026-09-20)
 
