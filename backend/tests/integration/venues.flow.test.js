@@ -94,6 +94,13 @@ describeWithDb('venues (database)', () => {
       const itFloor = academic.floors.find((f) => f.floor === 4);
       expect(itFloor.venues.map((v) => v.name)).toEqual(expect.arrayContaining(['Computer Lab 1', 'Networking Lab']));
       expect(res.body.data.equipment).toContain('PROJECTOR');
+      // Counts come from a postorder walk of the tree: each node's is the sum of its children's.
+      for (const building of res.body.data.buildings) {
+        expect(building.venueCount).toBe(building.floors.reduce((sum, f) => sum + f.venues.length, 0));
+        for (const floor of building.floors) expect(floor.venueCount).toBe(floor.venues.length);
+      }
+      const total = res.body.data.buildings.reduce((sum, b) => sum + b.venueCount, 0);
+      expect(total).toBeGreaterThanOrEqual(22);
       expect(res.body.data.rules).toMatchObject({ defaultBufferMinutes: 15, openingTime: '07:00', closingTime: '21:00' });
     });
 

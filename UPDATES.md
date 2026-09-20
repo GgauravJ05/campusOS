@@ -10,6 +10,7 @@ build history. Every change that lands gets an entry (see
 | Date | Change | Author |
 | ---- | ------ | ------ |
 | 2026-09-20 | [Test fixes — the two real causes of "flaky" full runs](#test-fixes--the-two-real-causes-of-flaky-full-runs-2026-09-20) | Gaurav |
+| 2026-09-20 | [Phase E.4 — a tree for the venue cascade](#phase-e4--a-tree-for-the-venue-cascade-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.3 — a binary min-heap, used for top-K](#phase-e3--a-binary-min-heap-used-for-top-k-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.2 — merge sort and binary search](#phase-e2--merge-sort-and-binary-search-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.1 — a circular queue behind the waitlist](#phase-e1--a-circular-queue-behind-the-waitlist-2026-09-20) | Gaurav |
@@ -84,6 +85,38 @@ own comment says so). I have not seen it fail since the changes above, but I hav
 fixed its cause.
 
 No application code changed.
+
+---
+
+## Phase E.4 — a tree for the venue cascade (2026-09-20)
+
+Fourth Phase E slice. The Building -> Floor -> Venue picker was built from nested
+`Map`s and walked with loops. It is now a real tree.
+
+- **`Tree` / `TreeNode`** (`lib/ds/Tree.js`): an n-ary tree. Nodes hold their
+  children in `#private` arrays plus a parent link, so the shape only changes
+  through `addChild`. It has the three classic traversals as generators -
+  **preorder**, **postorder** and **level order** - plus `find`, `pathTo`, `depth`,
+  `height` and `size`. Level order is breadth-first and runs on the `CircularQueue`
+  from E.1, so the structures build on each other.
+- **`getDirectoryMeta`** (`GET /api/venues/meta`) builds campus > building > floor
+  > venue as a `Tree`, then serialises it.
+- **Traversal does a job.** A node's venue count depends on its children's, so a
+  **postorder** walk (children first) computes it. The response now carries
+  `venueCount` on every building and floor, which the cascade picker can show
+  ("Academic Building - 18 venues"). This is an **additive** field: existing keys
+  and ordering are unchanged, and the pre-existing cascade test passes untouched.
+
+**Not done, on purpose.** The syllabus's BST, AVL, threaded and expression trees
+are not implemented: nothing in this project needs one, and a tree added to tick a
+row would not be doing a job. The mapping says so instead of claiming the row.
+
+**Proof.** `tests/unit/ds/tree.test.js` checks the three orders against a known
+tree, depth/height/path, stopping a walk early, and a 200-deep chain;
+`venues.flow` asserts every count equals the sum of its children and the total
+covers all venues.
+
+No schema or dependency change. The frontend does not display `venueCount` yet.
 
 ---
 
