@@ -19,6 +19,11 @@ fails every API call, which shows up in the UI as a login that never works:
 VITE_API_PROXY_TARGET=http://localhost:5050
 ```
 
+A small public page (Bootstrap, jQuery, an `XMLHttpRequest`, hand-written CSS)
+lives in `public/about/` and is served at **`/about/index.html`** (the explicit
+filename matters: `/about/` alone falls through to the app). It is a separate
+static page, not part of the React bundle.
+
 In development the sign-in page shows **demo account** buttons for the seeded
 users (password `Campus@123`). They are stripped from production builds.
 Sign-up codes are printed in the **API terminal** when `SMTP_HOST` is empty.
@@ -73,8 +78,9 @@ src/
   `<Field>` so the label, hint, error and ARIA wiring are always right.
 - **Campus time.** Dates and times are campus-local (`Asia/Kolkata`) strings,
   like the API. Use `lib/campusTime.js`, never `new Date().toLocaleDateString()`.
-- **Build against the real API.** Pages for modules whose backend does not
-  exist yet (Events) describe what is coming — they never show invented data.
+- **Build against the real API.** The endpoint exists and is tested before its
+  screen is written; a screen never shows invented data. (Some endpoints still
+  have no screen: `my-activity`, `nearest` and the approval `inbox`.)
 - **Test user journeys, not implementation.** Tests render the real routes and
   talk to an MSW fake of the API (`src/test/server.js`) using the backend's
   exact response envelope. Query by role and label, the way a user finds things.
