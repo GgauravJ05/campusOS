@@ -25,8 +25,8 @@ describeWithDb('nearest free venue (database)', () => {
   beforeAll(async () => {
     app = live.createApp();
     [itCoordinator, student] = await Promise.all([
-      live.signIn(app, 'coordinator.it@mmcoe.edu.in'),
-      live.signIn(app, 'srushti.mane@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.coordinator.it@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.student.a@mmcoe.edu.in'),
     ]);
   });
 
@@ -57,7 +57,7 @@ describeWithDb('nearest free venue (database)', () => {
     // They answer different questions, so they legitimately differ.
     expect(first.buildingsAway).toBe(2);
     expect(first.fewestPathsPossible).toBe(1);
-    expect(second).toMatchObject({ name: 'Seminar Hall A', capacity: 200, walkingMetres: 210 });
+    expect(second).toMatchObject({ name: 'MB 405', capacity: 200, walkingMetres: 210 });
   });
 
   it('puts a venue in the starting building ahead of one that needs a walk', async () => {

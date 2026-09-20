@@ -19,7 +19,7 @@ SELECT u.user_id, t.title, 'SEMINAR', 'COLLEGE', DATE '2031-06-01', TIME '10:00'
        (VALUES ('ACID Demo Event A',    'APPROVED',  NULL::int),
                ('ACID Demo Event B',    'APPROVED',  NULL::int),
                ('ACID Demo Seat Event', 'PUBLISHED', 1)) AS t(title, status, max_seats)
- WHERE u.email = 'principal@mmcoe.edu.in';
+ WHERE u.email = 'gaurav.principal@mmcoe.edu.in';
 
 \echo 'demo fixtures ready'
 SELECT venue_name, capacity FROM venues WHERE venue_name LIKE 'ACID Demo%' ORDER BY 1;

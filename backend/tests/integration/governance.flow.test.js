@@ -59,10 +59,10 @@ describeWithDb('governance and analytics (database)', () => {
   beforeAll(async () => {
     app = live.createApp();
     [principal, itCoordinator, csCoordinator, gaurav] = await Promise.all([
-      live.signIn(app, 'principal@mmcoe.edu.in'),
-      live.signIn(app, 'coordinator.it@mmcoe.edu.in'),
-      live.signIn(app, 'coordinator.cs@mmcoe.edu.in'),
-      live.signIn(app, 'gaurav.jadhav@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.principal@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.coordinator.it@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.coordinator.cs@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.head.ittech@mmcoe.edu.in'),
     ]);
     student = await live.createVerifiedStudent(app, { fullName: 'Report Student' });
     const { rows } = await db.query(`SELECT club_id, club_name FROM clubs WHERE club_name = 'IT Tech Club'`);
@@ -115,7 +115,7 @@ describeWithDb('governance and analytics (database)', () => {
     });
 
     it('gives a club member the student dashboard - same seats, same feed', async () => {
-      const member = await live.signIn(app, 'aditya.patil@mmcoe.edu.in');
+      const member = await live.signIn(app, 'gaurav.member.a@mmcoe.edu.in');
       const res = await request(app).get('/api/dashboard').set(auth(member)).expect(200);
 
       expect(res.body.data.role).toBe('CLUB_MEMBER');
@@ -204,10 +204,10 @@ describeWithDb('governance and analytics (database)', () => {
   // -------------------------------------------------------------------------
   describe('audit trail (FR20)', () => {
     it('records a sign-in, with who and from where', async () => {
-      await live.signIn(app, 'coordinator.it@mmcoe.edu.in');
+      await live.signIn(app, 'gaurav.coordinator.it@mmcoe.edu.in');
 
       const res = await request(app).get('/api/admin/audit').query({ action: 'USER_LOGIN' }).set(auth(principal)).expect(200);
-      const entry = res.body.data.find((e) => e.actor.email === 'coordinator.it@mmcoe.edu.in');
+      const entry = res.body.data.find((e) => e.actor.email === 'gaurav.coordinator.it@mmcoe.edu.in');
       expect(entry).toMatchObject({ action: 'USER_LOGIN', label: 'Signed in', group: 'ACCESS' });
       expect(entry.actor.role).toBe('DEPT_COORDINATOR');
       expect(entry.at).toEqual(expect.any(String));

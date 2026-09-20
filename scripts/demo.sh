@@ -27,7 +27,7 @@ Demo database ready. In two terminals:
   cd backend  && DATABASE_URL=postgresql://$PGUSER@$PGHOST:$PGPORT/campusos_demo PORT=5050 npm start
   cd frontend && npm run dev          # http://localhost:5173
 
-Sign in as principal@mmcoe.edu.in / Campus@123 (all demo accounts use that password).
+Sign in as gaurav.principal@mmcoe.edu.in / Campus@123 (all demo accounts use that password).
 Health:  curl -s http://localhost:5050/api/health/metrics
 MSG
 exit "$EX_OK"

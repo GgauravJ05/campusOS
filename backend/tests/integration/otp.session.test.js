@@ -119,7 +119,7 @@ describeWithDb('one-time codes and sessions (database)', () => {
       const student = await live.createVerifiedStudent(app);
       const res = await request(app).get('/api/directory/clubs').set('Authorization', `Bearer ${student.accessToken}`).expect(200);
       expect(res.body.data).toEqual(expect.arrayContaining([
-        expect.objectContaining({ name: 'IT Tech Club', head: expect.objectContaining({ fullName: 'Gaurav Jadhav' }) }),
+        expect.objectContaining({ name: 'IT Tech Club', head: expect.objectContaining({ fullName: 'Gaurav Jadhav - IT Tech Club Head' }) }),
       ]));
     });
 
@@ -128,7 +128,7 @@ describeWithDb('one-time codes and sessions (database)', () => {
       ['inactive', (u) => u.isActive === false],
       ['active', (u) => u.isActive && u.isVerified],
     ])('filters the directory by status=%s', async (status, predicate) => {
-      const principal = await live.signIn(app, 'principal@mmcoe.edu.in');
+      const principal = await live.signIn(app, 'gaurav.principal@mmcoe.edu.in');
       const email = uniqueEmail('pending');
       await request(app).post('/api/auth/register').send({
         fullName: 'Pending Person', email, password: 'Violet-Lantern-42', departmentId: await live.departmentId(), academicYear: 1,
@@ -144,7 +144,7 @@ describeWithDb('one-time codes and sessions (database)', () => {
     });
 
     it('filters by department for the super admin and returns an empty page cleanly', async () => {
-      const principal = await live.signIn(app, 'principal@mmcoe.edu.in');
+      const principal = await live.signIn(app, 'gaurav.principal@mmcoe.edu.in');
       const res = await request(app).get(`/api/users?departmentId=${await live.departmentId('AIDS')}&q=nobody-by-this-name`)
         .set('Authorization', `Bearer ${principal.accessToken}`).expect(200);
       expect(res.body).toMatchObject({ data: [], meta: { total: 0, totalPages: 0 } });

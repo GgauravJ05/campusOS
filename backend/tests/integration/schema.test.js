@@ -395,6 +395,36 @@ describeWithDb('database schema', () => {
     });
   });
 
+  describe('department floors', () => {
+    it('gives each department its own floor, one to six', async () => {
+      const { rows } = await pool.query('SELECT dept_code, floor FROM departments ORDER BY floor');
+      expect(rows).toEqual([
+        { dept_code: 'ELEC', floor: 1 }, { dept_code: 'MECH', floor: 2 }, { dept_code: 'ENTC', floor: 3 },
+        { dept_code: 'IT', floor: 4 }, { dept_code: 'CS', floor: 5 }, { dept_code: 'AIDS', floor: 6 },
+      ]);
+    });
+
+    it('refuses two departments on one floor, and a nonsense floor', async () => {
+      await expect(pool.query(`INSERT INTO departments (dept_code, dept_name, floor) VALUES ('DUP', 'Duplicate Floor', 4)`))
+        .rejects.toMatchObject({ code: '23505' });
+      await expect(pool.query(`INSERT INTO departments (dept_code, dept_name, floor) VALUES ('HIGH', 'Too High', 99)`))
+        .rejects.toMatchObject({ code: '23514' });
+    });
+
+    it('seeds the classrooms every floor has and the rooms the IT department named', async () => {
+      const { rows } = await pool.query(
+        `SELECT floor, string_agg(venue_name, ',' ORDER BY venue_name) AS names
+           FROM venues WHERE building = 'Academic Building' AND (venue_name LIKE 'AC %' OR venue_name LIKE 'MB %')
+          GROUP BY floor ORDER BY floor`,
+      );
+      for (const floor of [1, 2, 3, 5, 6]) {
+        expect(rows.find((r) => r.floor === floor).names).toBe([1, 2, 3, 4].map((k) => `AC ${floor}0${k}`).join(','));
+      }
+      expect(rows.find((r) => r.floor === 4).names)
+        .toBe('AC 401,AC 402,AC 403,AC 404,MB 405,MB 407,MB 408,MB 409,MB 411,MB 413,MB 414');
+    });
+  });
+
   describe('user credentials', () => {
     it('refuses an account with neither a password nor an OAuth identity', async () => {
       const { rows: [role] } = await pool.query(`SELECT role_id FROM roles WHERE role_key = 'STUDENT'`);

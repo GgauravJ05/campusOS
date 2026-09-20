@@ -18,7 +18,7 @@ INSERT INTO bookings (event_id, venue_id, requested_by, approved_by, start_at, e
 SELECT e.event_id, v.venue_id, u.user_id, u.user_id,
        '2031-06-01 10:00+05:30', '2031-06-01 12:00+05:30', 'APPROVED', now()
   FROM events e, venues v, users u
- WHERE e.title = 'ACID Demo Event A' AND v.venue_name = 'ACID Demo Hall' AND u.email = 'principal@mmcoe.edu.in';
+ WHERE e.title = 'ACID Demo Event A' AND v.venue_name = 'ACID Demo Hall' AND u.email = 'gaurav.principal@mmcoe.edu.in';
 SELECT count(*) AS bookings_inside_the_transaction FROM bookings b JOIN venues v USING (venue_id) WHERE v.venue_name = 'ACID Demo Hall';
 
 \echo '--- step 2: approve Event B for the SAME room and overlapping time (refused: excl_bookings_no_overlap)'
@@ -26,7 +26,7 @@ INSERT INTO bookings (event_id, venue_id, requested_by, approved_by, start_at, e
 SELECT e.event_id, v.venue_id, u.user_id, u.user_id,
        '2031-06-01 11:00+05:30', '2031-06-01 13:00+05:30', 'APPROVED', now()
   FROM events e, venues v, users u
- WHERE e.title = 'ACID Demo Event B' AND v.venue_name = 'ACID Demo Hall' AND u.email = 'principal@mmcoe.edu.in';
+ WHERE e.title = 'ACID Demo Event B' AND v.venue_name = 'ACID Demo Hall' AND u.email = 'gaurav.principal@mmcoe.edu.in';
 
 \echo '--- the transaction is now aborted; even COMMIT cannot save step 1'
 COMMIT;

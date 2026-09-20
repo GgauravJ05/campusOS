@@ -10,10 +10,10 @@ const rbac = require('./rbac');
 
 async function listDepartments() {
   const { rows } = await db.query(
-    `SELECT department_id, dept_code, dept_name
+    `SELECT department_id, dept_code, dept_name, floor
        FROM departments WHERE is_active ORDER BY dept_name`,
   );
-  return rows.map((row) => ({ id: row.department_id, code: row.dept_code, name: row.dept_name }));
+  return rows.map((row) => ({ id: row.department_id, code: row.dept_code, name: row.dept_name, floor: row.floor }));
 }
 
 async function listRoles() {
@@ -27,7 +27,7 @@ async function listRoles() {
  */
 async function listClubs(actor, { appointable = false } = {}) {
   const { rows } = await db.query(
-    `SELECT c.club_id, c.club_name, c.description, c.department_id, d.dept_code, d.dept_name,
+    `SELECT c.club_id, c.club_name, c.description, c.department_id, d.dept_code, d.dept_name, d.floor AS dept_floor,
             h.user_id AS head_id, h.full_name AS head_name,
             (SELECT count(*)::int FROM club_members m WHERE m.club_id = c.club_id AND m.is_active) AS member_count
        FROM clubs c
@@ -44,7 +44,7 @@ async function listClubs(actor, { appointable = false } = {}) {
       name: row.club_name,
       description: row.description,
       scope: row.department_id === null ? 'COLLEGE' : 'DEPARTMENT',
-      department: row.department_id ? { id: row.department_id, code: row.dept_code, name: row.dept_name } : null,
+      department: row.department_id ? { id: row.department_id, code: row.dept_code, name: row.dept_name, floor: row.dept_floor } : null,
       head: row.head_id ? { id: row.head_id, fullName: row.head_name } : null,
       memberCount: row.member_count,
     }));

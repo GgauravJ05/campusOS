@@ -102,24 +102,30 @@ curl localhost:5050/api/health/ready   # database reachable too
 > the Vite dev proxy. Change `PORT` in `backend/.env` and
 > `VITE_API_PROXY_TARGET` in `frontend/.env.local` together, or not at all.
 
-Seeded demo accounts all use the password `Campus@123`:
+Seeded demo accounts all use the password `Campus@123`. Every account is
+named **Gaurav Jadhav** with its role as the alias, so the name in the corner of
+the screen tells you which account you are in:
 
-| Role                         | Email                           | Department |
-| ---------------------------- | ------------------------------- | ---------- |
-| Principal & HOD (Super Admin)| `principal@mmcoe.edu.in`        | college    |
-| Department Event Coordinator | `coordinator.it@mmcoe.edu.in`   | IT         |
-| Department Event Coordinator | `coordinator.cs@mmcoe.edu.in`   | Computer   |
-| Club Head (IT Tech Club)     | `gaurav.jadhav@mmcoe.edu.in`    | IT         |
-| Club Head (C.O.D.E Club)     | `rohan.kulkarni@mmcoe.edu.in`   | Computer   |
-| Club Head (SAEINDIA)         | `sneha.deshmukh@mmcoe.edu.in`   | Mechanical |
-| Club Member                  | `aditya.patil@mmcoe.edu.in`     | IT         |
-| Student                      | `srushti.mane@mmcoe.edu.in`     | IT         |
-| Student                      | `ishita.rane@mmcoe.edu.in`      | AI & DS    |
+| Signed in as                              | Email                                    | Department |
+| ----------------------------------------- | ---------------------------------------- | ---------- |
+| Gaurav Jadhav - Principal                 | `gaurav.principal@mmcoe.edu.in`          | IT         |
+| Gaurav Jadhav - IT / CS / ENTC Coordinator| `gaurav.coordinator.it` / `.cs` / `.entc@mmcoe.edu.in` | IT / CS / ENTC |
+| Gaurav Jadhav - IT Tech Club Head         | `gaurav.head.ittech@mmcoe.edu.in`        | IT         |
+| Gaurav Jadhav - Envision Club Head        | `gaurav.head.envision@mmcoe.edu.in`      | IT         |
+| Gaurav Jadhav - CODE Club Head            | `gaurav.head.code@mmcoe.edu.in`          | Computer   |
+| Gaurav Jadhav - SAEINDIA Club Head        | `gaurav.head.saeindia@mmcoe.edu.in`      | Mechanical |
+| Gaurav Jadhav - Club Member A / B         | `gaurav.member.a` / `.b@mmcoe.edu.in`    | IT         |
+| Gaurav Jadhav - Student A to G            | `gaurav.student.a` to `.g@mmcoe.edu.in`  | A IT, B CS, C ENTC, D IT, E Electrical, F AI & DS, G Mechanical |
 
 The seed follows the real campus: six departments, one floor of the academic
 building each — **1 Electrical, 2 Mechanical, 3 ENTC, 4 IT, 5 Computer,
 6 AI & DS** — with the auditorium, conference room, ground and open air
-theatre shared. Clubs are the ones listed on
+theatre shared. Every floor has classrooms **AC x01 to x04** (AC 401 to AC 404
+on the 4th floor); the 4th floor also has the rooms **MB 405** (seminar hall),
+**MB 407, 408, 409, 413, 414** (labs) and **MB 411** (classroom). The Clubs and
+Venues pages list everything floor by floor. Rooms on the other floors beyond the
+AC classrooms, and every capacity and equipment list, are placeholders until the
+real ones are entered in `db/seed.sql`. Clubs are the ones listed on
 [mmcoe.edu.in](https://mmcoe.edu.in), department by department, plus the
 college-level chapters and teams.
 

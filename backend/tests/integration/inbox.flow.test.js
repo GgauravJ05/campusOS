@@ -47,11 +47,11 @@ describeWithDb('approval inbox scheduling (database)', () => {
   beforeAll(async () => {
     app = live.createApp();
     [principal, itCoordinator, csCoordinator, gaurav, student] = await Promise.all([
-      live.signIn(app, 'principal@mmcoe.edu.in'),
-      live.signIn(app, 'coordinator.it@mmcoe.edu.in'),
-      live.signIn(app, 'coordinator.cs@mmcoe.edu.in'),
-      live.signIn(app, 'gaurav.jadhav@mmcoe.edu.in'),
-      live.signIn(app, 'srushti.mane@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.principal@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.coordinator.it@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.coordinator.cs@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.head.ittech@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.student.a@mmcoe.edu.in'),
     ]);
     ({ rows: [{ club_id: clubId }] } = await db.query(`SELECT club_id FROM clubs WHERE club_name = 'IT Tech Club'`));
 

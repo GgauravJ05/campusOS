@@ -42,13 +42,13 @@ describeWithDb('venue bookings (database)', () => {
   beforeAll(async () => {
     app = live.createApp();
     [principal, itCoordinator, csCoordinator, gaurav, atharva, member, student] = await Promise.all([
-      live.signIn(app, 'principal@mmcoe.edu.in'),
-      live.signIn(app, 'coordinator.it@mmcoe.edu.in'),
-      live.signIn(app, 'coordinator.cs@mmcoe.edu.in'),
-      live.signIn(app, 'gaurav.jadhav@mmcoe.edu.in'),
-      live.signIn(app, 'atharva.desai@mmcoe.edu.in'),
-      live.signIn(app, 'aditya.patil@mmcoe.edu.in'),
-      live.signIn(app, 'srushti.mane@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.principal@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.coordinator.it@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.coordinator.cs@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.head.ittech@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.head.envision@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.member.a@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.student.a@mmcoe.edu.in'),
     ]);
     const { rows } = await db.query(`SELECT club_id, club_name FROM clubs WHERE club_name IN ('IT Tech Club', 'Envision Club', 'C.O.D.E Club')`);
     rows.forEach((r) => { clubs[r.club_name] = r.club_id; });
@@ -183,7 +183,7 @@ describeWithDb('venue bookings (database)', () => {
 
       const res = await request(app).post(`/api/bookings/${winner.body.data.id}/approve`).set(auth(itCoordinator)).expect(200);
 
-      expect(res.body.data).toMatchObject({ status: 'APPROVED', decidedBy: { fullName: 'Nishanti Naidu' }, event: { status: 'APPROVED' } });
+      expect(res.body.data).toMatchObject({ status: 'APPROVED', decidedBy: { fullName: 'Gaurav Jadhav - IT Coordinator' }, event: { status: 'APPROVED' } });
 
       const statusOf = async (id) => (await request(app).get(`/api/bookings/${id}`).set(auth(itCoordinator)).expect(200)).body.data;
       expect(await statusOf(loser.body.data.id)).toMatchObject({ status: 'REJECTED', rejectionReason: expect.stringMatching(/approved first/), event: { status: 'REJECTED' } });
@@ -266,7 +266,7 @@ describeWithDb('venue bookings (database)', () => {
       const venueId = await newVenue();
       const { rows: [club] } = await db.query(
         `INSERT INTO clubs (club_name, department_id, club_head_id)
-         VALUES ($1, NULL, (SELECT user_id FROM users WHERE email = 'atharva.desai@mmcoe.edu.in')) RETURNING club_id`,
+         VALUES ($1, NULL, (SELECT user_id FROM users WHERE email = 'gaurav.head.envision@mmcoe.edu.in')) RETURNING club_id`,
         [`College Fest ${Date.now()}`],
       );
       const req = await request_(atharva, { venueId, clubId: club.club_id, date: day(26), startTime: '10:00', endTime: '11:00' }).expect(201);
@@ -282,7 +282,7 @@ describeWithDb('venue bookings (database)', () => {
       const venueId = await newVenue();
       const res = await request_(itCoordinator, { venueId, date: day(27), startTime: '10:00', endTime: '11:00', title: 'Board of Studies' }).expect(201);
       expect(res.body.data).toMatchObject({
-        status: 'APPROVED', isDirect: true, decidedBy: { fullName: 'Nishanti Naidu' },
+        status: 'APPROVED', isDirect: true, decidedBy: { fullName: 'Gaurav Jadhav - IT Coordinator' },
         event: { scope: 'DEPARTMENT', club: null, department: { code: 'IT' }, status: 'APPROVED' },
       });
     });

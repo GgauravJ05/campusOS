@@ -43,11 +43,11 @@ describeWithDb('clubs (database)', () => {
   beforeAll(async () => {
     app = live.createApp();
     [principal, itCoordinator, csCoordinator, gaurav, aditya] = await Promise.all([
-      live.signIn(app, 'principal@mmcoe.edu.in'),
-      live.signIn(app, 'coordinator.it@mmcoe.edu.in'),
-      live.signIn(app, 'coordinator.cs@mmcoe.edu.in'),
-      live.signIn(app, 'gaurav.jadhav@mmcoe.edu.in'),
-      live.signIn(app, 'aditya.patil@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.principal@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.coordinator.it@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.coordinator.cs@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.head.ittech@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.member.a@mmcoe.edu.in'),
     ]);
     student = await live.createVerifiedStudent(app, { fullName: 'Team Hopeful' });
     [itDept, csDept] = await Promise.all([live.departmentId('IT'), live.departmentId('CS')]);
@@ -62,7 +62,7 @@ describeWithDb('clubs (database)', () => {
       const res = await request(app).get('/api/clubs').set(auth(gaurav)).expect(200);
       const dsc = res.body.data.find((c) => c.name === 'IT Tech Club');
       expect(dsc).toMatchObject({
-        scope: 'DEPARTMENT', department: { code: 'IT' }, head: { fullName: 'Gaurav Jadhav' }, isActive: true,
+        scope: 'DEPARTMENT', department: { code: 'IT', floor: 4 }, head: { fullName: 'Gaurav Jadhav - IT Tech Club Head' }, isActive: true,
         myPosition: 'PRESIDENT', permissions: { canManage: false, canEdit: true, canManageMembers: true },
       });
       const cultural = res.body.data.find((c) => c.name === 'Envision Club');
@@ -87,7 +87,7 @@ describeWithDb('clubs (database)', () => {
       const { rows: [dsc] } = await db.query(`SELECT club_id FROM clubs WHERE club_name = 'IT Tech Club'`);
 
       const asHead = await request(app).get(`/api/clubs/${dsc.club_id}`).set(auth(gaurav)).expect(200);
-      expect(asHead.body.data.members[0]).toMatchObject({ fullName: 'Gaurav Jadhav', position: 'PRESIDENT', isHead: true, email: 'gaurav.jadhav@mmcoe.edu.in' });
+      expect(asHead.body.data.members[0]).toMatchObject({ fullName: 'Gaurav Jadhav - IT Tech Club Head', position: 'PRESIDENT', isHead: true, email: 'gaurav.head.ittech@mmcoe.edu.in' });
       expect(asHead.body.data.members.map((m) => m.position)).toEqual(['PRESIDENT', 'TECHNICAL_LEAD', 'MEMBER']);
 
       const asStudent = await request(app).get(`/api/clubs/${dsc.club_id}`).set(auth(student)).expect(200);
@@ -279,13 +279,13 @@ describeWithDb('clubs (database)', () => {
       await request(app).post('/api/auth/register').send({ fullName: 'Not Yet', email, password: 'Violet-Lantern-42', departmentId: itDept, academicYear: 1 }).expect(202);
       await addMember(head, club.id, { email, position: 'MEMBER' }).expect(404);
 
-      const faculty = await addMember(head, club.id, { email: 'coordinator.cs@mmcoe.edu.in', position: 'MEMBER' });
+      const faculty = await addMember(head, club.id, { email: 'gaurav.coordinator.cs@mmcoe.edu.in', position: 'MEMBER' });
       expect(faculty.status).toBe(422);
 
       const self = await addMember(head, club.id, { email: head.user.email, position: 'MEMBER' });
       expect(self.body.error.code).toBe('ALREADY_MEMBER');
-      await addMember(head, club.id, { email: 'aditya.patil@mmcoe.edu.in', position: 'MEMBER' }).expect(201);
-      const twice = await addMember(head, club.id, { email: 'aditya.patil@mmcoe.edu.in', position: 'MEMBER' });
+      await addMember(head, club.id, { email: 'gaurav.member.a@mmcoe.edu.in', position: 'MEMBER' }).expect(201);
+      const twice = await addMember(head, club.id, { email: 'gaurav.member.a@mmcoe.edu.in', position: 'MEMBER' });
       expect(twice.body.error.code).toBe('ALREADY_MEMBER');
 
       await addMember(head, club.id, { email: student.email, position: 'PRESIDENT' }).expect(422);
@@ -313,7 +313,7 @@ describeWithDb('clubs (database)', () => {
     it('lets faculty administrators manage any team in their scope', async () => {
       const { club } = await clubWithHead();
       await addMember(itCoordinator, club.id, { email: student.email, position: 'EVENT_LEAD' }).expect(201);
-      await addMember(csCoordinator, club.id, { email: 'aditya.patil@mmcoe.edu.in', position: 'MEMBER' }).expect(403);
+      await addMember(csCoordinator, club.id, { email: 'gaurav.member.a@mmcoe.edu.in', position: 'MEMBER' }).expect(403);
       await request(app).delete(`/api/clubs/${club.id}/members/${student.user.id}`).set(auth(principal)).expect(200);
     });
   });

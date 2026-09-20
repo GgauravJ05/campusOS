@@ -231,7 +231,7 @@ const entry = (overrides = {}) => ({
   details: { from: 'STUDENT', to: 'CLUB_HEAD' },
   ip: '10.0.0.1',
   at: '2026-09-16T05:00:00.000Z',
-  actor: { id: 2, fullName: 'Nishanti Naidu', email: 'coordinator.it@mmcoe.edu.in', role: 'DEPT_COORDINATOR' },
+  actor: { id: 2, fullName: 'Nishanti Naidu', email: 'gaurav.coordinator.it@mmcoe.edu.in', role: 'DEPT_COORDINATOR' },
   ...overrides,
 })
 
@@ -243,7 +243,7 @@ describe('audit trail (FR20)', () => {
       entry(),
       entry({
         id: '41', action: 'USER_LOGIN', label: 'Signed in', group: 'ACCESS', details: { userAgent: 'Firefox' },
-        actor: { id: 1, fullName: 'Dr. Principal', email: 'principal@mmcoe.edu.in', role: 'SUPER_ADMIN' },
+        actor: { id: 1, fullName: 'Dr. Principal', email: 'gaurav.principal@mmcoe.edu.in', role: 'SUPER_ADMIN' },
       }),
     ])))
     renderApp('/admin/audit', { user: principal })

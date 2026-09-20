@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Floor-wise Clubs and Venues, real rooms, and Gaurav demo accounts](#floor-wise-clubs-and-venues-real-rooms-and-gaurav-demo-accounts-2026-09-20) | Gaurav |
 | 2026-09-20 | [Test runs rebuild their own database](#test-runs-rebuild-their-own-database-2026-09-20) | Gaurav |
 | 2026-09-20 | [Test fix — the FR17 ranking test no longer needs a fresh database](#test-fix--the-fr17-ranking-test-no-longer-needs-a-fresh-database-2026-09-20) | Gaurav |
 | 2026-09-20 | [Feedback screen on the event page](#feedback-screen-on-the-event-page-2026-09-20) | Gaurav |
@@ -64,6 +65,49 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Floor-wise Clubs and Venues, real rooms, and Gaurav demo accounts (2026-09-20)
+
+**Asked for:** the Clubs and Venues pages laid out floor by floor (they looked
+messy), the real rooms (classrooms AC x01-x04 on every floor; on the 4th floor
+MB 411 classroom, labs MB 407/408/409/413/414, seminar hall MB 405), and every
+demo login and name to use "Gaurav" with an alias.
+
+**Database:** `departments.floor SMALLINT UNIQUE` (1 Electrical ... 6 AI & DS),
+seeded; returned as `department.floor` by `GET /api/clubs` and
+`/api/directory/departments` (additive). Seed venues: `AC x01-x04` on all six
+floors replace the invented `Classroom N01`; on floor 4 `MB 405, 407, 408, 409,
+411, 413, 414` replace `Seminar Hall A`, `Computer Lab 1`, `Networking Lab`.
+`db/reset.sql` is unchanged. **Placeholders, please replace:** capacities and
+equipment for every MB room (kept from the old placeholders: e.g. MB 407 has
+desktops, projector and AC; MB 408 has routers and switches), and the invented
+labs on floors 1, 2, 3, 5, 6 plus `Seminar Hall B` (floor 3), which stay until you
+send the real room numbers. Nothing in the seed claims these are real.
+
+**Frontend:** `lib/floors.js` (`groupVenuesByFloor`, `groupClubsByFloor`, natural
+room order so AC 402 precedes AC 1010) and `components/ui/FloorGroups.jsx`. Venues:
+one section per floor, the Academic Building first, and within a floor separate
+rows for Classrooms, Labs and Seminar halls, plus a "jump to floor" chip bar.
+Clubs: one section per department floor (with the department name), then
+College-level clubs; chips jump between them. Filters and search still work and
+the sections follow the results. 12 new frontend tests (grouping, ordering, the
+jump buttons, one-group case) and 4 backend (floors in the schema, the seeded
+rooms, `department.floor`, a hyphenated name).
+
+**Accounts:** all 17 seeded people are now `Gaurav Jadhav - <role>` with role
+aliases in the email, e.g. `gaurav.principal@`, `gaurav.coordinator.it@`,
+`gaurav.head.ittech@`, `gaurav.member.a@`, `gaurav.student.a@` to `.g@` (the full
+list is in `README.md`). Password is still `Campus@123`. The names use a hyphen and
+no brackets or digits, because profile and registration name validation allows
+only letters, spaces, dots, apostrophes and hyphens: a name like "Gaurav (Student)"
+could not have been saved from the profile page. Old emails are gone from the
+seed, tests, demo scripts, `README.md`, the review script and the sign-in page's
+quick-fill buttons. Mock users inside frontend tests are independent of the
+seed and were left alone. `UPDATES.md` history above this entry still uses the
+old emails, as history should.
+
+**Teammates must do:** rebuild your local database (`scripts/db-reset.sh campusos --yes`)
+to get the new rooms and accounts; the old emails will not sign in afterwards.
 
 ## Test runs rebuild their own database (2026-09-20)
 

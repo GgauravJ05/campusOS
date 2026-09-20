@@ -13,10 +13,10 @@ import { useDocumentTitle } from '@/lib/hooks'
 
 /** Seeded development accounts (db/seed.sql). Never rendered in a production build. */
 const DEMO_ACCOUNTS = [
-  { label: 'Principal', email: 'principal@mmcoe.edu.in' },
-  { label: 'Coordinator', email: 'coordinator.it@mmcoe.edu.in' },
-  { label: 'Club head', email: 'gaurav.jadhav@mmcoe.edu.in' },
-  { label: 'Student', email: 'srushti.mane@mmcoe.edu.in' },
+  { label: 'Principal', email: 'gaurav.principal@mmcoe.edu.in' },
+  { label: 'Coordinator', email: 'gaurav.coordinator.it@mmcoe.edu.in' },
+  { label: 'Club head', email: 'gaurav.head.ittech@mmcoe.edu.in' },
+  { label: 'Student', email: 'gaurav.student.a@mmcoe.edu.in' },
 ]
 
 export default function LoginPage() {
