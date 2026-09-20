@@ -14,13 +14,37 @@ const connectionString = process.env.TEST_DATABASE_URL;
 // first require, and each test file has its own module registry.
 if (connectionString) process.env.DATABASE_URL = connectionString;
 
-const request = require('supertest');
+const supertest = require('supertest');
 const createApp = require('../../src/app');
 const db = require('../../src/config/db');
 const mailer = require('../../src/services/mail/mailer');
 const config = require('../../src/config');
 
 const describeWithDb = connectionString ? describe : describe.skip;
+
+const servers = new WeakMap();
+
+/**
+ * `supertest(app)`, but against one long-lived listening server per app.
+ *
+ * Handing supertest a bare app makes it start a fresh server for every request
+ * and close it afterwards, and that occasionally resets the connection
+ * (`ECONNRESET` / "socket hang up"): measured at about 1 request in 8,000, with
+ * no application code involved (0 in 60,000 requests against a shared server,
+ * 7 in 60,000 per-request). A suite makes thousands of requests, so it failed a
+ * different test in roughly one full run in six. The server is unref'd so it
+ * never keeps Jest alive.
+ */
+function request(app) {
+  if (typeof app !== 'function') return supertest(app);
+  let server = servers.get(app);
+  if (!server) {
+    server = app.listen(0);
+    server.unref();
+    servers.set(app, server);
+  }
+  return supertest(server);
+}
 
 let counter = 0;
 /** A unique, allowed-domain email per call, so suites never collide. */
