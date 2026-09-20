@@ -28,7 +28,7 @@ const tw = require('../scheduling/timeWindow');
 const notifications = require('../notifications/notification.service');
 const templates = require('../mail/templates');
 const policy = require('./eligibility');
-const mergeSort = require('../../lib/ds/mergeSort');
+const selectSmallest = require('../../lib/ds/selectSmallest');
 
 const { ROLES } = rbac;
 
@@ -754,14 +754,16 @@ async function recommendations(actor, { limit = 6 } = {}) {
       );
       return { score, reason, row };
     });
-  // Best score first, then soonest, then lowest id: a total order, so the
-  // ranking is the same on every run (lib/ds/mergeSort.js is stable as well).
-  const scored = mergeSort(
+  // The best few of up to 100 candidates: a heap selects them without sorting
+  // all of them (lib/ds/selectSmallest.js). Best score first, then soonest, then
+  // lowest id - a total order, so the result is the same on every run.
+  const scored = selectSmallest(
     candidates,
+    Math.min(Math.max(Number(limit) || 6, 1), 20),
     (a, b) => b.score - a.score
       || startInstant(a.row) - startInstant(b.row)
       || a.row.event_id - b.row.event_id,
-  ).slice(0, Math.min(Math.max(Number(limit) || 6, 1), 20));
+  );
 
   return {
     items: scored.map(({ row, score, reason }) => ({ ...toEvent(row, actor), score, reason })),

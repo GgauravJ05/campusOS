@@ -12,6 +12,7 @@
 const CAMPUS_UTC_OFFSET = '+05:30';
 const mergeSort = require('../../lib/ds/mergeSort');
 const { lowerBound } = require('../../lib/ds/binarySearch');
+const selectSmallest = require('../../lib/ds/selectSmallest');
 
 const MINUTE_MS = 60 * 1000;
 
@@ -167,10 +168,14 @@ function suggestSlots({
 
   // Closest to what the user asked for first.
   const anchor = preferStart && isValidTime(preferStart) ? toMinutes(preferStart) : open;
-  const nearest = mergeSort(
+  // The few closest to the anchor, picked with a heap rather than by sorting
+  // every free window. Ties on distance break by start time, which is unique,
+  // so this is a total order and the result is deterministic.
+  const nearest = selectSmallest(
     candidates,
+    limit,
     (a, b) => Math.abs(a.start - anchor) - Math.abs(b.start - anchor) || a.start - b.start,
-  ).slice(0, limit);
+  );
   return mergeSort(nearest, (a, b) => a.start - b.start)
     .map(({ startTime, endTime }) => ({ startTime, endTime }));
 }

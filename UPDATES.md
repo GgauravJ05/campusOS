@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Phase E.3 — a binary min-heap, used for top-K](#phase-e3--a-binary-min-heap-used-for-top-k-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.2 — merge sort and binary search](#phase-e2--merge-sort-and-binary-search-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.1 — a circular queue behind the waitlist](#phase-e1--a-circular-queue-behind-the-waitlist-2026-09-20) | Gaurav |
 | 2026-09-20 | [UI palette — Framer Modern](#ui-palette--framer-modern-2026-09-20) | Gaurav |
@@ -42,6 +43,50 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase E.3 — a binary min-heap, used for top-K (2026-09-20)
+
+Third Phase E slice.
+
+- **`MinHeap`** (`lib/ds/MinHeap.js`): an array-backed binary min-heap. `push` and
+  `pop` are O(log n) (sift up / sift down), `peek` is O(1), and `MinHeap.from`
+  builds one in O(n) with Floyd's bottom-up heapify. It takes a comparator, so a
+  reversed one gives a max-heap. Storage is `#private`. It is **not stable**, which
+  the docs say.
+- **`selectSmallest(items, k, compare)`** heapifies and pops `k` times:
+  O(n + k log n) instead of sorting all `n` to keep a few.
+- **Two real uses**, both "keep the best few of many": recommendation ranking
+  (the best 6-20 of up to 100 scored events) and `suggestSlots` (the 4 free windows
+  nearest the requested time). Both use a comparator with a tie-break (id, start
+  time) that makes it a total order, so the answer is deterministic despite the
+  heap being unstable. Merge sort stays where a full ordering is needed.
+
+**A deviation from the plan, and why.** The plan said "approval inbox by nearest
+start; reminder dispatch". I checked both. They are PostgreSQL `ORDER BY ... LIMIT`,
+and reminder dispatch also relies on `FOR UPDATE SKIP LOCKED` so two workers never
+send the same reminder. An in-memory heap can do neither. Putting one there would
+have fetched more rows and hidden the locking, so I did not. The approval inbox
+gets a heap-backed *scheduling-policy* queue in Phase F, where it is a new feature
+rather than a rewrite of a correct query. The mapping records this.
+
+**Proof.** `selectSmallest` is compared with "merge-sort everything, then slice"
+on 500 random inputs with many ties; the heap itself is compared with the built-in
+sort on 600 random inputs (built by pushing and by heapify). The existing
+`suggestSlots` equivalence test (against the original scan) and the recommendation
+integration tests pass unchanged.
+
+**The reminders test failed once on this slice's first full run** ("sends the
+two-hour reminder with its own wording", the same intermittent failure noted
+earlier) and then passed in the next 19 full runs, with and without coverage.
+Nothing in this slice touches reminders. I tested two explanations and neither
+held: run order (pinning it did not help), and the 50-reminder batch limit hiding
+this test's reminder behind old ones (there were 0 pending due reminders, and the
+suite passed 3 of 3 against that database). It is still unexplained; if it fails
+for you, rerun before assuming your change broke it.
+
+No API, schema or dependency change.
 
 ---
 
