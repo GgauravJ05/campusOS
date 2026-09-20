@@ -88,6 +88,12 @@ cleanup of leftover rows per run (or a guarded reset of `*_test` databases in th
 Jest global setup); not done, since it is a larger change than was asked.
 Until then: reseed before a full run, as `CLAUDE.md` says.
 
+**Follow-up the same day:** CI failed once on that push in `clubs.flow.test.js`
+(the rename test). It read `admin_logs` with no `ORDER BY` and asserted the
+order, which PostgreSQL does not guarantee; the CI database returned the rows
+the other way round. Unrelated to the FR17 change. Fixed with `ORDER BY log_id`.
+Other multi-row audit reads in the tests were checked: the rest read one row.
+
 **Teammates must do:** nothing.
 
 ## Feedback screen on the event page (2026-09-20)
