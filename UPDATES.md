@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Test fixes — the two real causes of "flaky" full runs](#test-fixes--the-two-real-causes-of-flaky-full-runs-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.3 — a binary min-heap, used for top-K](#phase-e3--a-binary-min-heap-used-for-top-k-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.2 — merge sort and binary search](#phase-e2--merge-sort-and-binary-search-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.1 — a circular queue behind the waitlist](#phase-e1--a-circular-queue-behind-the-waitlist-2026-09-20) | Gaurav |
@@ -43,6 +44,46 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Test fixes — the two real causes of "flaky" full runs (2026-09-20)
+
+Full runs of identical code kept failing a *different* test, about one run in six.
+Earlier entries (Test fix - venues; Phase D.1; Phase E.3) call some of these
+"unexplained". They are now explained, and fixed. I measured instead of guessing,
+and my first two guesses were wrong.
+
+**1. supertest resets connections (the `socket hang up` / `ECONNRESET` failures).**
+`request(app)` makes supertest start and stop a fresh server for every request,
+and that occasionally resets the connection. Reproduced with no CampusOS code at
+all: **7 failures in 60,000 requests** against per-request servers, **0 in 60,000**
+against one long-lived server. A suite makes thousands of requests, so it failed
+whichever test happened to be running. `tests/helpers/liveApp.js`'s `request` now
+keeps one listening server per app (unref'd, so Jest still exits). Hit: `otp`,
+`approvals`, `clubs`, and other transport-level failures earlier in this work.
+My first theory (Node's keep-alive reusing a stale socket) was **wrong**: turning
+keep-alive off did not help.
+
+**2. A test on a rounding boundary (the reminders failure).** "sends the
+two-hour reminder..." created an event exactly **1.5 hours** away, and
+`leadLabel` rounds to whole hours, so 1.5 is the exact boundary between "under an
+hour" and "about 2 hours". Postgres and the sweep both truncate to the millisecond;
+when they land in the same millisecond the gap is exactly 90:00.000 and it reads
+"about 2 hours". I captured the assertion (`Received "Starting in about 2 hours"`)
+and pinned the behaviour in a unit test (exactly 90 min rounds up, 1 ms less rounds
+down). The test now uses 75 minutes. The app was right; the test was on a knife-edge.
+Passed 25 of 25 runs of that suite afterwards.
+
+**Ruled out along the way:** Jest's run order (pinning it did not help) and the
+50-reminder batch limit (there were 0 pending due reminders).
+
+**Still open:** the `recommendations` ranking test scores only the soonest 100
+upcoming events, so it depends on how many events other suites published first (its
+own comment says so). I have not seen it fail since the changes above, but I have not
+fixed its cause.
+
+No application code changed.
 
 ---
 

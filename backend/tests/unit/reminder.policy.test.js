@@ -82,6 +82,14 @@ describe('decide', () => {
 describe('leadLabel', () => {
   const startAt = at('2026-10-12T10:00:00.000Z');
 
+  it('rounds exactly 90 minutes up, and anything shorter down (a boundary integration tests must avoid)', () => {
+    const now = at('2026-10-12T08:00:00.000Z');
+    const ahead = (ms) => ({ startAt: new Date(now.getTime() + ms), now });
+    expect(schedule.leadLabel('T_MINUS_2H', ahead(90 * 60 * 1000))).toBe('in about 2 hours');
+    expect(schedule.leadLabel('T_MINUS_2H', ahead(90 * 60 * 1000 - 1))).toBe('in under an hour');
+    expect(schedule.leadLabel('T_MINUS_2H', ahead(75 * 60 * 1000))).toBe('in under an hour');
+  });
+
   it('counts the two-day reminder in days', () => {
     expect(schedule.leadLabel('T_MINUS_2D', { startAt, now: at('2026-10-10T10:00:00.000Z') })).toBe('in 2 days');
   });

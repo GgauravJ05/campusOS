@@ -188,7 +188,12 @@ describeWithDb('reminder sweep (FR19)', () => {
     });
 
     it('sends the two-hour reminder with its own wording', async () => {
-      const eventId = await publishedEvent({ hoursFromNow: 1.5, attendees: [{ student }] });
+      // 75 minutes, not 90: leadLabel rounds to whole hours, and exactly 90
+      // minutes is the boundary between "under an hour" and "about 2 hours".
+      // Postgres and the sweep both truncate to the millisecond, so an event
+      // created "1.5 hours away" reads as exactly 1.5 whenever they land in the
+      // same millisecond, and flipped this test about one run in eight.
+      const eventId = await publishedEvent({ hoursFromNow: 1.25, attendees: [{ student }] });
       await reminders.sweep();
 
       const rows = await remindersFor(eventId);
