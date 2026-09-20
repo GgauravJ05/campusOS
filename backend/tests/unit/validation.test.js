@@ -31,7 +31,7 @@ describe('normaliseMobile / isIndianMobile', () => {
 });
 
 describe('isPersonName', () => {
-  it.each(['Asha Kulkarni', "Ravi D'Souza", 'Anne-Marie', 'Dr. Nishanti Naidu', 'श्रुति माने', 'Al', 'José Núñez'])(
+  it.each(['Asha Kulkarni', "Ravi D'Souza", 'Anne-Marie', 'Dr. Nishanti Naidu', 'Gaurav Jadhav - IT Tech Club Head', 'श्रुति माने', 'Al', 'José Núñez'])(
     'accepts %s', (name) => expect(isPersonName(name)).toBe(true),
   );
 

@@ -40,7 +40,7 @@ export function makeUser(overrides = {}) {
 export const coordinator = makeUser({
   id: 2,
   fullName: 'Nishanti Naidu',
-  email: 'coordinator.it@mmcoe.edu.in',
+  email: 'gaurav.coordinator.it@mmcoe.edu.in',
   academicYear: null,
   role: { key: 'DEPT_COORDINATOR', name: 'Department Event Coordinator', rank: 2 },
 })

@@ -40,14 +40,14 @@ real browsers (the component tests run in jsdom), and anything at production sca
 
 | | Suites | Tests | Passed | Failed | Skipped |
 | --- | --- | --- | --- | --- | --- |
-| Backend (Jest) | 59 | 1025 | 1025 | 0 | 0 |
-| Frontend (Vitest) | 14 | 234 | 234 | 0 | 0 |
-| **Total** | **73** | **1259** | **1259** | **0** | **0** |
+| Backend (Jest) | 59 | 1029 | 1029 | 0 | 0 |
+| Frontend (Vitest) | 15 | 246 | 246 | 0 | 0 |
+| **Total** | **74** | **1275** | **1275** | **0** | **0** |
 
 The backend's database suites skip themselves silently when PostgreSQL is
 unreachable, so "0 skipped" is a real check here, not a default. Measured with
-the database unreachable: `696 passed, 329 skipped, 1025 total`, and the total
-still reads 1025, which is why the pass count must be checked.
+the database unreachable: `700 passed, 329 skipped, 1029 total`, and the total
+still reads 1029, which is why the pass count must be checked.
 
 ### Coverage
 
@@ -55,7 +55,7 @@ still reads 1025, which is why the pass count must be checked.
 | --- | --- | --- | --- | --- |
 | Backend, measured | 98.71% | 91.03% | 99.47% | 99.44% |
 | Backend, CI gate | 97% | 89% | 97% | 98% |
-| Frontend, measured | 94.06% | 88.40% | 91.31% | 95.70% |
+| Frontend, measured | 94.17% | 88.54% | 91.41% | 95.81% |
 | Frontend, CI gate | 90% | 84% | 85% | 92% |
 
 The gates only ratchet upward; a pull request below them fails CI. Coverage
@@ -88,7 +88,7 @@ Durations are wall-clock for that file in the run above (28.4 s of test time in 
 | `integration/rsvp.concurrency` | 4 | seat race |
 | `integration/publish.concurrency` | 1 | double-publish race |
 | `integration/lockorder.concurrency` | 1 | deadlock regression |
-| `unit/*` (40 files) | 679 | policies, RBAC, validators, domain classes, data structures, OS models, config |
+| `unit/*` (40 files) | 680 | policies, RBAC, validators, domain classes, data structures, OS models, config |
 
 Every file is listed in `backend/tests/`; the per-file counts come from `jest --json`.
 
@@ -96,19 +96,20 @@ Every file is listed in `backend/tests/`; the per-file counts come from `jest --
 
 | Suite | Tests |
 | --- | ---: |
-| `about.validate` (public page rules) | 46 |
+| `about.validate` | 47 |
 | `pages/events/events.flows` | 41 |
 | `pages/app.flows` | 22 |
-| `pages/reports/governance.flows` | 16 |
 | `components/ui/ui` | 16 |
-| `pages/auth/auth.flows` | 15 |
+| `pages/reports/governance.flows` | 16 |
 | `lib/api` | 15 |
+| `pages/auth/auth.flows` | 15 |
 | `lib/lib` | 12 |
+| `pages/clubs/clubs.flows` | 12 |
 | `pages/bookings/approvals.flows` | 10 |
 | `pages/bookings/bookings.flows` | 10 |
-| `pages/clubs/clubs.flows` | 10 |
+| `pages/venues/venues.flows` | 10 |
 | `lib/campusTime` | 9 |
-| `pages/venues/venues.flows` | 9 |
+| `lib/floors` | 8 |
 | `components/ui/semantics` | 3 |
 
 ## 4. Functional requirements: where each is tested
@@ -195,7 +196,7 @@ says little about the real database size.
 1. **Deadlock** between `addMember` and `changeRole` (fixed; `docs/DEADLOCK-CASE-STUDY.md`).
 2. **Double broadcast** on simultaneous publish (fixed).
 3. **A test that did not test its own requirement:** the FR10 proof re-implemented the transaction in raw SQL instead of calling the service. Removed and replaced by the real 20-way race.
-4. **Test-suite instability, and what is still open.** Four causes were fixed: a one-request-per-server pattern in the test helper (one long-lived server now), a 90-minute rounding boundary in a reminder test, a venue assertion that depended on suite order, and the FR17 recommendation-ranking test, which scored only the soonest 100 events and so failed from the **second** run on a reused database (it now clears the field first; verified over five runs with no reseed). Every suite leaves its rows behind, and from about the **fourth** run without a reseed the approval-inbox, venue-visibility and my-activity tests used to fail because their 100-row list windows filled up. **Fixed later the same day:** the Jest global setup now rebuilds any `*_test` database before each run; six consecutive full runs with no manual reseed all passed (1,025 backend tests: 1,013 plus 12 for the new guard).
+4. **Test-suite instability, and what is still open.** Four causes were fixed: a one-request-per-server pattern in the test helper (one long-lived server now), a 90-minute rounding boundary in a reminder test, a venue assertion that depended on suite order, and the FR17 recommendation-ranking test, which scored only the soonest 100 events and so failed from the **second** run on a reused database (it now clears the field first; verified over five runs with no reseed). Every suite leaves its rows behind, and from about the **fourth** run without a reseed the approval-inbox, venue-visibility and my-activity tests used to fail because their 100-row list windows filled up. **Fixed later the same day:** the Jest global setup now rebuilds any `*_test` database before each run; six consecutive full runs with no manual reseed all passed (1,025 backend tests at the time: 1,013 plus 12 for the new guard; 1,029 after the floor work).
 5. **Global rate limit versus the 500-user requirement (open risk).** The API allows 300 requests per 15 minutes **per address** (`RATE_LIMIT_MAX`). The probe hit this: with the default, every request after the 300th returned 429. If a college network presents all users as one address, they would share that budget. Not a problem on a laptop; it would be one behind a shared network address, and the value is configurable.
 6. **Phone validation was loose** (`1234567` was accepted). Fixed in Phase G.4. The React profile form does not check the format itself and shows the server's message instead.
 7. **No data retention:** expired OTPs, refresh tokens and notifications are never purged (`docs/ETHICS-PRIVACY-SUSTAINABILITY.md`).
@@ -216,9 +217,9 @@ says little about the real database size.
 # the test run rebuilds the *_test database itself (see CLAUDE.md), no reseed needed
 
 # backend
-cd backend && npm run test:ci          # expect: 59 suites, 1025 passed, 0 skipped
+cd backend && npm run test:ci          # expect: 59 suites, 1029 passed, 0 skipped
 # frontend
-cd frontend && npx vitest run --coverage   # expect: 14 files, 234 passed
+cd frontend && npx vitest run --coverage   # expect: 15 files, 246 passed
 
 # response-time probe (raise the limits only for this measurement)
 cd backend

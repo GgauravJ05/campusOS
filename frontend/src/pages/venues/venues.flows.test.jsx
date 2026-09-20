@@ -31,6 +31,42 @@ const clubHead = makeUser({
   clubs: [{ id: 1, name: 'IT Tech Club', scope: 'DEPARTMENT', isHead: true, position: 'PRESIDENT' }],
 })
 
+describe('venues by floor', () => {
+  const it4 = { id: 4, code: 'IT', name: 'Information Technology' }
+  const room = (id, name, floor, type, extra = {}) => venue({ id, name, building: 'Academic Building', floor, type, department: it4, ...extra })
+
+  it('lists each floor with classrooms, labs and halls together, in room order, with a jump bar', async () => {
+    const scrolled = []
+    Element.prototype.scrollIntoView = function scrollIntoView() { scrolled.push(this.id) }
+    server.use(
+      http.get(`${API}/venues/meta`, () => ok(meta)),
+      http.get(`${API}/venues`, () => ok([
+        room(1, 'MB 414', 4, 'LABORATORY'), room(2, 'AC 402', 4, 'CLASSROOM'), room(3, 'MB 405', 4, 'SEMINAR_HALL'),
+        room(4, 'AC 401', 4, 'CLASSROOM'), room(5, 'MB 407', 4, 'LABORATORY'),
+        room(6, 'AC 101', 1, 'CLASSROOM', { department: { id: 1, code: 'ELEC', name: 'Electrical Engineering' } }),
+        venue({ id: 7, name: 'Main Auditorium', floor: 0, type: 'AUDITORIUM' }),
+      ])),
+    )
+    const { user } = renderApp('/venues', { user: makeUser() })
+
+    await screen.findByText('MB 405')
+    const floors = screen.getAllByRole('region').filter((r) => /floor/i.test(r.getAttribute('aria-labelledby') ?? r.textContent.slice(0, 20)))
+    expect(floors.map((r) => within(r).getAllByRole('heading', { level: 2 })[0].textContent)).toEqual(['1st floor', '4th floor', 'Ground floor'])
+
+    const fourth = screen.getByRole('region', { name: '4th floor' })
+    expect(within(fourth).getByText('Academic Building · Information Technology')).toBeInTheDocument()
+    // The venue cards are level-3 headings too; the kinds are the ones that end in a count.
+    expect(within(fourth).getAllByRole('heading', { level: 3 }).map((h) => h.textContent).filter((t) => /\d$/.test(t) && !/^(AC|MB) /.test(t)))
+      .toEqual(['Classrooms 2', 'Labs 2', 'Seminar halls 1'])
+    // Rooms read in order inside their kind: AC 401 before AC 402, MB 407 before MB 414.
+    expect(within(fourth).getAllByRole('link').map((a) => a.textContent.match(/(AC|MB) \d+/)[0]))
+      .toEqual(['AC 401', 'AC 402', 'MB 407', 'MB 414', 'MB 405'])
+
+    await user.click(within(screen.getByRole('navigation', { name: 'Jump to a floor' })).getByRole('button', { name: /4th floor/ }))
+    expect(scrolled).toEqual(['floor-academic-building-4'])
+  })
+})
+
 describe('venue directory', () => {
   it('lists venues and sends filters to the API, with the floor cascade', async () => {
     const queries = []

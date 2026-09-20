@@ -62,7 +62,7 @@ describe('password policy', () => {
   it('blocks common passwords regardless of case', () => fails('Password123', /too common/));
 
   it('rejects a password containing the email local part', () => {
-    fails('Srushti.mane#2026', /email/, { email: 'srushti.mane@mmcoe.edu.in' });
+    fails('Gaurav.student.a#2026', /email/, { email: 'gaurav.student.a@mmcoe.edu.in' });
   });
 
   it('rejects a password containing part of the name', () => {

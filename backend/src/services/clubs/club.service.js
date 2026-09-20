@@ -34,7 +34,7 @@ const TEAM_ROLES = Object.freeze([ROLES.STUDENT, ROLES.CLUB_MEMBER, ROLES.CLUB_H
 
 const CLUB_SELECT = `
   SELECT c.club_id, c.club_name, c.description, c.department_id, c.club_head_id, c.is_active, c.created_at,
-         d.dept_code, d.dept_name,
+         d.dept_code, d.dept_name, d.floor AS dept_floor,
          h.full_name AS head_name, h.email AS head_email,
          (SELECT count(*)::int FROM club_members m WHERE m.club_id = c.club_id AND m.is_active) AS member_count
     FROM clubs c
@@ -56,7 +56,7 @@ function toClub(row, actor, { myPosition = null } = {}) {
     name: row.club_name,
     description: row.description ?? null,
     scope: row.department_id === null ? 'COLLEGE' : 'DEPARTMENT',
-    department: row.department_id ? { id: row.department_id, code: row.dept_code, name: row.dept_name } : null,
+    department: row.department_id ? { id: row.department_id, code: row.dept_code, name: row.dept_name, floor: row.dept_floor } : null,
     head: row.club_head_id ? { id: row.club_head_id, fullName: row.head_name } : null,
     memberCount: row.member_count,
     isActive: row.is_active,

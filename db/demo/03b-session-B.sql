@@ -8,7 +8,7 @@ INSERT INTO bookings (event_id, venue_id, requested_by, approved_by, start_at, e
 SELECT e.event_id, v.venue_id, u.user_id, u.user_id,
        '2031-06-01 11:00+05:30', '2031-06-01 13:00+05:30', 'APPROVED', now()
   FROM events e, venues v, users u
- WHERE e.title = 'ACID Demo Event B' AND v.venue_name = 'ACID Demo Hall' AND u.email = 'principal@mmcoe.edu.in';
+ WHERE e.title = 'ACID Demo Event B' AND v.venue_name = 'ACID Demo Hall' AND u.email = 'gaurav.principal@mmcoe.edu.in';
 COMMIT;
 \timing off
 SELECT e.title, b.status FROM bookings b JOIN events e USING (event_id)

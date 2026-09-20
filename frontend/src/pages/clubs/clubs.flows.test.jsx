@@ -30,6 +30,44 @@ function detail(overrides = {}) {
   })
 }
 
+describe('clubs by floor', () => {
+  const dept = (id, code, name, floor) => ({ id, code, name, floor })
+
+  it('groups clubs under their department\'s floor, with college-level clubs last, and jumps to a floor', async () => {
+    const scrolled = []
+    Element.prototype.scrollIntoView = function scrollIntoView() { scrolled.push(this.id) }
+    server.use(http.get(`${API}/clubs`, () => ok([
+      club({ id: 1, name: 'IT Tech Club', department: dept(4, 'IT', 'Information Technology', 4) }),
+      club({ id: 2, name: 'EESA', department: dept(1, 'ELEC', 'Electrical Engineering', 1), head: null }),
+      club({ id: 3, name: 'Team Rudra', scope: 'COLLEGE', department: null, head: null }),
+      club({ id: 4, name: 'Envision Club', department: dept(4, 'IT', 'Information Technology', 4) }),
+    ])))
+    const { user } = renderApp('/clubs', { user: makeUser() })
+
+    await screen.findByText('IT Tech Club')
+    // Sections run 1st floor, 4th floor, then college-level.
+    const headings = screen.getAllByRole('heading', { level: 2 }).filter((h) => /floor|College-level/.test(h.textContent))
+    expect(headings.map((h) => h.textContent)).toEqual(['1st floor', '4th floor', 'College-level'])
+    const fourth = screen.getByRole('region', { name: '4th floor' })
+    expect(within(fourth).getByText('Information Technology')).toBeInTheDocument()
+    expect(within(fourth).getAllByRole('link').map((a) => a.textContent)).toEqual([
+      expect.stringContaining('IT Tech Club'), expect.stringContaining('Envision Club'),
+    ])
+    expect(within(screen.getByRole('region', { name: 'College-level' })).getByText('Team Rudra')).toBeInTheDocument()
+
+    await user.click(within(screen.getByRole('navigation', { name: 'Jump to a floor' })).getByRole('button', { name: /4th floor/ }))
+    expect(scrolled).toEqual(['floor-floor-4'])
+  })
+
+  it('shows no floor chips when there is only one group', async () => {
+    server.use(http.get(`${API}/clubs`, () => ok([club({ department: { id: 4, code: 'IT', name: 'Information Technology', floor: 4 } })])))
+    renderApp('/clubs', { user: makeUser() })
+
+    await screen.findByText('IT Tech Club')
+    expect(screen.queryByRole('navigation', { name: 'Jump to a floor' })).not.toBeInTheDocument()
+  })
+})
+
 describe('clubs directory', () => {
   it('lists clubs with their head, size and the viewer\'s position, and filters by search and "my clubs"', async () => {
     const queries = []

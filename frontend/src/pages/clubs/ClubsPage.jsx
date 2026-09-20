@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Crown, Flag, Plus, Search, Users2 } from 'lucide-react'
 import { useAuth } from '@/features/auth/authContext'
@@ -8,6 +8,8 @@ import { ClubFormDialog } from '@/components/clubs/ClubDialogs'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Field'
 import { Alert, Avatar, Badge, Card, EmptyState, Skeleton } from '@/components/ui/Surface'
+import { FloorNav, FloorSection } from '@/components/ui/FloorGroups'
+import { groupClubsByFloor } from '@/lib/floors'
 import { cn, isFaculty } from '@/lib/utils'
 import { useDebouncedValue, useDocumentTitle } from '@/lib/hooks'
 
@@ -85,6 +87,8 @@ export default function ClubsPage() {
     return () => controller.abort()
   }, [key, q, mine, inactive])
 
+  const groups = useMemo(() => groupClubsByFloor(result.clubs), [result.clubs])
+
   function toggle(name, on) {
     const next = new URLSearchParams(params)
     if (on) next.set(name, 'true')
@@ -96,7 +100,7 @@ export default function ClubsPage() {
     <>
       <PageHeader
         title="Clubs"
-        description="Every club on campus, who leads it and who is on the team."
+        description="Every club on campus by floor, who leads it and who is on the team."
         actions={faculty && <Button onClick={() => setCreating(true)}><Plus className="size-4" aria-hidden /> New club</Button>}
       />
 
@@ -126,9 +130,16 @@ export default function ClubsPage() {
           />
         </Card>
       ) : (
-        <ul className={cn('grid gap-4 transition-opacity sm:grid-cols-2 lg:grid-cols-3', loading && 'opacity-60')}>
-          {result.clubs.map((club) => <ClubCard key={club.id} club={club} />)}
-        </ul>
+        <div className={cn('transition-opacity', loading && 'opacity-60')}>
+          <FloorNav groups={groups} />
+          {groups.map((group) => (
+            <FloorSection key={group.key} group={group}>
+              <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {group.clubs.map((club) => <ClubCard key={club.id} club={club} />)}
+              </ul>
+            </FloorSection>
+          ))}
+        </div>
       )}
 
       {creating && (

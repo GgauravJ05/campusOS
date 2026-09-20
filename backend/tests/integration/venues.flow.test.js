@@ -21,11 +21,11 @@ describeWithDb('venues (database)', () => {
   beforeAll(async () => {
     app = live.createApp();
     [principal, itCoordinator, csCoordinator] = await Promise.all([
-      live.signIn(app, 'principal@mmcoe.edu.in'),
-      live.signIn(app, 'coordinator.it@mmcoe.edu.in'),
-      live.signIn(app, 'coordinator.cs@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.principal@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.coordinator.it@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.coordinator.cs@mmcoe.edu.in'),
     ]);
-    student = await live.signIn(app, 'srushti.mane@mmcoe.edu.in');
+    student = await live.signIn(app, 'gaurav.student.a@mmcoe.edu.in');
   });
 
   afterAll(async () => {
@@ -52,7 +52,10 @@ describeWithDb('venues (database)', () => {
     it('filters by building and floor', async () => {
       // Floor 4 of the academic building is Information Technology.
       const res = await request(app).get('/api/venues?building=Academic%20Building&floor=4').set(auth(student)).expect(200);
-      expect(res.body.data.map((v) => v.name).sort()).toEqual(['Computer Lab 1', 'Networking Lab', 'Seminar Hall A']);
+      // Every floor has classrooms AC x01-x04; floor 4 also has the MB rooms the IT department named.
+      expect(res.body.data.map((v) => v.name).sort()).toEqual([
+        'AC 401', 'AC 402', 'AC 403', 'AC 404', 'MB 405', 'MB 407', 'MB 408', 'MB 409', 'MB 411', 'MB 413', 'MB 414',
+      ]);
     });
 
     it('filters by minimum capacity and type', async () => {
@@ -60,21 +63,21 @@ describeWithDb('venues (database)', () => {
       // Other suites create venues in the shared database, so assert what the
       // filter means rather than that these two are the only matches: both
       // seeded halls are found, and nothing that does not qualify is.
-      expect(res.body.data.map((v) => v.name)).toEqual(expect.arrayContaining(['Seminar Hall A', 'Seminar Hall B']));
+      expect(res.body.data.map((v) => v.name)).toEqual(expect.arrayContaining(['MB 405', 'Seminar Hall B']));
       expect(res.body.data.every((v) => v.type === 'SEMINAR_HALL' && v.capacity >= 150)).toBe(true);
-      expect(res.body.data.map((v) => v.name)).not.toContain('Classroom 101'); // 70 seats, wrong type
+      expect(res.body.data.map((v) => v.name)).not.toContain('AC 101'); // 70 seats, wrong type
     });
 
     it('requires every requested piece of equipment', async () => {
       const res = await request(app).get('/api/venues?equipment=projector,ac').set(auth(student)).expect(200);
       const names = res.body.data.map((v) => v.name);
-      expect(names).toEqual(expect.arrayContaining(['Main Auditorium', 'Seminar Hall A', 'Computer Lab 1']));
+      expect(names).toEqual(expect.arrayContaining(['Main Auditorium', 'MB 405', 'MB 407']));
       // The networking lab has desktops and routers, but no projector.
-      expect(names).not.toContain('Networking Lab');
+      expect(names).not.toContain('MB 408');
     });
 
     it('searches name, building and location, treating wildcards literally', async () => {
-      const hit = await request(app).get('/api/venues?q=seminar').set(auth(student)).expect(200);
+      const hit = await request(app).get('/api/venues?q=MB%204').set(auth(student)).expect(200);
       expect(hit.body.data.length).toBeGreaterThanOrEqual(2);
       const wildcard = await request(app).get('/api/venues?q=%25').set(auth(student)).expect(200);
       expect(wildcard.body.data).toHaveLength(0);
@@ -92,7 +95,7 @@ describeWithDb('venues (database)', () => {
       expect(academic.floors.map((f) => f.floor)).toEqual(expect.arrayContaining([1, 2, 3, 4, 5, 6]));
       expect(academic.floors.map((f) => f.floor)).toEqual([...academic.floors.map((f) => f.floor)].sort((a, b) => a - b));
       const itFloor = academic.floors.find((f) => f.floor === 4);
-      expect(itFloor.venues.map((v) => v.name)).toEqual(expect.arrayContaining(['Computer Lab 1', 'Networking Lab']));
+      expect(itFloor.venues.map((v) => v.name)).toEqual(expect.arrayContaining(['MB 407', 'MB 408']));
       expect(res.body.data.equipment).toContain('PROJECTOR');
       // Counts come from a postorder walk of the tree: each node's is the sum of its children's.
       for (const building of res.body.data.buildings) {
@@ -131,13 +134,13 @@ describeWithDb('venues (database)', () => {
     });
 
     it('is closed to students and club heads', async () => {
-      const head = await live.signIn(app, 'gaurav.jadhav@mmcoe.edu.in');
+      const head = await live.signIn(app, 'gaurav.head.ittech@mmcoe.edu.in');
       await request(app).post('/api/venues').set(auth(head)).send({}).expect(403);
       await request(app).post('/api/venues').set(auth(student)).send({}).expect(403);
     });
 
     it('stops a coordinator editing another department\'s venue', async () => {
-      const { rows: [lab] } = await db.query(`SELECT venue_id FROM venues WHERE venue_name = 'Computer Lab 1'`);
+      const { rows: [lab] } = await db.query(`SELECT venue_id FROM venues WHERE venue_name = 'MB 407'`);
       const res = await request(app).patch(`/api/venues/${lab.venue_id}`).set(auth(csCoordinator)).send({ capacity: 10 });
       expect(res.status).toBe(403);
     });
@@ -162,7 +165,7 @@ describeWithDb('venues (database)', () => {
     });
 
     it('ignores an empty update', async () => {
-      const { rows: [lab] } = await db.query(`SELECT venue_id FROM venues WHERE venue_name = 'Computer Lab 1'`);
+      const { rows: [lab] } = await db.query(`SELECT venue_id FROM venues WHERE venue_name = 'MB 407'`);
       await request(app).patch(`/api/venues/${lab.venue_id}`).set(auth(itCoordinator)).send({}).expect(200);
     });
 
@@ -192,7 +195,7 @@ describeWithDb('venues (database)', () => {
 
   describe('availability range validation', () => {
     it('rejects a reversed range and a range over 31 days', async () => {
-      const { rows: [hall] } = await db.query(`SELECT venue_id FROM venues WHERE venue_name = 'Seminar Hall A'`);
+      const { rows: [hall] } = await db.query(`SELECT venue_id FROM venues WHERE venue_name = 'MB 405'`);
       await request(app).get(`/api/venues/${hall.venue_id}/availability?from=2030-02-10&to=2030-02-01`).set(auth(student)).expect(422);
       await request(app).get(`/api/venues/${hall.venue_id}/availability?from=2030-01-01&to=2030-03-01`).set(auth(student)).expect(422);
       await request(app).get(`/api/venues/${hall.venue_id}/availability?from=soon&to=later`).set(auth(student)).expect(422);

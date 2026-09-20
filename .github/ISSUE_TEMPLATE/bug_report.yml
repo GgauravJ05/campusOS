@@ -18,7 +18,7 @@ body:
     attributes:
       label: Steps to reproduce
       placeholder: |
-        1. Sign in as coordinator.it@mmcoe.edu.in
+        1. Sign in as gaurav.coordinator.it@mmcoe.edu.in
         2. Open ...
         3. Click ...
     validations:

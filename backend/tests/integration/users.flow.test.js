@@ -41,9 +41,9 @@ describeWithDb('user management (database)', () => {
 
   beforeAll(async () => {
     app = live.createApp();
-    principal = await live.signIn(app, 'principal@mmcoe.edu.in');
-    itCoordinator = await live.signIn(app, 'coordinator.it@mmcoe.edu.in');
-    csCoordinator = await live.signIn(app, 'coordinator.cs@mmcoe.edu.in');
+    principal = await live.signIn(app, 'gaurav.principal@mmcoe.edu.in');
+    itCoordinator = await live.signIn(app, 'gaurav.coordinator.it@mmcoe.edu.in');
+    csCoordinator = await live.signIn(app, 'gaurav.coordinator.cs@mmcoe.edu.in');
     clubs.it = await createClub('IT Test Club', 'IT');
     clubs.cs = await createClub('CS Test Club', 'CS');
     clubs.college = await createClub('College Test Club', null);
@@ -79,8 +79,8 @@ describeWithDb('user management (database)', () => {
     });
 
     it('searches by name or email, treating wildcards literally', async () => {
-      const hit = await request(app).get('/api/users?q=srushti').set(auth(principal)).expect(200);
-      expect(hit.body.data.map((u) => u.email)).toContain('srushti.mane@mmcoe.edu.in');
+      const hit = await request(app).get('/api/users?q=student.a').set(auth(principal)).expect(200);
+      expect(hit.body.data.map((u) => u.email)).toContain('gaurav.student.a@mmcoe.edu.in');
 
       const wildcard = await request(app).get('/api/users?q=%25').set(auth(principal)).expect(200);
       expect(wildcard.body.data).toHaveLength(0);
@@ -248,7 +248,7 @@ describeWithDb('user management (database)', () => {
     });
 
     it('is closed to club heads', async () => {
-      const head = await live.signIn(app, 'gaurav.jadhav@mmcoe.edu.in');
+      const head = await live.signIn(app, 'gaurav.head.ittech@mmcoe.edu.in');
       const student = await live.createVerifiedStudent(app);
       const res = await request(app).patch(`/api/users/${student.user.id}/role`)
         .set(auth(head)).send({ role: 'CLUB_MEMBER', clubId: clubs.it });

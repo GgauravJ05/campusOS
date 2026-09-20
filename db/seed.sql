@@ -25,13 +25,13 @@ ON CONFLICT (role_key) DO NOTHING;
 -- The academic building gives one floor to each: floor 1 Electrical,
 -- 2 Mechanical, 3 ENTC, 4 IT, 5 Computer, 6 AI & DS.
 -- ------------------------------------------------------------
-INSERT INTO departments (dept_code, dept_name) VALUES
-    ('ELEC',   'Electrical Engineering'),
-    ('MECH',   'Mechanical Engineering'),
-    ('ENTC',   'Electronics & Telecommunication Engineering'),
-    ('IT',     'Information Technology'),
-    ('CS',     'Computer Engineering'),
-    ('AIDS',   'Artificial Intelligence & Data Science')
+INSERT INTO departments (dept_code, dept_name, floor) VALUES
+    ('ELEC',   'Electrical Engineering',                       1),
+    ('MECH',   'Mechanical Engineering',                       2),
+    ('ENTC',   'Electronics & Telecommunication Engineering',  3),
+    ('IT',     'Information Technology',                       4),
+    ('CS',     'Computer Engineering',                         5),
+    ('AIDS',   'Artificial Intelligence & Data Science',       6)
 ON CONFLICT (dept_code) DO NOTHING;
 
 -- ------------------------------------------------------------
@@ -46,23 +46,23 @@ SELECT v.full_name,
        r.role_id,
        TRUE
 FROM (VALUES
-    ('Dr. Principal MMCOE',   'principal@mmcoe.edu.in',      'IT',   NULL::SMALLINT, 'SUPER_ADMIN'),
-    ('Nishanti Naidu',        'coordinator.it@mmcoe.edu.in',  'IT',   NULL::SMALLINT, 'DEPT_COORDINATOR'),
-    ('Coordinator CS',        'coordinator.cs@mmcoe.edu.in',  'CS',   NULL::SMALLINT, 'DEPT_COORDINATOR'),
-    ('Coordinator ENTC',      'coordinator.entc@mmcoe.edu.in','ENTC', NULL::SMALLINT, 'DEPT_COORDINATOR'),
-    ('Gaurav Jadhav',         'gaurav.jadhav@mmcoe.edu.in',   'IT',   3::SMALLINT,    'CLUB_HEAD'),
-    ('Atharva Desai',         'atharva.desai@mmcoe.edu.in',   'IT',   3::SMALLINT,    'CLUB_HEAD'),
-    ('Rohan Kulkarni',        'rohan.kulkarni@mmcoe.edu.in',  'CS',   3::SMALLINT,    'CLUB_HEAD'),
-    ('Sneha Deshmukh',        'sneha.deshmukh@mmcoe.edu.in',  'MECH', 3::SMALLINT,    'CLUB_HEAD'),
-    ('Aditya Patil',          'aditya.patil@mmcoe.edu.in',    'IT',   3::SMALLINT,    'CLUB_MEMBER'),
-    ('Tanishka Patil',        'tanishka.patil@mmcoe.edu.in',  'IT',   3::SMALLINT,    'CLUB_MEMBER'),
-    ('Srushti Mane',          'srushti.mane@mmcoe.edu.in',    'IT',   2::SMALLINT,    'STUDENT'),
-    ('Shravani Khandzode',    'shravani.k@mmcoe.edu.in',      'CS',   2::SMALLINT,    'STUDENT'),
-    ('Omkar Shinde',          'omkar.shinde@mmcoe.edu.in',    'ENTC', 1::SMALLINT,    'STUDENT'),
-    ('Gayatri Muttepawar',    'gayatri.m@mmcoe.edu.in',       'IT',   4::SMALLINT,    'STUDENT'),
-    ('Prathamesh Gaikwad',    'prathamesh.g@mmcoe.edu.in',    'ELEC', 2::SMALLINT,    'STUDENT'),
-    ('Ishita Rane',           'ishita.rane@mmcoe.edu.in',     'AIDS', 2::SMALLINT,    'STUDENT'),
-    ('Kunal Bhosale',         'kunal.bhosale@mmcoe.edu.in',   'MECH', 4::SMALLINT,    'STUDENT')
+    ('Gaurav Jadhav - Principal',           'gaurav.principal@mmcoe.edu.in',       'IT',   NULL::SMALLINT, 'SUPER_ADMIN'),
+    ('Gaurav Jadhav - IT Coordinator',      'gaurav.coordinator.it@mmcoe.edu.in',  'IT',   NULL::SMALLINT, 'DEPT_COORDINATOR'),
+    ('Gaurav Jadhav - CS Coordinator',      'gaurav.coordinator.cs@mmcoe.edu.in',  'CS',   NULL::SMALLINT, 'DEPT_COORDINATOR'),
+    ('Gaurav Jadhav - ENTC Coordinator',    'gaurav.coordinator.entc@mmcoe.edu.in','ENTC', NULL::SMALLINT, 'DEPT_COORDINATOR'),
+    ('Gaurav Jadhav - IT Tech Club Head',   'gaurav.head.ittech@mmcoe.edu.in',     'IT',   3::SMALLINT,    'CLUB_HEAD'),
+    ('Gaurav Jadhav - Envision Club Head',  'gaurav.head.envision@mmcoe.edu.in',   'IT',   3::SMALLINT,    'CLUB_HEAD'),
+    ('Gaurav Jadhav - CODE Club Head',      'gaurav.head.code@mmcoe.edu.in',       'CS',   3::SMALLINT,    'CLUB_HEAD'),
+    ('Gaurav Jadhav - SAEINDIA Club Head',  'gaurav.head.saeindia@mmcoe.edu.in',   'MECH', 3::SMALLINT,    'CLUB_HEAD'),
+    ('Gaurav Jadhav - Club Member A',       'gaurav.member.a@mmcoe.edu.in',        'IT',   3::SMALLINT,    'CLUB_MEMBER'),
+    ('Gaurav Jadhav - Club Member B',       'gaurav.member.b@mmcoe.edu.in',        'IT',   3::SMALLINT,    'CLUB_MEMBER'),
+    ('Gaurav Jadhav - Student A',           'gaurav.student.a@mmcoe.edu.in',       'IT',   2::SMALLINT,    'STUDENT'),
+    ('Gaurav Jadhav - Student B',           'gaurav.student.b@mmcoe.edu.in',       'CS',   2::SMALLINT,    'STUDENT'),
+    ('Gaurav Jadhav - Student C',           'gaurav.student.c@mmcoe.edu.in',       'ENTC', 1::SMALLINT,    'STUDENT'),
+    ('Gaurav Jadhav - Student D',           'gaurav.student.d@mmcoe.edu.in',       'IT',   4::SMALLINT,    'STUDENT'),
+    ('Gaurav Jadhav - Student E',           'gaurav.student.e@mmcoe.edu.in',       'ELEC', 2::SMALLINT,    'STUDENT'),
+    ('Gaurav Jadhav - Student F',           'gaurav.student.f@mmcoe.edu.in',       'AIDS', 2::SMALLINT,    'STUDENT'),
+    ('Gaurav Jadhav - Student G',           'gaurav.student.g@mmcoe.edu.in',       'MECH', 4::SMALLINT,    'STUDENT')
 ) AS v(full_name, email, dept_code, academic_year, role_key)
 JOIN departments d ON d.dept_code = v.dept_code
 JOIN roles       r ON r.role_key  = v.role_key
@@ -101,30 +101,61 @@ ON CONFLICT (setting_key) DO NOTHING;
 INSERT INTO venues (venue_name, building, floor, department_id, venue_type, capacity, location)
 SELECT v.venue_name, v.building, v.floor, d.department_id, v.venue_type, v.capacity, v.location
 FROM (VALUES
-    -- Floor 1 - Electrical Engineering
-    ('Electrical Machines Lab', 'Academic Building', 1::SMALLINT, 'ELEC', 'LABORATORY',      40, 'Floor 1, Academic Building'),
-    ('PLC & SCADA Lab',         'Academic Building', 1::SMALLINT, 'ELEC', 'LABORATORY',      35, 'Floor 1, Academic Building'),
-    ('Classroom 101',           'Academic Building', 1::SMALLINT, 'ELEC', 'CLASSROOM',       70, 'Floor 1, Academic Building'),
-    -- Floor 2 - Mechanical Engineering
-    ('Mechanical Workshop',     'Academic Building', 2::SMALLINT, 'MECH', 'LABORATORY',      80, 'Floor 2, Academic Building'),
-    ('Thermal Engineering Lab', 'Academic Building', 2::SMALLINT, 'MECH', 'LABORATORY',      45, 'Floor 2, Academic Building'),
-    ('Classroom 201',           'Academic Building', 2::SMALLINT, 'MECH', 'CLASSROOM',       70, 'Floor 2, Academic Building'),
-    -- Floor 3 - Electronics & Telecommunication
-    ('Electronics Lab',         'Academic Building', 3::SMALLINT, 'ENTC', 'LABORATORY',      45, 'Floor 3, Academic Building'),
-    ('VLSI & Embedded Lab',     'Academic Building', 3::SMALLINT, 'ENTC', 'LABORATORY',      40, 'Floor 3, Academic Building'),
-    ('Seminar Hall B',          'Academic Building', 3::SMALLINT, 'ENTC', 'SEMINAR_HALL',   150, 'Floor 3, Academic Building'),
-    -- Floor 4 - Information Technology
-    ('Computer Lab 1',          'Academic Building', 4::SMALLINT, 'IT',   'LABORATORY',      60, 'Floor 4, Academic Building'),
-    ('Networking Lab',          'Academic Building', 4::SMALLINT, 'IT',   'LABORATORY',      40, 'Floor 4, Academic Building'),
-    ('Seminar Hall A',          'Academic Building', 4::SMALLINT, 'IT',   'SEMINAR_HALL',   200, 'Floor 4, Academic Building'),
-    -- Floor 5 - Computer Engineering
-    ('Computer Lab 2',          'Academic Building', 5::SMALLINT, 'CS',   'LABORATORY',      60, 'Floor 5, Academic Building'),
-    ('Project Lab',             'Academic Building', 5::SMALLINT, 'CS',   'LABORATORY',      40, 'Floor 5, Academic Building'),
-    ('Classroom 501',           'Academic Building', 5::SMALLINT, 'CS',   'CLASSROOM',       70, 'Floor 5, Academic Building'),
-    -- Floor 6 - AI & Data Science
-    ('AI & Data Science Lab',   'Academic Building', 6::SMALLINT, 'AIDS', 'LABORATORY',      55, 'Floor 6, Academic Building'),
-    ('Data Analytics Lab',      'Academic Building', 6::SMALLINT, 'AIDS', 'LABORATORY',      40, 'Floor 6, Academic Building'),
-    ('Classroom 601',           'Academic Building', 6::SMALLINT, 'AIDS', 'CLASSROOM',       70, 'Floor 6, Academic Building'),
+    -- Floor 1 - Electrical Engineering. AC 101-104 are the classrooms every floor has.
+    ('AC 101', 'Academic Building', 1::SMALLINT, 'ELEC', 'CLASSROOM', 70, 'Floor 1, Academic Building'),
+    ('AC 102', 'Academic Building', 1::SMALLINT, 'ELEC', 'CLASSROOM', 70, 'Floor 1, Academic Building'),
+    ('AC 103', 'Academic Building', 1::SMALLINT, 'ELEC', 'CLASSROOM', 70, 'Floor 1, Academic Building'),
+    ('AC 104', 'Academic Building', 1::SMALLINT, 'ELEC', 'CLASSROOM', 70, 'Floor 1, Academic Building'),
+    -- Placeholder rooms (invented names): replace with the real room numbers.
+    ('Electrical Machines Lab', 'Academic Building', 1::SMALLINT, 'ELEC', 'LABORATORY', 40, 'Floor 1, Academic Building'),
+    ('PLC & SCADA Lab', 'Academic Building', 1::SMALLINT, 'ELEC', 'LABORATORY', 35, 'Floor 1, Academic Building'),
+    -- Floor 2 - Mechanical Engineering. AC 201-204 are the classrooms every floor has.
+    ('AC 201', 'Academic Building', 2::SMALLINT, 'MECH', 'CLASSROOM', 70, 'Floor 2, Academic Building'),
+    ('AC 202', 'Academic Building', 2::SMALLINT, 'MECH', 'CLASSROOM', 70, 'Floor 2, Academic Building'),
+    ('AC 203', 'Academic Building', 2::SMALLINT, 'MECH', 'CLASSROOM', 70, 'Floor 2, Academic Building'),
+    ('AC 204', 'Academic Building', 2::SMALLINT, 'MECH', 'CLASSROOM', 70, 'Floor 2, Academic Building'),
+    -- Placeholder rooms (invented names): replace with the real room numbers.
+    ('Mechanical Workshop', 'Academic Building', 2::SMALLINT, 'MECH', 'LABORATORY', 80, 'Floor 2, Academic Building'),
+    ('Thermal Engineering Lab', 'Academic Building', 2::SMALLINT, 'MECH', 'LABORATORY', 45, 'Floor 2, Academic Building'),
+    -- Floor 3 - Electronics & Telecommunication. AC 301-304 are the classrooms every floor has.
+    ('AC 301', 'Academic Building', 3::SMALLINT, 'ENTC', 'CLASSROOM', 70, 'Floor 3, Academic Building'),
+    ('AC 302', 'Academic Building', 3::SMALLINT, 'ENTC', 'CLASSROOM', 70, 'Floor 3, Academic Building'),
+    ('AC 303', 'Academic Building', 3::SMALLINT, 'ENTC', 'CLASSROOM', 70, 'Floor 3, Academic Building'),
+    ('AC 304', 'Academic Building', 3::SMALLINT, 'ENTC', 'CLASSROOM', 70, 'Floor 3, Academic Building'),
+    -- Placeholder rooms (invented names): replace with the real room numbers.
+    ('Electronics Lab', 'Academic Building', 3::SMALLINT, 'ENTC', 'LABORATORY', 45, 'Floor 3, Academic Building'),
+    ('VLSI & Embedded Lab', 'Academic Building', 3::SMALLINT, 'ENTC', 'LABORATORY', 40, 'Floor 3, Academic Building'),
+    ('Seminar Hall B', 'Academic Building', 3::SMALLINT, 'ENTC', 'SEMINAR_HALL', 150, 'Floor 3, Academic Building'),
+    -- Floor 4 - Information Technology. AC 401-404 are the classrooms every floor has.
+    ('AC 401', 'Academic Building', 4::SMALLINT, 'IT', 'CLASSROOM', 70, 'Floor 4, Academic Building'),
+    ('AC 402', 'Academic Building', 4::SMALLINT, 'IT', 'CLASSROOM', 70, 'Floor 4, Academic Building'),
+    ('AC 403', 'Academic Building', 4::SMALLINT, 'IT', 'CLASSROOM', 70, 'Floor 4, Academic Building'),
+    ('AC 404', 'Academic Building', 4::SMALLINT, 'IT', 'CLASSROOM', 70, 'Floor 4, Academic Building'),
+    -- Floor 4 rooms as named by the department. Capacities and equipment are
+    -- PLACEHOLDERS: replace them with the real figures.
+    ('MB 405', 'Academic Building', 4::SMALLINT, 'IT', 'SEMINAR_HALL', 200, 'Floor 4, Academic Building'),
+    ('MB 407', 'Academic Building', 4::SMALLINT, 'IT', 'LABORATORY', 60, 'Floor 4, Academic Building'),
+    ('MB 408', 'Academic Building', 4::SMALLINT, 'IT', 'LABORATORY', 40, 'Floor 4, Academic Building'),
+    ('MB 409', 'Academic Building', 4::SMALLINT, 'IT', 'LABORATORY', 40, 'Floor 4, Academic Building'),
+    ('MB 411', 'Academic Building', 4::SMALLINT, 'IT', 'CLASSROOM', 70, 'Floor 4, Academic Building'),
+    ('MB 413', 'Academic Building', 4::SMALLINT, 'IT', 'LABORATORY', 40, 'Floor 4, Academic Building'),
+    ('MB 414', 'Academic Building', 4::SMALLINT, 'IT', 'LABORATORY', 40, 'Floor 4, Academic Building'),
+    -- Floor 5 - Computer Engineering. AC 501-504 are the classrooms every floor has.
+    ('AC 501', 'Academic Building', 5::SMALLINT, 'CS', 'CLASSROOM', 70, 'Floor 5, Academic Building'),
+    ('AC 502', 'Academic Building', 5::SMALLINT, 'CS', 'CLASSROOM', 70, 'Floor 5, Academic Building'),
+    ('AC 503', 'Academic Building', 5::SMALLINT, 'CS', 'CLASSROOM', 70, 'Floor 5, Academic Building'),
+    ('AC 504', 'Academic Building', 5::SMALLINT, 'CS', 'CLASSROOM', 70, 'Floor 5, Academic Building'),
+    -- Placeholder rooms (invented names): replace with the real room numbers.
+    ('Computer Lab 2', 'Academic Building', 5::SMALLINT, 'CS', 'LABORATORY', 60, 'Floor 5, Academic Building'),
+    ('Project Lab', 'Academic Building', 5::SMALLINT, 'CS', 'LABORATORY', 40, 'Floor 5, Academic Building'),
+    -- Floor 6 - AI & Data Science. AC 601-604 are the classrooms every floor has.
+    ('AC 601', 'Academic Building', 6::SMALLINT, 'AIDS', 'CLASSROOM', 70, 'Floor 6, Academic Building'),
+    ('AC 602', 'Academic Building', 6::SMALLINT, 'AIDS', 'CLASSROOM', 70, 'Floor 6, Academic Building'),
+    ('AC 603', 'Academic Building', 6::SMALLINT, 'AIDS', 'CLASSROOM', 70, 'Floor 6, Academic Building'),
+    ('AC 604', 'Academic Building', 6::SMALLINT, 'AIDS', 'CLASSROOM', 70, 'Floor 6, Academic Building'),
+    -- Placeholder rooms (invented names): replace with the real room numbers.
+    ('AI & Data Science Lab', 'Academic Building', 6::SMALLINT, 'AIDS', 'LABORATORY', 55, 'Floor 6, Academic Building'),
+    ('Data Analytics Lab', 'Academic Building', 6::SMALLINT, 'AIDS', 'LABORATORY', 40, 'Floor 6, Academic Building'),
     -- Shared spaces, open to every department
     ('Main Auditorium',         'Main Building',     0::SMALLINT, NULL,   'AUDITORIUM',     500, 'Ground Floor, Main Building'),
     ('Conference Room',         'Admin Block',       1::SMALLINT, NULL,   'CONFERENCE_ROOM', 50, 'Floor 1, Admin Block'),
@@ -168,24 +199,48 @@ ON CONFLICT (equipment_code) DO NOTHING;
 INSERT INTO venue_equipment (venue_id, equipment_id)
 SELECT v.venue_id, e.equipment_id
 FROM (VALUES
+    ('AC 101', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 102', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 103', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 104', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 201', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 202', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 203', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 204', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 301', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 302', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 303', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 304', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 401', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 402', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 403', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 404', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 501', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 502', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 503', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 504', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 601', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 602', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 603', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('AC 604', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
     ('Electrical Machines Lab', 'Academic Building', ARRAY['WORKBENCHES','MOTORS','SAFETY_GEAR']),
-    ('PLC & SCADA Lab',         'Academic Building', ARRAY['DESKTOPS','PLC_KITS']),
-    ('Classroom 101',           'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
-    ('Mechanical Workshop',     'Academic Building', ARRAY['MACHINES','SAFETY_GEAR']),
+    ('PLC & SCADA Lab', 'Academic Building', ARRAY['DESKTOPS','PLC_KITS']),
+    ('Mechanical Workshop', 'Academic Building', ARRAY['MACHINES','SAFETY_GEAR']),
     ('Thermal Engineering Lab', 'Academic Building', ARRAY['WORKBENCHES']),
-    ('Classroom 201',           'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
-    ('Electronics Lab',         'Academic Building', ARRAY['OSCILLOSCOPES','WORKBENCHES']),
-    ('VLSI & Embedded Lab',     'Academic Building', ARRAY['DESKTOPS','FPGA_KITS']),
-    ('Seminar Hall B',          'Academic Building', ARRAY['PROJECTOR','MIC','AC']),
-    ('Computer Lab 1',          'Academic Building', ARRAY['DESKTOPS','PROJECTOR','AC']),
-    ('Networking Lab',          'Academic Building', ARRAY['DESKTOPS','ROUTERS','SWITCHES']),
-    ('Seminar Hall A',          'Academic Building', ARRAY['PROJECTOR','MIC','AC']),
-    ('Computer Lab 2',          'Academic Building', ARRAY['DESKTOPS','PROJECTOR','AC']),
-    ('Project Lab',             'Academic Building', ARRAY['DESKTOPS','WHITEBOARD']),
-    ('Classroom 501',           'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
-    ('AI & Data Science Lab',   'Academic Building', ARRAY['DESKTOPS','GPU_WORKSTATIONS','AC']),
-    ('Data Analytics Lab',      'Academic Building', ARRAY['DESKTOPS','PROJECTOR']),
-    ('Classroom 601',           'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('Electronics Lab', 'Academic Building', ARRAY['OSCILLOSCOPES','WORKBENCHES']),
+    ('VLSI & Embedded Lab', 'Academic Building', ARRAY['DESKTOPS','FPGA_KITS']),
+    ('Seminar Hall B', 'Academic Building', ARRAY['PROJECTOR','MIC','AC']),
+    ('MB 405', 'Academic Building', ARRAY['PROJECTOR','MIC','AC']),
+    ('MB 407', 'Academic Building', ARRAY['DESKTOPS','PROJECTOR','AC']),
+    ('MB 408', 'Academic Building', ARRAY['DESKTOPS','ROUTERS','SWITCHES']),
+    ('MB 409', 'Academic Building', ARRAY['DESKTOPS']),
+    ('MB 411', 'Academic Building', ARRAY['PROJECTOR','WHITEBOARD']),
+    ('MB 413', 'Academic Building', ARRAY['DESKTOPS']),
+    ('MB 414', 'Academic Building', ARRAY['DESKTOPS']),
+    ('Computer Lab 2', 'Academic Building', ARRAY['DESKTOPS','PROJECTOR','AC']),
+    ('Project Lab', 'Academic Building', ARRAY['DESKTOPS','WHITEBOARD']),
+    ('AI & Data Science Lab', 'Academic Building', ARRAY['DESKTOPS','GPU_WORKSTATIONS','AC']),
+    ('Data Analytics Lab', 'Academic Building', ARRAY['DESKTOPS','PROJECTOR']),
     ('Main Auditorium',         'Main Building',     ARRAY['PROJECTOR','SOUND_SYSTEM','AC','STAGE']),
     ('Conference Room',         'Admin Block',       ARRAY['PROJECTOR','AC','WHITEBOARD']),
     ('Sports Ground',           'Campus',            ARRAY['FLOODLIGHTS']),
@@ -214,19 +269,19 @@ FROM (VALUES
     ('Effi-cycle Team',           'SAE Effi-cycle vehicle design and build team.',                 'ELEC', NULL),
     ('PLC & SCADA Club',          'Industrial automation, PLC and SCADA training.',                'ELEC', NULL),
     -- Mechanical
-    ('SAEINDIA Collegiate Club',  'BAJA, Supra and Effi-cycle vehicle teams.',                     'MECH', 'sneha.deshmukh@mmcoe.edu.in'),
+    ('SAEINDIA Collegiate Club',  'BAJA, Supra and Effi-cycle vehicle teams.',                     'MECH', 'gaurav.head.saeindia@mmcoe.edu.in'),
     ('ISHRAE Student Chapter',    'Heating, refrigeration and air-conditioning engineers.',        'MECH', NULL),
     ('Mechanical Students'' Association', 'Departmental student body for Mechanical Engineering.', 'MECH', NULL),
     -- ENTC
     ('IETE Student Chapter',      'Institution of Electronics and Telecommunication Engineers.',   'ENTC', NULL),
     ('ENTC Students'' Association', 'Departmental student body for ENTC.',                         'ENTC', NULL),
     -- Information Technology
-    ('IT Tech Club',              'Technical workshops, projects and coding sessions.',            'IT',   'gaurav.jadhav@mmcoe.edu.in'),
-    ('Envision Club',             'Design, media and creative technology.',                        'IT',   'atharva.desai@mmcoe.edu.in'),
+    ('IT Tech Club',              'Technical workshops, projects and coding sessions.',            'IT',   'gaurav.head.ittech@mmcoe.edu.in'),
+    ('Envision Club',             'Design, media and creative technology.',                        'IT',   'gaurav.head.envision@mmcoe.edu.in'),
     ('Career Guidance Club',      'Placement preparation, aptitude and interview practice.',       'IT',   NULL),
     ('IT Students'' Association',  'Departmental student body for Information Technology.',         'IT',   NULL),
     -- Computer Engineering
-    ('C.O.D.E Club',              'Competitive programming and development.',                      'CS',   'rohan.kulkarni@mmcoe.edu.in'),
+    ('C.O.D.E Club',              'Competitive programming and development.',                      'CS',   'gaurav.head.code@mmcoe.edu.in'),
     ('MSOC Club',                 'Microsoft Student Open-source Community.',                      'CS',   NULL),
     ('G.D.G Club',                'Google Developer Groups on campus.',                            'CS',   NULL),
     ('Aadhar Club',               'Social initiatives and community outreach.',                    'CS',   NULL),
@@ -261,15 +316,15 @@ ON CONFLICT (club_name) DO NOTHING;
 INSERT INTO club_members (club_id, user_id, position)
 SELECT c.club_id, u.user_id, m.position
 FROM (VALUES
-    ('IT Tech Club',    'gaurav.jadhav@mmcoe.edu.in',  'PRESIDENT'),
-    ('IT Tech Club',    'aditya.patil@mmcoe.edu.in',   'TECHNICAL_LEAD'),
-    ('IT Tech Club',    'tanishka.patil@mmcoe.edu.in', 'MEMBER'),
-    ('Envision Club',   'atharva.desai@mmcoe.edu.in',  'PRESIDENT'),
-    ('Envision Club',   'tanishka.patil@mmcoe.edu.in', 'MEMBER'),
-    ('C.O.D.E Club',    'rohan.kulkarni@mmcoe.edu.in', 'PRESIDENT'),
-    ('C.O.D.E Club',    'shravani.k@mmcoe.edu.in',     'MEMBER'),
-    ('SAEINDIA Collegiate Club', 'sneha.deshmukh@mmcoe.edu.in', 'PRESIDENT'),
-    ('SAEINDIA Collegiate Club', 'kunal.bhosale@mmcoe.edu.in',  'MEMBER')
+    ('IT Tech Club',    'gaurav.head.ittech@mmcoe.edu.in',  'PRESIDENT'),
+    ('IT Tech Club',    'gaurav.member.a@mmcoe.edu.in',   'TECHNICAL_LEAD'),
+    ('IT Tech Club',    'gaurav.member.b@mmcoe.edu.in', 'MEMBER'),
+    ('Envision Club',   'gaurav.head.envision@mmcoe.edu.in',  'PRESIDENT'),
+    ('Envision Club',   'gaurav.member.b@mmcoe.edu.in', 'MEMBER'),
+    ('C.O.D.E Club',    'gaurav.head.code@mmcoe.edu.in', 'PRESIDENT'),
+    ('C.O.D.E Club',    'gaurav.student.b@mmcoe.edu.in',     'MEMBER'),
+    ('SAEINDIA Collegiate Club', 'gaurav.head.saeindia@mmcoe.edu.in', 'PRESIDENT'),
+    ('SAEINDIA Collegiate Club', 'gaurav.student.g@mmcoe.edu.in',  'MEMBER')
 ) AS m(club_name, email, position)
 JOIN clubs c ON c.club_name = m.club_name
 JOIN users u ON u.email     = m.email

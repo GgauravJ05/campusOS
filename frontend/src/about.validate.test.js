@@ -33,7 +33,7 @@ describe('public page validation', () => {
     expect(V.normaliseMobile(input)).toBeNull()
   })
 
-  it.each(['Asha Kulkarni', "Ravi D'Souza", 'Anne-Marie', 'Dr. Nishanti Naidu', 'श्रुति माने', 'Al', 'José Núñez'])(
+  it.each(['Asha Kulkarni', "Ravi D'Souza", 'Anne-Marie', 'Dr. Nishanti Naidu', 'Gaurav Jadhav - IT Tech Club Head', 'श्रुति माने', 'Al', 'José Núñez'])(
     'accepts the name %s', (name) => expect(V.isPersonName(name)).toBe(true),
   )
 

@@ -18,7 +18,7 @@ const row = (overrides = {}) => ({
   ip_address: '10.0.0.1',
   created_at: '2026-09-16T05:00:00.000Z',
   admin_name: 'Nishanti Naidu',
-  admin_email: 'coordinator.it@mmcoe.edu.in',
+  admin_email: 'gaurav.coordinator.it@mmcoe.edu.in',
   role_key: 'DEPT_COORDINATOR',
   ...overrides,
 });

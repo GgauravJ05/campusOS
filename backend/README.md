@@ -29,7 +29,7 @@ curl localhost:5050/api/health/ready  # database is reachable too
 
 Compose applies `db/schema.sql` and `db/seed.sql` automatically the first
 time the volume is created. Every seeded account uses the password
-`Campus@123`; sign in as `principal@mmcoe.edu.in` for the super-admin role.
+`Campus@123`; sign in as `gaurav.principal@mmcoe.edu.in` for the super-admin role.
 
 ### Without Docker
 

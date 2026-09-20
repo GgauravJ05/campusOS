@@ -180,6 +180,18 @@ against it ever drifting past `max_seats`. Recorded here so the mapping is
 honest about which "3NF violations" are bugs and which are traded-off
 on purpose.
 
+## Department floors ✅ added
+
+The Clubs page groups by floor, and a club's floor is its department's floor, so
+`departments` gained `floor SMALLINT UNIQUE` (`CHECK` 0-20): 1 Electrical,
+2 Mechanical, 3 ENTC, 4 IT, 5 Computer, 6 AI & DS. `UNIQUE` says one department
+per floor; `NULL` is allowed for a department with no floor. It is a fact about
+the department, so it does not break 3NF: nothing else in the row determines it.
+It is *not* derived from `venues.floor`, since a department can own a venue on a
+different floor. `GET /api/clubs` and `/api/directory/departments` return it as
+`department.floor`. The seed also names the real rooms: `AC x01`-`AC x04` on every
+floor and, on the 4th, `MB 405/407/408/409/411/413/414`.
+
 ## Views — reporting in plain SQL ✅ fixed
 
 FR21 needed venue utilisation, club activity and attendance reports. Before
@@ -244,8 +256,8 @@ straight through a view this simple — no `INSTEAD OF` trigger needed. Tested
 directly:
 
 ```sql
-UPDATE v_active_venues SET capacity = 999 WHERE venue_name = 'Computer Lab 1';
-SELECT capacity FROM venues WHERE venue_name = 'Computer Lab 1';  -- 999
+UPDATE v_active_venues SET capacity = 999 WHERE venue_name = 'MB 407';
+SELECT capacity FROM venues WHERE venue_name = 'MB 407';  -- 999
 ```
 
 **Where to see it:**

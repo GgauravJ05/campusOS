@@ -20,7 +20,7 @@ That is what this session reports against. The development is done.
 | --- | --- | --- |
 | Files in the repository | 36 | **326** |
 | Functional requirements implemented | 0 | **21 of 21** |
-| Automated tests | 0 | **1259** |
+| Automated tests | 0 | **1275** |
 | Working application | — | API + web app, running |
 
 ---
@@ -30,7 +30,7 @@ That is what this session reports against. The development is done.
 > "At Week 1 we had finished the SRS and the schema, and the plan was to start
 > development. What I want to show you today is that the development is
 > finished. All twenty-one functional requirements in the SRS are implemented,
-> the system runs end to end, and there are 1,259 automated tests that prove it
+> the system runs end to end, and there are 1,275 automated tests that prove it
 > behaves the way the document says it should.
 >
 > Rather than walk through module by module, I'll follow one event through the
@@ -51,7 +51,7 @@ That is what this session reports against. The development is done.
 
 ## Part 1 — A club asks for a room · FR6–FR9
 
-**Sign in:** `gaurav.jadhav@mmcoe.edu.in` — club head, IT Tech Club
+**Sign in:** `gaurav.head.ittech@mmcoe.edu.in` — club head, IT Tech Club
 **Password for every demo account:** `Campus@123`
 
 **Go to Venues.**
@@ -88,7 +88,7 @@ Filter by capacity, then by equipment.
 
 ## Part 2 — Faculty decides · FR11–FR13
 
-**Sign in:** `coordinator.it@mmcoe.edu.in` — Department Event Coordinator
+**Sign in:** `gaurav.coordinator.it@mmcoe.edu.in` — Department Event Coordinator
 
 **Open Bookings.**
 
@@ -131,7 +131,7 @@ Set a seat cap and an audience, then publish.
 
 ## Part 4 — A student takes part · FR14–FR18
 
-**Sign in:** `srushti.mane@mmcoe.edu.in` — student, IT, second year
+**Sign in:** `gaurav.student.a@mmcoe.edu.in` — student, IT, second year
 
 **Dashboard first.**
 
@@ -198,7 +198,7 @@ Set a seat cap and an audience, then publish.
 > "CSV and PDF, which is what the requirement asks for. The PDF is generated
 > server-side with the totals and a footer recording who ran it and when."
 
-**Sign in:** `principal@mmcoe.edu.in` — Principal & HOD. **Open the Audit trail.**
+**Sign in:** `gaurav.principal@mmcoe.edu.in` — Principal & HOD. **Open the Audit trail.**
 
 > "Every sign-in, role change, venue decision, approval and publish is recorded
 > here — that's FR20. It's the Principal's screen only, because it records every
@@ -218,13 +218,13 @@ Set a seat cap and an audience, then publish.
 npm test
 ```
 
-> "That's 1,025 tests on the backend, and another 234 on the frontend. Every push
+> "That's 1,029 tests on the backend, and another 246 on the frontend. Every push
 > runs them in GitHub Actions against a real PostgreSQL database, with a
 > coverage threshold that we're not allowed to drop below."
 
-> ⚠️ **Check the output says `1025 passed`, not `696 passed, 329 skipped`.** The
+> ⚠️ **Check the output says `1029 passed`, not `700 passed, 329 skipped`.** The
 > database-backed suites skip themselves when PostgreSQL isn't reachable, and
-> the summary still prints "1025 total" either way. If you see skips, the
+> the summary still prints "1029 total" either way. If you see skips, the
 > database is not running — see the checklist.
 
 **Then run the two that matter most:**
@@ -270,7 +270,7 @@ psql -h localhost -p 55432 -U postgres -d campusos \
 | | |
 | --- | --- |
 | Functional requirements | **21 of 21** implemented |
-| Automated tests | **1259** — 1025 backend, 234 frontend (full report: `docs/TEST-REPORT.md`) |
+| Automated tests | **1275** — 1029 backend, 246 frontend (full report: `docs/TEST-REPORT.md`) |
 | API endpoints | about 70 route handlers |
 | Database | 24 tables, 44 indexes, 8 triggers, 4 views |
 | Code | ~10,800 lines backend, ~7,200 frontend, ~13,700 lines of tests |
@@ -354,7 +354,7 @@ Run this in the hour before, never during.
      `"database":{"status":"up"}`
    - http://localhost:5173
    If the database is down, the app looks broken *and* the test run in Part 6
-   silently skips 329 of its 1,025 tests — both in front of your guide.
+   silently skips 329 of its 1,029 tests — both in front of your guide.
 2. **Reseed and re-create the demo data.** The walkthrough needs a pending
    request to approve, a published event with seats free, a past event to mark
    attendance on, and a reminder already sitting in the bell. Without it the

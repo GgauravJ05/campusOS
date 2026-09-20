@@ -101,8 +101,8 @@ describeWithDb('reminder sweep (FR19)', () => {
   beforeAll(async () => {
     app = live.createApp();
     [principal, coordinator] = await Promise.all([
-      live.signIn(app, 'principal@mmcoe.edu.in'),
-      live.signIn(app, 'coordinator.it@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.principal@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.coordinator.it@mmcoe.edu.in'),
     ]);
     student = await live.createVerifiedStudent(app, { fullName: 'Reminded Student' });
     secondStudent = await live.createVerifiedStudent(app, { fullName: 'Also Reminded' });

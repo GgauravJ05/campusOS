@@ -10,6 +10,8 @@ import { buttonClasses } from '@/components/ui/buttonClasses'
 import { Input, Select } from '@/components/ui/Field'
 import { Alert, Badge, Card, EmptyState, Skeleton } from '@/components/ui/Surface'
 import { VenueIcon } from '@/components/venues/VenueVisual'
+import { FloorNav, FloorSection } from '@/components/ui/FloorGroups'
+import { groupVenuesByFloor } from '@/lib/floors'
 import { VenueFormDialog } from '@/components/venues/VenueFormDialog'
 import { cn, isFaculty } from '@/lib/utils'
 import { useDebouncedValue, useDocumentTitle } from '@/lib/hooks'
@@ -105,6 +107,7 @@ export default function VenuesPage() {
     return () => controller.abort()
   }, [queryKey])
 
+  const groups = useMemo(() => groupVenuesByFloor(result.items), [result.items])
   const floors = meta?.buildings.find((b) => b.name === building)?.floors ?? []
   const filtered = Boolean(params.toString())
 
@@ -117,7 +120,7 @@ export default function VenuesPage() {
     <>
       <PageHeader
         title="Venues"
-        description="Find the right room by building, floor, capacity and equipment, then check when it is free."
+        description="Every room by floor: classrooms, labs and halls. Filter by capacity and equipment, then check when it is free."
         actions={(
           <>
             {faculty && <Button variant="secondary" onClick={() => setCreating(true)}><Plus className="size-4" aria-hidden /> Add venue</Button>}
@@ -196,8 +199,22 @@ export default function VenuesPage() {
       ) : (
         <>
           <p className="mb-3 text-sm text-zinc-500" aria-live="polite">{result.items.length} venue{result.items.length === 1 ? '' : 's'}</p>
-          <div className={cn('grid gap-4 transition-opacity sm:grid-cols-2 xl:grid-cols-3', loading && 'opacity-60')}>
-            {result.items.map((venue) => <VenueCard key={venue.id} venue={venue} />)}
+          <div className={cn('transition-opacity', loading && 'opacity-60')}>
+            <FloorNav groups={groups} />
+            {groups.map((group) => (
+              <FloorSection key={group.key} group={group}>
+                {group.sections.map((section) => (
+                  <div key={section.type} className="mb-6 last:mb-0">
+                    <h3 className="mb-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                      {section.label} <span className="ml-1 text-zinc-400 tabular-nums">{section.venues.length}</span>
+                    </h3>
+                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                      {section.venues.map((venue) => <VenueCard key={venue.id} venue={venue} />)}
+                    </div>
+                  </div>
+                ))}
+              </FloorSection>
+            ))}
           </div>
         </>
       )}

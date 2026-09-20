@@ -46,7 +46,7 @@ describeWithDb('club membership vs role change lock order (no deadlock)', () => 
     const { rows: [coordinatorRow] } = await db.query(
       `SELECT u.user_id, u.full_name, u.email, u.department_id, r.role_key
          FROM users u JOIN roles r USING (role_id)
-        WHERE u.email = 'coordinator.it@mmcoe.edu.in'`,
+        WHERE u.email = 'gaurav.coordinator.it@mmcoe.edu.in'`,
     );
     coordinator = {
       id: coordinatorRow.user_id,
