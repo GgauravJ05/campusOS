@@ -5,7 +5,7 @@
 **Run date:** 2026-09-20, commit `3fcca8a` plus the Phase H files
 **Status:** every automated test passed, none skipped. Load, cross-browser and accessibility testing have **not** been done (§8).
 
-Every number below came from a run on the date above, not from memory. Section 9
+Every number below came from a run on the date above, not from memory (the frontend figures were refreshed after the feedback screen added 7 tests). Section 9
 gives the commands to reproduce them.
 
 ## 1. Scope and approach
@@ -41,8 +41,8 @@ real browsers (the component tests run in jsdom), and anything at production sca
 | | Suites | Tests | Passed | Failed | Skipped |
 | --- | --- | --- | --- | --- | --- |
 | Backend (Jest) | 58 | 1013 | 1013 | 0 | 0 |
-| Frontend (Vitest) | 14 | 227 | 227 | 0 | 0 |
-| **Total** | **72** | **1240** | **1240** | **0** | **0** |
+| Frontend (Vitest) | 14 | 234 | 234 | 0 | 0 |
+| **Total** | **72** | **1247** | **1247** | **0** | **0** |
 
 The backend's database suites skip themselves silently when PostgreSQL is
 unreachable, so "0 skipped" is a real check here, not a default. Measured with
@@ -55,7 +55,7 @@ still reads 1013, which is why the pass count must be checked.
 | --- | --- | --- | --- | --- |
 | Backend, measured | 98.71% | 91.03% | 99.47% | 99.44% |
 | Backend, CI gate | 97% | 89% | 97% | 98% |
-| Frontend, measured | 94.01% | 88.34% | 91.29% | 95.64% |
+| Frontend, measured | 94.06% | 88.40% | 91.31% | 95.70% |
 | Frontend, CI gate | 90% | 84% | 85% | 92% |
 
 The gates only ratchet upward; a pull request below them fails CI. Coverage
@@ -97,7 +97,7 @@ Every file is listed in `backend/tests/`; the per-file counts come from `jest --
 | Suite | Tests |
 | --- | ---: |
 | `about.validate` (public page rules) | 46 |
-| `pages/events/events.flows` | 34 |
+| `pages/events/events.flows` | 41 |
 | `pages/app.flows` | 22 |
 | `pages/reports/governance.flows` | 16 |
 | `components/ui/ui` | 16 |
@@ -219,7 +219,7 @@ scripts/db-reset.sh campusos_test
 # backend
 cd backend && npm run test:ci          # expect: 58 suites, 1013 passed, 0 skipped
 # frontend
-cd frontend && npx vitest run --coverage   # expect: 14 files, 227 passed
+cd frontend && npx vitest run --coverage   # expect: 14 files, 234 passed
 
 # response-time probe (raise the limits only for this measurement)
 cd backend
