@@ -135,6 +135,23 @@ LEFT JOIN departments d ON d.dept_code = v.dept_code
 ON CONFLICT (building, venue_name) DO NOTHING;
 
 -- ------------------------------------------------------------
+-- Campus paths. ILLUSTRATIVE distances: these are plausible placeholders, NOT
+-- measurements of MMCOE's campus. Measure the real walking distances and replace
+-- them (UPDATE campus_paths SET metres = ...). The shape is deliberate:
+-- Academic Building to the grounds is longer directly (260 m) than through the
+-- Main Building (60 + 150 = 210 m), so the shortest route is not always the
+-- direct path, which is what Dijkstra is for.
+-- ------------------------------------------------------------
+INSERT INTO campus_paths (building_a, building_b, metres) VALUES
+    ('Academic Building', 'Admin Block',    120),
+    ('Academic Building', 'Campus',         260),
+    ('Academic Building', 'Main Building',   60),
+    ('Admin Block',       'Campus',         180),
+    ('Admin Block',       'Main Building',   80),
+    ('Campus',            'Main Building',  150)
+ON CONFLICT (building_a, building_b) DO NOTHING;
+
+-- ------------------------------------------------------------
 -- Equipment (lookup table) and venue_equipment (junction, composite PK).
 -- Populate the lookup from every distinct code used below, then link each
 -- venue to its equipment - this is the 1NF fix for what used to be

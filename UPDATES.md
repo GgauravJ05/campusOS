@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Phase E.5 — the campus graph and "nearest free venue"](#phase-e5--the-campus-graph-and-nearest-free-venue-2026-09-20) | Gaurav |
 | 2026-09-20 | [Test fixes — the two real causes of "flaky" full runs](#test-fixes--the-two-real-causes-of-flaky-full-runs-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.4 — a tree for the venue cascade](#phase-e4--a-tree-for-the-venue-cascade-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.3 — a binary min-heap, used for top-K](#phase-e3--a-binary-min-heap-used-for-top-k-2026-09-20) | Gaurav |
@@ -45,6 +46,61 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Phase E.5 — the campus graph and "nearest free venue" (2026-09-20)
+
+Fifth Phase E slice, and the first that is a new feature rather than a rewrite:
+**which free venue is closest to where I am?**
+
+- **`Graph`** (`lib/ds/Graph.js`): an undirected weighted graph stored as an
+  adjacency list. **BFS** finds the fewest edges (it runs on the `CircularQueue`
+  from E.1); **Dijkstra** finds the least total weight (it runs on the `MinHeap`
+  from E.3, with stale heap entries skipped rather than edited in place).
+  `shortestPath` returns the route.
+- **The map is data:** a new `campus_paths` table, one row per walkable path
+  between two buildings, with its length in metres. Composite primary key, and
+  `CHECK (building_a < building_b)` so a path cannot be entered twice as A-B and
+  B-A.
+- **`GET /api/venues/nearest?from=<building>&date=&startTime=&endTime=` (+ `minCapacity`,
+  `type`, `limit`)** returns venues that are **free** for the window, nearest first
+  by walking distance, then tightest capacity fit. Freeness reuses the booking
+  rules (E.2's clash checker), fed by **one** query for all candidate venues rather
+  than one per venue. Each result carries `walkingMetres`, the `route` of buildings,
+  `buildingsAway` and `fewestPathsPossible`.
+- **Backend only**, per the build order; no screen yet.
+
+**Read this before demoing: the distances are placeholders.** I do not know
+MMCOE's real walking distances. `db/seed.sql` seeds plausible-looking numbers and
+says so in a comment. Measure the real ones and `UPDATE campus_paths SET metres = ...`.
+The seed is deliberately shaped so the shortest route is *not* always the direct
+one (grounds to Academic Building is 260 m direct but 60 + 150 = 210 m through the
+Main Building), because that is what Dijkstra is for.
+
+**A design flaw the tests caught.** I first returned BFS's hop count as
+`buildingsAway` beside Dijkstra's route. For that case BFS says 1 (the direct path
+exists) while the shortest walk crosses 2, so the response looked self-contradictory.
+BFS and Dijkstra answer different questions. `buildingsAway` is now the route's own
+length, and BFS's answer is a separately-named `fewestPathsPossible`.
+
+**Behaviour worth knowing.** A `from` building that is not on the map is not an
+error: the response says `fromIsOnMap: false` and lists venues with `null`
+distances, sorted after any with a known route. A venue in the *same* building is 0
+m even if that building is not on the map.
+
+**Proof.** `Graph` is checked against an independent algorithm (Floyd-Warshall) on
+200 random graphs, some disconnected; the endpoint tests cover own-building ranking,
+the Dijkstra-beats-the-direct-path case, booked and buffered windows, filters,
+unknown buildings, validation and the table's constraints, and pass three times in a
+row on the same database.
+
+**Teammates:** the schema gained `campus_paths` (rebuild your database) and the seed
+gained its rows. Your local `campusos` database is still on an *older* schema than
+the code expects (no `venue_equipment`, `event_feedback` or `campus_paths`) and needs
+`db/reset.sql` + `schema.sql` + `seed.sql`, which deletes its data.
+
+No dependency change.
 
 ---
 

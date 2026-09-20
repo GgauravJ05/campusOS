@@ -257,6 +257,26 @@ CREATE TRIGGER trg_venues_updated_at
 
 
 -- ------------------------------------------------------------
+-- 7b. CAMPUS PATHS  (the campus map, as a weighted graph)
+--
+-- One row per walkable path between two buildings, with its length in metres.
+-- The application loads these as the edges of a graph and runs Dijkstra over
+-- it (backend/src/lib/ds/Graph.js) to rank venues by walking distance.
+-- Building names match venues.building. The pair is stored once, in
+-- alphabetical order, so the same path cannot be entered twice as A-B and B-A.
+-- ------------------------------------------------------------
+
+CREATE TABLE campus_paths (
+    building_a  VARCHAR(80) NOT NULL,
+    building_b  VARCHAR(80) NOT NULL,
+    metres      INTEGER     NOT NULL,
+
+    PRIMARY KEY (building_a, building_b),
+    CONSTRAINT chk_campus_paths_order CHECK (building_a < building_b),
+    CONSTRAINT chk_campus_paths_metres CHECK (metres > 0)
+);
+
+-- ------------------------------------------------------------
 -- 7a. EQUIPMENT (lookup table) and VENUE_EQUIPMENT (junction table)
 --
 -- venues.equipment used to be a TEXT[] column - a repeating group, which

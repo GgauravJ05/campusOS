@@ -231,4 +231,5 @@ module.exports = {
   conflicts,
   validateWindow,
   suggestSlots,
+  clashChecker,
 };
