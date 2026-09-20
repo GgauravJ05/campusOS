@@ -3,6 +3,7 @@
 const os = require('node:os');
 const db = require('../config/db');
 const config = require('../config');
+const lookupCache = require('../services/lookupCache');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/ApiResponse');
 
@@ -60,6 +61,7 @@ const metrics = (_req, res) => {
     },
     loadAverage: os.loadavg().map((n) => +n.toFixed(2)),
     nodeVersion: process.version,
+    cache: lookupCache.stats(),
   });
 };
 

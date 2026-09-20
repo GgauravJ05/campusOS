@@ -6,6 +6,7 @@
  */
 
 const db = require('../config/db');
+const lookupCache = require('./lookupCache');
 
 /** Used when a key is missing, so a partially seeded database still works. */
 const DEFAULTS = Object.freeze({
@@ -22,7 +23,7 @@ const DEFAULTS = Object.freeze({
  * @returns {Promise<{ defaultBufferMinutes: number, openingTime: string, closingTime: string,
  *   maxAdvanceDays: number, minDurationMinutes: number, maxDurationMinutes: number }>}
  */
-async function getSchedulingRules(client = db) {
+async function getSchedulingRulesUncached(client) {
   const { rows } = await client.query(
     'SELECT setting_key, setting_value FROM system_settings WHERE setting_key = ANY($1)',
     [Object.keys(DEFAULTS)],
@@ -58,7 +59,7 @@ const REMINDER_DEFAULTS = Object.freeze({
  * @param {import('pg').PoolClient} [client]
  * @returns {Promise<{ firstOffsetHours: number, secondOffsetHours: number }>}
  */
-async function getReminderRules(client = db) {
+async function getReminderRulesUncached(client) {
   const { rows } = await client.query(
     'SELECT setting_key, setting_value FROM system_settings WHERE setting_key = ANY($1)',
     [Object.keys(REMINDER_DEFAULTS)],
@@ -80,7 +81,7 @@ async function getReminderRules(client = db) {
  * @param {import('pg').PoolClient} [client]
  * @returns {Promise<{ allowWaitlist: boolean }>}
  */
-async function getRsvpRules(client = db) {
+async function getRsvpRulesUncached(client) {
   const { rows } = await client.query(
     'SELECT setting_key, setting_value FROM system_settings WHERE setting_key = ANY($1)',
     [Object.keys(RSVP_DEFAULTS)],
@@ -89,4 +90,31 @@ async function getRsvpRules(client = db) {
   return { allowWaitlist: String(values['rsvp.allow_waitlist']).toLowerCase() === 'true' };
 }
 
-module.exports = { getSchedulingRules, getRsvpRules, getReminderRules, DEFAULTS, RSVP_DEFAULTS, REMINDER_DEFAULTS };
+/**
+ * Reads through the LRU cache. Only the shared pool is cached: a caller holding
+ * a transaction client wants what that transaction sees, so it goes straight to
+ * the database. Results are frozen because every caller shares one object.
+ */
+function cached(key, load) {
+  return async (client = db) => {
+    if (client !== db) return load(client);
+    const hit = lookupCache.get(key);
+    if (hit !== undefined) return hit;
+    const value = Object.freeze(await load(db));
+    lookupCache.set(key, value);
+    return value;
+  };
+}
+
+const getSchedulingRules = cached('settings:scheduling', getSchedulingRulesUncached);
+const getRsvpRules = cached('settings:rsvp', getRsvpRulesUncached);
+const getReminderRules = cached('settings:reminder', getReminderRulesUncached);
+
+/** Forget every cached setting, after a change made outside this module's reads. */
+function invalidate() {
+  for (const key of ['settings:scheduling', 'settings:rsvp', 'settings:reminder']) lookupCache.invalidate(key);
+}
+
+module.exports = {
+  getSchedulingRules, getRsvpRules, getReminderRules, invalidate, DEFAULTS, RSVP_DEFAULTS, REMINDER_DEFAULTS,
+};
