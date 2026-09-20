@@ -630,3 +630,145 @@ describe('navigation', () => {
     expect(within(nav).queryByText('Soon')).not.toBeInTheDocument()
   })
 })
+
+describe('event feedback (DBMS NoSQL substitute, JSONB on the server)', () => {
+  const past = { date: '2026-01-12', startAt: '2026-01-12T04:30:00.000Z', endAt: '2026-01-12T06:30:00.000Z', status: 'COMPLETED' }
+  const going = { id: 5, status: 'RESERVED', seats: 1, registeredAt: '2026-01-01T05:00:00.000Z' }
+  const detail = (data) => http.get(`${API}/events/1`, () => ok(data))
+  const technicalForm = {
+    rating: { min: 1, max: 5 },
+    questions: { difficulty: { type: 'enum', values: ['TOO_EASY', 'JUST_RIGHT', 'TOO_HARD'] }, would_repeat: { type: 'boolean' } },
+    commentMaxLength: 500,
+  }
+
+  it('asks a student who held a seat for a rating and the questions for that kind of event, then sends them', async () => {
+    let sent
+    server.use(
+      detail(event({ ...past, myRegistration: going })),
+      http.get(`${API}/events/1/feedback/form`, () => ok(technicalForm)),
+      http.post(`${API}/events/1/feedback`, async ({ request }) => {
+        sent = await request.json()
+        return ok({ rating: sent.rating, answers: sent.answers, submittedAt: '2026-01-13T05:00:00.000Z' })
+      }),
+    )
+    const { user } = renderApp('/events/1', { user: student })
+
+    expect(await screen.findByRole('heading', { name: 'How was it?' })).toBeInTheDocument()
+
+    // The rating is the one required answer.
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+    expect(await screen.findByText('Choose a rating from 1 to 5 stars.')).toBeInTheDocument()
+    expect(sent).toBeUndefined()
+
+    await user.click(screen.getByLabelText('4 stars'))
+    await user.click(screen.getByLabelText('Just right'))
+    await user.click(within(screen.getByRole('group', { name: 'Would you come to another one like this?' })).getByLabelText('Yes'))
+    await user.type(screen.getByLabelText(/Anything else/), '  Great pace.  ')
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+
+    expect(await screen.findByText('Feedback sent')).toBeInTheDocument()
+    expect(sent).toEqual({ rating: 4, answers: { difficulty: 'JUST_RIGHT', would_repeat: true, comment: 'Great pace.' } })
+
+    await user.click(screen.getByRole('button', { name: 'Change my answers' }))
+    expect(await screen.findByRole('button', { name: 'Send feedback' })).toBeInTheDocument()
+  })
+
+  it('sends only what was answered', async () => {
+    let sent
+    server.use(
+      detail(event({ ...past, myRegistration: going })),
+      http.get(`${API}/events/1/feedback/form`, () => ok(technicalForm)),
+      http.post(`${API}/events/1/feedback`, async ({ request }) => {
+        sent = await request.json()
+        return ok({ rating: sent.rating, answers: sent.answers, submittedAt: '2026-01-13T05:00:00.000Z' })
+      }),
+    )
+    const { user } = renderApp('/events/1', { user: student })
+
+    await screen.findByRole('heading', { name: 'How was it?' })
+    await user.click(screen.getByLabelText('5 stars'))
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+
+    await screen.findByText('Feedback sent')
+    expect(sent).toEqual({ rating: 5, answers: {} })
+  })
+
+  it("shows the server's reason when feedback is refused", async () => {
+    server.use(
+      detail(event({ ...past, myRegistration: going })),
+      http.get(`${API}/events/1/feedback/form`, () => ok(technicalForm)),
+      http.post(`${API}/events/1/feedback`, () => fail(403, 'FORBIDDEN', 'Only students who held a seat can leave feedback')),
+    )
+    const { user } = renderApp('/events/1', { user: student })
+
+    await screen.findByRole('heading', { name: 'How was it?' })
+    await user.click(screen.getByLabelText('3 stars'))
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+
+    expect(await screen.findByText('Only students who held a seat can leave feedback')).toBeInTheDocument()
+  })
+
+  it('does not ask before the event, when waitlisted, or when never registered', async () => {
+    let asked = 0
+    server.use(http.get(`${API}/events/1/feedback/form`, () => { asked += 1; return ok(technicalForm) }))
+
+    for (const data of [
+      event({ myRegistration: going }), // has not started yet
+      event({ ...past, myRegistration: { ...going, status: 'WAITLISTED' } }),
+      event({ ...past, myRegistration: null }),
+    ]) {
+      server.use(detail(data))
+      const { unmount } = renderApp('/events/1', { user: student })
+      await screen.findByRole('heading', { name: 'Hack Night' })
+      expect(screen.queryByRole('heading', { name: 'How was it?' })).not.toBeInTheDocument()
+      unmount()
+    }
+    expect(asked).toBe(0)
+  })
+
+  it('shows an organiser the anonymous summary once the event has happened', async () => {
+    server.use(
+      detail(event({ ...past, permissions: permissions({ canViewRoster: true }) })),
+      http.get(`${API}/events/1/registrations`, () => ok({ items: [], meta: { reserved: 0, waitlisted: 0 } })),
+      http.get(`${API}/events/1/feedback`, () => ok({
+        responses: 3, averageRating: 4.33, minRating: 4, maxRating: 5, ratingSpread: { 4: 2, 5: 1 },
+        questions: { would_repeat: { true: 2, false: 1 }, difficulty: { JUST_RIGHT: 3 } }, wouldRepeat: 2,
+        comments: ['Great pace.', 'Loved it.'],
+      })),
+    )
+    renderApp('/events/1', { user: coordinator })
+
+    expect(await screen.findByText('3 responses, anonymous.')).toBeInTheDocument()
+    expect(screen.getByText('4.3')).toBeInTheDocument()
+    expect(screen.getByText('Would you come to another one like this?').nextSibling).toHaveTextContent('Yes 2 · No 1')
+    expect(screen.getByText('How was the difficulty?').nextSibling).toHaveTextContent('Just right 3')
+    expect(screen.getByText('Great pace.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Ratings')).toHaveTextContent('2')
+  })
+
+  it('says so when nobody has answered yet', async () => {
+    server.use(
+      detail(event({ ...past, permissions: permissions({ canViewRoster: true }) })),
+      http.get(`${API}/events/1/registrations`, () => ok({ items: [], meta: { reserved: 0, waitlisted: 0 } })),
+      http.get(`${API}/events/1/feedback`, () => ok({
+        responses: 0, averageRating: null, minRating: null, maxRating: null, ratingSpread: {}, questions: {}, wouldRepeat: 0, comments: [],
+      })),
+    )
+    renderApp('/events/1', { user: coordinator })
+
+    expect(await screen.findByText('No feedback yet.')).toBeInTheDocument()
+  })
+
+  it('does not show the organiser summary before the event', async () => {
+    let asked = false
+    server.use(
+      detail(event({ permissions: permissions({ canViewRoster: true }) })),
+      http.get(`${API}/events/1/registrations`, () => ok({ items: [], meta: { reserved: 0, waitlisted: 0 } })),
+      http.get(`${API}/events/1/feedback`, () => { asked = true; return ok({}) }),
+    )
+    renderApp('/events/1', { user: coordinator })
+
+    await screen.findByRole('heading', { name: 'Hack Night' })
+    expect(asked).toBe(false)
+  })
+})
