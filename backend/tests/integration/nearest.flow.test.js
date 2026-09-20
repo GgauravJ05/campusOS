@@ -47,27 +47,27 @@ describeWithDb('nearest free venue (database)', () => {
   });
 
   it('takes the shorter route even when the direct path is longer (Dijkstra)', async () => {
-    // Grounds -> Academic Building is 260 m directly, but 150 + 60 = 210 m through the Main Building.
+    // Campus -> Academic Building is 260 m directly, but 80 + 120 = 200 m through the Admin Block.
     const res = await nearest({ from: 'Campus', ...window(61), type: 'SEMINAR_HALL', minCapacity: 150, limit: 2 }).expect(200);
     const [first, second] = res.body.data.venues;
 
-    expect(first).toMatchObject({ name: 'Seminar Hall B', capacity: 150, walkingMetres: 210 });
-    expect(first.route).toEqual(['Campus', 'Main Building', 'Academic Building']);
+    expect(first).toMatchObject({ name: 'Seminar Hall B', capacity: 150, walkingMetres: 200 });
+    expect(first.route).toEqual(['Campus', 'Admin Block', 'Academic Building']);
     // The shortest walk crosses 2 paths; BFS knows a route crossing only 1 exists (the 260 m direct one).
     // They answer different questions, so they legitimately differ.
     expect(first.buildingsAway).toBe(2);
     expect(first.fewestPathsPossible).toBe(1);
-    expect(second).toMatchObject({ name: 'MB 405', capacity: 200, walkingMetres: 210 });
+    expect(second).toMatchObject({ name: 'MB 405', capacity: 200, walkingMetres: 200 });
   });
 
   it('puts a venue in the starting building ahead of one that needs a walk', async () => {
-    const res = await nearest({ from: 'Campus', ...window(62), minCapacity: 300, limit: 3 }).expect(200);
-    const names = res.body.data.venues.map((v) => v.name);
-    // Sports Ground (800) and Open Air Theatre (350) are in "Campus" itself; the auditorium is 150 m away.
-    expect(names.slice(0, 2)).toEqual(['Open Air Theatre', 'Sports Ground']);
-    expect(res.body.data.venues[0].walkingMetres).toBe(0);
-    expect(names[2]).toBe('Main Auditorium');
-    expect(res.body.data.venues[2]).toMatchObject({ walkingMetres: 150, route: ['Campus', 'Main Building'] });
+    const res = await nearest({ from: 'Campus', ...window(62), minCapacity: 100, limit: 6 }).expect(200);
+    const { venues } = res.body.data;
+    // The four spaces on "Campus" itself come first at 0 m, tightest fit first...
+    expect(venues.slice(0, 4).map((v) => v.name)).toEqual(['Atmayou Kuti', 'Main Building Entry Space', 'FMCII Hall', 'Sports Ground']);
+    expect(venues.slice(0, 4).every((v) => v.walkingMetres === 0 && v.building === 'Campus')).toBe(true);
+    // ...and anything that needs a walk comes after, over the shorter Admin Block route.
+    expect(venues.slice(4).every((v) => v.walkingMetres === 200 && v.route[1] === 'Admin Block')).toBe(true);
   });
 
   it('leaves out a venue that is already booked for the window, and includes it for another', async () => {
@@ -140,7 +140,7 @@ describeWithDb('nearest free venue (database)', () => {
     it('stores each path once, in alphabetical order, with a positive length', async () => {
       await expect(db.query(`INSERT INTO campus_paths VALUES ('Admin Block', 'Academic Building', 50)`))
         .rejects.toMatchObject({ code: '23514' });
-      await expect(db.query(`INSERT INTO campus_paths VALUES ('Academic Building', 'Main Building', 61)`))
+      await expect(db.query(`INSERT INTO campus_paths VALUES ('Academic Building', 'Admin Block', 61)`))
         .rejects.toMatchObject({ code: '23505' });
       await expect(db.query(`INSERT INTO campus_paths VALUES ('Aaa', 'Bbb', 0)`))
         .rejects.toMatchObject({ code: '23514' });

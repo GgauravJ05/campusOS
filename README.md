@@ -119,8 +119,10 @@ the screen tells you which account you are in:
 
 The seed follows the real campus: six departments, one floor of the academic
 building each — **1 Electrical, 2 Mechanical, 3 ENTC, 4 IT, 5 Computer,
-6 AI & DS** — with the auditorium, conference room, ground and open air
-theatre shared. Every floor has classrooms **AC x01 to x04** (AC 401 to AC 404
+6 AI & DS** — with shared spaces beside them: the **Admin Block** (Conference Room and
+Syndicate Room, both on its one floor) and **Campus** (Atmayou Kuti, Main
+Building Entry Space, FMCII Hall and Sports Ground; the old "Main Building" and
+"Campus" are one place now). Every floor has classrooms **AC x01 to x04** (AC 401 to AC 404
 on the 4th floor); the 4th floor also has the rooms **MB 405** (seminar hall),
 **MB 407, 408, 409, 413, 414** (labs) and **MB 411** (classroom). The Clubs and
 Venues pages list everything floor by floor. Rooms on the other floors beyond the
