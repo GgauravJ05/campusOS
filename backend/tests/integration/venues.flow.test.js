@@ -43,9 +43,9 @@ describeWithDb('venues (database)', () => {
 
       // Searched by name rather than picked out of the first page: other
       // suites add venues, and a paged list is not a stable place to look.
-      const named = await request(app).get('/api/venues?q=Main%20Auditorium').set(auth(student)).expect(200);
-      expect(named.body.data.find((v) => v.name === 'Main Auditorium')).toMatchObject({
-        building: 'Main Building', floor: 0, type: 'AUDITORIUM', capacity: 500, bufferMinutes: 15, canManage: false,
+      const named = await request(app).get('/api/venues?q=FMCII').set(auth(student)).expect(200);
+      expect(named.body.data.find((v) => v.name === 'FMCII Hall')).toMatchObject({
+        building: 'Campus', floor: 0, type: 'AUDITORIUM', capacity: 500, bufferMinutes: 15, canManage: false,
       });
     });
 
@@ -71,7 +71,7 @@ describeWithDb('venues (database)', () => {
     it('requires every requested piece of equipment', async () => {
       const res = await request(app).get('/api/venues?equipment=projector,ac').set(auth(student)).expect(200);
       const names = res.body.data.map((v) => v.name);
-      expect(names).toEqual(expect.arrayContaining(['Main Auditorium', 'MB 405', 'MB 407']));
+      expect(names).toEqual(expect.arrayContaining(['FMCII Hall', 'MB 405', 'MB 407']));
       // The networking lab has desktops and routers, but no projector.
       expect(names).not.toContain('MB 408');
     });

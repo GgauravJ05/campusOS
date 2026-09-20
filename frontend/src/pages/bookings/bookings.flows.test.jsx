@@ -41,6 +41,31 @@ function booking(overrides = {}) {
   }
 }
 
+describe('choosing a venue in a one-floor building', () => {
+  it('lists the rooms straight away, with no floor step, while a multi-floor building still asks', async () => {
+    server.use(
+      http.get(`${API}/venues/meta`, () => ok(meta)),
+      http.get(`${API}/bookings`, () => ok([], { page: 1, pageSize: 50, total: 0, totalPages: 0 })),
+    )
+    const { user } = renderApp('/bookings/new', { user: clubHead })
+
+    // IT Block has one floor: choosing it shows its venue at once, and says why.
+    await user.click(await screen.findByRole('button', { name: /IT Block/ }))
+    expect(screen.getByRole('button', { name: /Computer Lab 1/ })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /Floor/ })).not.toBeInTheDocument()
+    expect(screen.getByText('IT Block has a single floor, so its rooms are listed directly.')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '2. Venue' })).toBeInTheDocument()
+
+    // Main Building has two floors, so the floor step is back and no room shows until one is chosen.
+    await user.click(screen.getByRole('button', { name: /Main Building/ }))
+    expect(screen.getByRole('heading', { name: '2. Floor' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Seminar Hall A/ })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /1st floor/ }))
+    expect(screen.getByRole('heading', { name: '3. Venue' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Seminar Hall A/ })).toBeInTheDocument()
+  })
+})
+
 describe('booking wizard', () => {
   it('walks Building → Floor → Venue → time → details and sends a request', async () => {
     const checks = []

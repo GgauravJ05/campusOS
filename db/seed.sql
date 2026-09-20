@@ -156,11 +156,16 @@ FROM (VALUES
     -- Placeholder rooms (invented names): replace with the real room numbers.
     ('AI & Data Science Lab', 'Academic Building', 6::SMALLINT, 'AIDS', 'LABORATORY', 55, 'Floor 6, Academic Building'),
     ('Data Analytics Lab', 'Academic Building', 6::SMALLINT, 'AIDS', 'LABORATORY', 40, 'Floor 6, Academic Building'),
-    -- Shared spaces, open to every department
-    ('Main Auditorium',         'Main Building',     0::SMALLINT, NULL,   'AUDITORIUM',     500, 'Ground Floor, Main Building'),
-    ('Conference Room',         'Admin Block',       1::SMALLINT, NULL,   'CONFERENCE_ROOM', 50, 'Floor 1, Admin Block'),
-    ('Sports Ground',           'Campus',            0::SMALLINT, NULL,   'SPORTS_GROUND',  800, 'Behind Main Building'),
-    ('Open Air Theatre',        'Campus',            0::SMALLINT, NULL,   'OPEN_AIR',       350, 'Near Canteen')
+    -- Shared spaces, open to every department. Admin Block has two rooms on its
+    -- first floor. "Campus" is one place: the old "Main Building" and "Campus"
+    -- were merged, and holds the four spaces below. Types and capacities here are
+    -- PLACEHOLDERS: replace them with the real ones.
+    ('Conference Room',           'Admin Block', 1::SMALLINT, NULL, 'CONFERENCE_ROOM',  50, 'Floor 1, Admin Block'),
+    ('Syndicate Room',            'Admin Block', 1::SMALLINT, NULL, 'CONFERENCE_ROOM',  20, 'Floor 1, Admin Block'),
+    ('Atmayou Kuti',              'Campus',      0::SMALLINT, NULL, 'OPEN_AIR',        100, 'Campus'),
+    ('Main Building Entry Space', 'Campus',      0::SMALLINT, NULL, 'OPEN_AIR',        150, 'Campus, at the Main Building entrance'),
+    ('FMCII Hall',                'Campus',      0::SMALLINT, NULL, 'AUDITORIUM',      500, 'Campus'),
+    ('Sports Ground',             'Campus',      0::SMALLINT, NULL, 'SPORTS_GROUND',   800, 'Campus')
 ) AS v(venue_name, building, floor, dept_code, venue_type, capacity, location)
 LEFT JOIN departments d ON d.dept_code = v.dept_code
 ON CONFLICT (building, venue_name) DO NOTHING;
@@ -169,17 +174,15 @@ ON CONFLICT (building, venue_name) DO NOTHING;
 -- Campus paths. ILLUSTRATIVE distances: these are plausible placeholders, NOT
 -- measurements of MMCOE's campus. Measure the real walking distances and replace
 -- them (UPDATE campus_paths SET metres = ...). The shape is deliberate:
--- Academic Building to the grounds is longer directly (260 m) than through the
--- Main Building (60 + 150 = 210 m), so the shortest route is not always the
--- direct path, which is what Dijkstra is for.
+-- Academic Building to Campus is longer directly (260 m) than through the
+-- Admin Block (120 + 80 = 200 m), so the shortest route is not always the
+-- direct path, which is what Dijkstra is for. (The old Main Building is now
+-- part of "Campus".)
 -- ------------------------------------------------------------
 INSERT INTO campus_paths (building_a, building_b, metres) VALUES
-    ('Academic Building', 'Admin Block',    120),
-    ('Academic Building', 'Campus',         260),
-    ('Academic Building', 'Main Building',   60),
-    ('Admin Block',       'Campus',         180),
-    ('Admin Block',       'Main Building',   80),
-    ('Campus',            'Main Building',  150)
+    ('Academic Building', 'Admin Block', 120),
+    ('Academic Building', 'Campus',      260),
+    ('Admin Block',       'Campus',       80)
 ON CONFLICT (building_a, building_b) DO NOTHING;
 
 -- ------------------------------------------------------------
@@ -241,10 +244,10 @@ FROM (VALUES
     ('Project Lab', 'Academic Building', ARRAY['DESKTOPS','WHITEBOARD']),
     ('AI & Data Science Lab', 'Academic Building', ARRAY['DESKTOPS','GPU_WORKSTATIONS','AC']),
     ('Data Analytics Lab', 'Academic Building', ARRAY['DESKTOPS','PROJECTOR']),
-    ('Main Auditorium',         'Main Building',     ARRAY['PROJECTOR','SOUND_SYSTEM','AC','STAGE']),
+    ('FMCII Hall',              'Campus',            ARRAY['PROJECTOR','SOUND_SYSTEM','AC','STAGE']),
     ('Conference Room',         'Admin Block',       ARRAY['PROJECTOR','AC','WHITEBOARD']),
-    ('Sports Ground',           'Campus',            ARRAY['FLOODLIGHTS']),
-    ('Open Air Theatre',        'Campus',            ARRAY['SOUND_SYSTEM','STAGE'])
+    ('Syndicate Room',          'Admin Block',       ARRAY['PROJECTOR','AC','WHITEBOARD']),
+    ('Sports Ground',           'Campus',            ARRAY['FLOODLIGHTS'])
 ) AS x(venue_name, building, codes)
 JOIN venues v ON v.venue_name = x.venue_name AND v.building = x.building
 JOIN LATERAL unnest(x.codes) AS code ON TRUE

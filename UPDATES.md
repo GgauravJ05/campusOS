@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Admin Block and Campus rooms, one-floor booking](#admin-block-and-campus-rooms-one-floor-booking-2026-09-20) | Gaurav |
 | 2026-09-20 | [Floor-wise Clubs and Venues, real rooms, and Gaurav demo accounts](#floor-wise-clubs-and-venues-real-rooms-and-gaurav-demo-accounts-2026-09-20) | Gaurav |
 | 2026-09-20 | [Test runs rebuild their own database](#test-runs-rebuild-their-own-database-2026-09-20) | Gaurav |
 | 2026-09-20 | [Test fix — the FR17 ranking test no longer needs a fresh database](#test-fix--the-fr17-ranking-test-no-longer-needs-a-fresh-database-2026-09-20) | Gaurav |
@@ -65,6 +66,41 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Admin Block and Campus rooms, one-floor booking (2026-09-20)
+
+**Asked for:** Admin Block with two options on its one floor (Conference Room,
+Syndicate Room); "Campus" and "Main Building" merged into one building called
+**Campus** holding Atmayou Kuti, Main Building Entry Space, FMCII Hall and Sports
+Ground (you listed four although you said three; you chose "only your four", so
+**Main Auditorium and Open Air Theatre are removed**).
+
+**Seed:** Admin Block floor 1 = Conference Room, Syndicate Room (new).
+Campus floor 0 = Atmayou Kuti, Main Building Entry Space, FMCII Hall, Sports
+Ground. There is no "Main Building" building any more. **Placeholders, please
+replace:** the type and capacity of the three new Campus spaces (open-air 100 and
+150, FMCII Hall an auditorium of 500 seats, kept from the old Main Auditorium,
+including its projector/sound/AC/stage equipment) and of the Syndicate Room (20
+seats, projector/AC/whiteboard copied from the Conference Room).
+
+**Booking picker:** it asks Building, then Floor, then Venue. A building with
+only one floor now skips the floor step and lists its rooms straight away, with
+a note saying why (so Admin Block and Campus are two clicks, not three).
+Multi-floor buildings are unchanged.
+
+**Campus map (nearest venue):** the three buildings are now Academic Building,
+Admin Block and Campus. The illustrative distances keep their teaching shape:
+Academic to Campus is 260 m directly but 200 m through the Admin Block (120 + 80),
+so the shortest route is still not the direct one. They are placeholders, not
+measurements. Tests for the route and the ordering were rewritten to match.
+
+**Checked:** backend 1,030 and frontend 247 tests pass. New: a seed test for the
+exact rooms of the Admin Block and Campus (and that no Main Building exists), and
+a booking test for the one-floor shortcut.
+
+**Teammates must do:** rebuild your local database
+(`scripts/db-reset.sh campusos --yes`) to get the new rooms; bookings you made for
+the removed Main Auditorium or Open Air Theatre would be gone with it.
 
 ## Floor-wise Clubs and Venues, real rooms, and Gaurav demo accounts (2026-09-20)
 
