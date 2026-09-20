@@ -28,6 +28,7 @@ const tw = require('../scheduling/timeWindow');
 const notifications = require('../notifications/notification.service');
 const templates = require('../mail/templates');
 const policy = require('./eligibility');
+const mergeSort = require('../../lib/ds/mergeSort');
 
 const { ROLES } = rbac;
 
@@ -743,7 +744,7 @@ async function recommendations(actor, { limit = 6 } = {}) {
     [actor.id],
   );
 
-  const scored = rows
+  const candidates = rows
     .filter((row) => policy.checkEligibility(actor, toPolicyEvent(row)) === null)
     .filter((row) => !policy.seatState(toPolicyEvent(row)).isFull)
     .map((row) => {
@@ -752,11 +753,15 @@ async function recommendations(actor, { limit = 6 } = {}) {
         history,
       );
       return { score, reason, row };
-    })
-    .sort((a, b) => b.score - a.score
+    });
+  // Best score first, then soonest, then lowest id: a total order, so the
+  // ranking is the same on every run (lib/ds/mergeSort.js is stable as well).
+  const scored = mergeSort(
+    candidates,
+    (a, b) => b.score - a.score
       || startInstant(a.row) - startInstant(b.row)
-      || a.row.event_id - b.row.event_id)
-    .slice(0, Math.min(Math.max(Number(limit) || 6, 1), 20));
+      || a.row.event_id - b.row.event_id,
+  ).slice(0, Math.min(Math.max(Number(limit) || 6, 1), 20));
 
   return {
     items: scored.map(({ row, score, reason }) => ({ ...toEvent(row, actor), score, reason })),
