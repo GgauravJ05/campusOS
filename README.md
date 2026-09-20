@@ -128,15 +128,16 @@ college-level chapters and teams.
 ### Running the tests
 
 ```bash
-cd backend && npm test      # 666 tests: unit + API flows (DB suites need PostgreSQL)
-cd frontend && npm test     # 178 tests: components and user journeys
+cd backend && npm test      # 1,030 tests: unit + API flows (DB suites need PostgreSQL)
+cd frontend && npm test     # 247 tests: components and user journeys
 ```
 
 Every pull request runs both suites in CI, including the database suites against a real PostgreSQL.
 
 Unit tests need no database. The SQL-backed suites read `TEST_DATABASE_URL`
-and skip themselves when it is unset, so the suite passes on a machine with
-no PostgreSQL installed.
+and skip themselves when PostgreSQL is not reachable, so **check the summary says
+`1030 passed`, not `700 passed, 329 skipped`**: a skip is not a pass. Full
+numbers and what was not tested are in [`docs/TEST-REPORT.md`](docs/TEST-REPORT.md).
 
 ---
 
@@ -145,8 +146,9 @@ no PostgreSQL installed.
 ```
 backend/     Express REST API - see backend/README.md
 frontend/    React 19 + Tailwind web app - see frontend/README.md
-db/          schema.sql, seed.sql, reset.sql
-docs/        SRS, diagrams, workflows, weekly reports
+db/          schema.sql, seed.sql, reset.sql, demo/ (ACID and locking demos for psql)
+scripts/     shell scripts: db-reset, db-backup, demo
+docs/        SRS, diagrams, workflows, weekly reports, syllabus mapping, test report
 ```
 
 ---
