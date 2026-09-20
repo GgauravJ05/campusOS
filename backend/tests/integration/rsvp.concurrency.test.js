@@ -82,7 +82,7 @@ describeWithDb('concurrent RSVP (FR15, FR16)', () => {
     const { rows: [dept] } = await db.query(`SELECT department_id FROM departments WHERE dept_code = 'IT'`);
     const { rows: [role] } = await db.query(`SELECT role_id FROM roles WHERE role_key = 'STUDENT'`);
     const { rows: [coordinator] } = await db.query(
-      `SELECT user_id FROM users WHERE email = 'coordinator.it@mmcoe.edu.in'`,
+      `SELECT user_id FROM users WHERE email = 'gaurav.coordinator.it@mmcoe.edu.in'`,
     );
     const { rows: [venue] } = await db.query(
       `INSERT INTO venues (venue_name, building, floor, venue_type, capacity)

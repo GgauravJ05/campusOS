@@ -39,7 +39,7 @@ async function signIn() {
   const res = await fetch(`${BASE}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: 'principal@mmcoe.edu.in', password: 'Campus@123' }),
+    body: JSON.stringify({ email: 'gaurav.principal@mmcoe.edu.in', password: 'Campus@123' }),
   });
   if (!res.ok) throw new Error(`sign-in failed: HTTP ${res.status}`);
   return (await res.json()).data.accessToken;

@@ -130,10 +130,17 @@ Don't duplicate these documents' content here. Read them.
 - **Sign-in is rate limited to 10 attempts per 15 minutes per address.**
   Expected during manual testing that switches accounts repeatedly; restart
   the API to reset the in-memory counter rather than treating it as a bug.
-- Demo accounts all use password `Campus@123`. Campus data model: six
-  departments, one floor of the academic building each (1 Electrical,
-  2 Mechanical, 3 ENTC, 4 IT, 5 Computer, 6 AI & DS). Clubs are the real ones
-  from mmcoe.edu.in.
+- Demo accounts all use password `Campus@123`, and are all named **Gaurav
+  Jadhav - <role>** (e.g. `gaurav.student.a@mmcoe.edu.in`; full list in
+  `README.md`), so the name on screen says which account you are in. Names use
+  letters, spaces and hyphens only, because that is what name validation allows.
+  Campus data model: six departments, one floor of the academic building each
+  (`departments.floor`: 1 Electrical, 2 Mechanical, 3 ENTC, 4 IT, 5 Computer,
+  6 AI & DS). Every floor has classrooms `AC x01`-`AC x04`; floor 4 also has
+  `MB 405` (seminar hall), `MB 407/408/409/413/414` (labs) and `MB 411`
+  (classroom). Other floors' labs and every capacity/equipment list are
+  placeholders. Clubs are the real ones from mmcoe.edu.in. The Clubs and Venues
+  pages group by floor (`frontend/src/lib/floors.js`).
 
 ## Before finishing any task
 

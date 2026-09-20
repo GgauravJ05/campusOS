@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { renderApp, currentPath } from '@/test/render'
 import { API, coordinator, departments, fail, makeUser, ok, server, session, state } from '@/test/server'
 
-const principal = makeUser({ id: 1, fullName: 'Dr. Principal MMCOE', email: 'principal@mmcoe.edu.in', role: { key: 'SUPER_ADMIN', name: 'Principal & HOD', rank: 1 } })
+const principal = makeUser({ id: 1, fullName: 'Dr. Principal MMCOE', email: 'gaurav.principal@mmcoe.edu.in', role: { key: 'SUPER_ADMIN', name: 'Principal & HOD', rank: 1 } })
 
 const clubHead = makeUser({
   role: { key: 'CLUB_HEAD', name: 'Club Head / President', rank: 3 },
@@ -142,8 +142,8 @@ describe('profile and security', () => {
 
 describe('people management', () => {
   const people = [
-    makeUser({ id: 21, fullName: 'Srushti Mane', email: 'srushti.mane@mmcoe.edu.in' }),
-    makeUser({ id: 22, fullName: 'Omkar Shinde', email: 'omkar.shinde@mmcoe.edu.in', isVerified: false, lastLoginAt: null }),
+    makeUser({ id: 21, fullName: 'Srushti Mane', email: 'gaurav.student.a@mmcoe.edu.in' }),
+    makeUser({ id: 22, fullName: 'Omkar Shinde', email: 'gaurav.student.c@mmcoe.edu.in', isVerified: false, lastLoginAt: null }),
   ]
 
   it('lists people with filters that reach the API', async () => {
@@ -207,7 +207,7 @@ describe('people management', () => {
   })
 
   describe('person detail', () => {
-    const target = makeUser({ id: 21, fullName: 'Srushti Mane', email: 'srushti.mane@mmcoe.edu.in' })
+    const target = makeUser({ id: 21, fullName: 'Srushti Mane', email: 'gaurav.student.a@mmcoe.edu.in' })
     const withPermissions = (user) => ({ ...user, permissions: { canManage: true, assignableRoles: ['CLUB_HEAD', 'CLUB_MEMBER', 'STUDENT'] } })
     const clubs = [
       { id: 1, name: 'IT Tech Club', scope: 'DEPARTMENT', department: departments[0], head: { id: 4, fullName: 'Gaurav Jadhav' }, memberCount: 3 },

@@ -23,7 +23,7 @@ describe('password feedback', () => {
   it('flags a password containing part of the name or the email', () => {
     const personal = (pw, ctx) => passwordChecks(pw, ctx).find((c) => c.id === 'personal').ok
     expect(personal('Kulkarni#Secure99', { fullName: 'Asha Kulkarni' })).toBe(false)
-    expect(personal('srushti.mane#26', { email: 'srushti.mane@mmcoe.edu.in' })).toBe(false)
+    expect(personal('gaurav.student.a#26', { email: 'gaurav.student.a@mmcoe.edu.in' })).toBe(false)
     expect(passes('Violet-Lantern-42', { fullName: 'Asha Kulkarni', email: 'asha.k@mmcoe.edu.in' })).toBe(true)
   })
 

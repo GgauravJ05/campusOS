@@ -365,13 +365,13 @@ This course's rubric is reproduced and checked against the repository in
 | Weight | Criterion | State |
 | --- | --- | --- |
 | 5% | Idea inception | ✅ SRS, Week 0 slides, Review 1 deck |
-| 60% | Outcomes — individual and team | Product: ✅ strong (21/21 FRs, 1,259 tests). Individual: 🟡 **a blank template exists (`docs/CONTRIBUTIONS.md`); the team has not filled it in** |
+| 60% | Outcomes — individual and team | Product: ✅ strong (21/21 FRs, 1,275 tests). Individual: 🟡 **a blank template exists (`docs/CONTRIBUTIONS.md`); the team has not filled it in** |
 | 10% | Documentation (incl. final report) | 🟡 requirements, `docs/TEST-REPORT.md`, `docs/NETWORK.md`, `docs/DEADLOCK-CASE-STUDY.md`, `docs/DATABASE.md`; **still no final project report** |
 | 10% | Demonstration (presentation, UI, usability) | 🟡 review script exists; no usability evaluation, no final deck |
 | 10% | Contest participation / publication | ⬜ nothing yet |
 | 5% | Environment/social/ethics/safety/legal | 🟡 `docs/ETHICS-PRIVACY-SUSTAINABILITY.md` covers privacy (DPDP Act 2023), security, accessibility and sustainability, and lists what is **not** yet done (no consent notice, export, erasure or retention) |
 
-**Phase H (done):** `docs/TEST-REPORT.md` (from a real run: 1,025 backend and 234 frontend tests, coverage, concurrency proofs, a measured response-time probe, and a section of what was **not** tested); `docs/CONTRIBUTIONS.md` (structure only, **deliberately blank**, because only the team knows who did what); `docs/ETHICS-PRIVACY-SUSTAINABILITY.md`. The last two rubric lines still need the team: filling in the matrix, and a final project report and deck. Contest participation is untouched.
+**Phase H (done):** `docs/TEST-REPORT.md` (from a real run: 1,029 backend and 246 frontend tests, coverage, concurrency proofs, a measured response-time probe, and a section of what was **not** tested); `docs/CONTRIBUTIONS.md` (structure only, **deliberately blank**, because only the team knows who did what); `docs/ETHICS-PRIVACY-SUSTAINABILITY.md`. The last two rubric lines still need the team: filling in the matrix, and a final project report and deck. Contest participation is untouched.
 
 ---
 

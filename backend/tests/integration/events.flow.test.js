@@ -90,10 +90,10 @@ describeWithDb('events and RSVP (database)', () => {
   beforeAll(async () => {
     app = live.createApp();
     [principal, itCoordinator, gaurav, clubMember] = await Promise.all([
-      live.signIn(app, 'principal@mmcoe.edu.in'),
-      live.signIn(app, 'coordinator.it@mmcoe.edu.in'),
-      live.signIn(app, 'gaurav.jadhav@mmcoe.edu.in'),
-      live.signIn(app, 'aditya.patil@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.principal@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.coordinator.it@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.head.ittech@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.member.a@mmcoe.edu.in'),
     ]);
     student = await live.createVerifiedStudent(app, { fullName: 'Feed Reader' });
     [itDept, csDept] = await Promise.all([live.departmentId('IT'), live.departmentId('CS')]);
@@ -165,7 +165,7 @@ describeWithDb('events and RSVP (database)', () => {
         `INSERT INTO events (club_id, department_id, created_by, title, category, event_scope,
                              event_date, start_time, end_time, status, max_seats)
          VALUES (NULL, (SELECT department_id FROM departments WHERE dept_code = 'IT'),
-                 (SELECT user_id FROM users WHERE email = 'coordinator.it@mmcoe.edu.in'),
+                 (SELECT user_id FROM users WHERE email = 'gaurav.coordinator.it@mmcoe.edu.in'),
                  'Venueless', 'SEMINAR', 'DEPARTMENT', CURRENT_DATE + 15, '10:00', '12:00', 'APPROVED', 30)
          RETURNING event_id`,
       );

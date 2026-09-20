@@ -21,7 +21,7 @@ describeWithDb('lookup cache (database)', () => {
 
   beforeAll(async () => {
     app = live.createApp();
-    principal = await live.signIn(app, 'principal@mmcoe.edu.in');
+    principal = await live.signIn(app, 'gaurav.principal@mmcoe.edu.in');
   });
 
   beforeEach(() => lookupCache.clear());

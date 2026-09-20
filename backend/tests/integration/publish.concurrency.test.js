@@ -44,8 +44,8 @@ describeWithDb('concurrent event publish (no double broadcast)', () => {
   beforeAll(async () => {
     app = live.createApp();
     [principal, itCoordinator] = await Promise.all([
-      live.signIn(app, 'principal@mmcoe.edu.in'),
-      live.signIn(app, 'coordinator.it@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.principal@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.coordinator.it@mmcoe.edu.in'),
     ]);
 
     // A tracked recipient: however many other verified users exist in the

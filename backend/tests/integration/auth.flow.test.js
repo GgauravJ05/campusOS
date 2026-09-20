@@ -205,7 +205,7 @@ describeWithDb('auth flows (database)', () => {
   describe('login', () => {
     it('signs in a seeded account with its role and clubs', async () => {
       const res = await request(app).post('/api/auth/login')
-        .send({ email: 'Gaurav.Jadhav@MMCOE.edu.in', password: 'Campus@123' })
+        .send({ email: 'Gaurav.Head.ITTech@MMCOE.edu.in', password: 'Campus@123' })
         .expect(200);
 
       expect(res.body.data.user.role.key).toBe('CLUB_HEAD');
@@ -215,7 +215,7 @@ describeWithDb('auth flows (database)', () => {
     });
 
     it('answers a wrong password and an unknown email identically', async () => {
-      const wrong = await request(app).post('/api/auth/login').send({ email: 'srushti.mane@mmcoe.edu.in', password: 'Nope-nope-1' });
+      const wrong = await request(app).post('/api/auth/login').send({ email: 'gaurav.student.a@mmcoe.edu.in', password: 'Nope-nope-1' });
       const unknown = await request(app).post('/api/auth/login').send({ email: uniqueEmail('ghost'), password: 'Nope-nope-1' });
 
       expect(wrong.status).toBe(401);

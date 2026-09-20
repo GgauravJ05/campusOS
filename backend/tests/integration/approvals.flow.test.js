@@ -60,12 +60,12 @@ describeWithDb('approval workflow (database)', () => {
   beforeAll(async () => {
     app = live.createApp();
     [principal, itCoordinator, csCoordinator, gaurav, atharva, aditya] = await Promise.all([
-      live.signIn(app, 'principal@mmcoe.edu.in'),
-      live.signIn(app, 'coordinator.it@mmcoe.edu.in'),
-      live.signIn(app, 'coordinator.cs@mmcoe.edu.in'),
-      live.signIn(app, 'gaurav.jadhav@mmcoe.edu.in'),
-      live.signIn(app, 'atharva.desai@mmcoe.edu.in'),
-      live.signIn(app, 'aditya.patil@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.principal@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.coordinator.it@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.coordinator.cs@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.head.ittech@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.head.envision@mmcoe.edu.in'),
+      live.signIn(app, 'gaurav.member.a@mmcoe.edu.in'),
     ]);
     const { rows } = await db.query(`SELECT club_id, club_name FROM clubs WHERE club_name IN ('IT Tech Club', 'Envision Club')`);
     rows.forEach((r) => { clubs[r.club_name] = r.club_id; });
@@ -85,16 +85,16 @@ describeWithDb('approval workflow (database)', () => {
       expect(res.body.data).toMatchObject({
         status: 'MODIFICATION_REQUESTED',
         modificationNote: 'Expected attendance is too high for a Friday.',
-        decidedBy: { fullName: 'Nishanti Naidu' },
+        decidedBy: { fullName: 'Gaurav Jadhav - IT Coordinator' },
         event: { status: 'PENDING_APPROVAL' },
         permissions: { canDecide: false, canReject: true, canEdit: false },
       });
 
-      const mail = live.sentMail('gaurav.jadhav@mmcoe.edu.in').at(-1);
+      const mail = live.sentMail('gaurav.head.ittech@mmcoe.edu.in').at(-1);
       expect(mail.subject).toBe('"Hack Night" needs changes');
       expect(mail.text).toContain('What to change: Expected attendance is too high for a Friday.');
 
-      const notes = await notificationsFor('gaurav.jadhav@mmcoe.edu.in');
+      const notes = await notificationsFor('gaurav.head.ittech@mmcoe.edu.in');
       expect(notes.at(-1)).toMatchObject({ category: 'BOOKING_CHANGES_REQUESTED', title: 'Changes requested: Hack Night', booking_id: booking.id });
 
       const { rows: [log] } = await db.query(`SELECT action, details FROM admin_logs WHERE booking_id = $1`, [booking.id]);
@@ -130,8 +130,8 @@ describeWithDb('approval workflow (database)', () => {
 
       const lost = await request(app).get(`/api/bookings/${booking.id}`).set(auth(gaurav)).expect(200);
       expect(lost.body.data).toMatchObject({ status: 'REJECTED', rejectionReason: expect.stringMatching(/approved first/) });
-      expect(live.sentMail('gaurav.jadhav@mmcoe.edu.in').at(-1).subject).toBe('"Hack Night" not approved');
-      expect(live.sentMail('atharva.desai@mmcoe.edu.in').at(-1).subject).toBe('"Music Jam" approved');
+      expect(live.sentMail('gaurav.head.ittech@mmcoe.edu.in').at(-1).subject).toBe('"Hack Night" not approved');
+      expect(live.sentMail('gaurav.head.envision@mmcoe.edu.in').at(-1).subject).toBe('"Music Jam" approved');
     });
 
     it('can still reject a request that was sent back', async () => {
@@ -165,14 +165,14 @@ describeWithDb('approval workflow (database)', () => {
       const inbox = await request(app).get('/api/bookings?view=decisions&pageSize=100').set(auth(itCoordinator)).expect(200);
       expect(inbox.body.data.find((b) => b.id === booking.id)).toMatchObject({ revision: 1, permissions: { canDecide: true } });
 
-      const approverNote = (await notificationsFor('coordinator.it@mmcoe.edu.in')).filter((n) => n.booking_id === booking.id);
+      const approverNote = (await notificationsFor('gaurav.coordinator.it@mmcoe.edu.in')).filter((n) => n.booking_id === booking.id);
       expect(approverNote.map((n) => n.title)).toEqual(['New request: Hack Night', 'Updated request: Hack Night v2']);
     });
 
     it('lets the original requester and the current club head edit, never a stranger or faculty', async () => {
       const { booking } = await dscRequest();
       // As if Aditya had requested it while he led the club.
-      await db.query(`UPDATE bookings SET requested_by = (SELECT user_id FROM users WHERE email = 'aditya.patil@mmcoe.edu.in') WHERE booking_id = $1`, [booking.id]);
+      await db.query(`UPDATE bookings SET requested_by = (SELECT user_id FROM users WHERE email = 'gaurav.member.a@mmcoe.edu.in') WHERE booking_id = $1`, [booking.id]);
 
       await edit(atharva, booking.id, { title: 'Hijacked' }).expect(404);
       await edit(csCoordinator, booking.id, { title: 'Other dept' }).expect(404);
@@ -303,12 +303,12 @@ describeWithDb('approval workflow (database)', () => {
       await request(app).post(`/api/bookings/${good.id}/approve`).set(auth(itCoordinator)).expect(200);
       await request(app).post(`/api/bookings/${bad.id}/reject`).set(auth(itCoordinator)).send({ reason: 'Exam week <b>no events</b>' }).expect(200);
 
-      const mails = live.sentMail('gaurav.jadhav@mmcoe.edu.in');
+      const mails = live.sentMail('gaurav.head.ittech@mmcoe.edu.in');
       expect(mails.map((m) => m.subject)).toEqual(['"Hack Night" approved', '"Hack Night" not approved']);
       expect(mails[1].html).toContain('Exam week &lt;b&gt;no events&lt;/b&gt;');
       expect(mails[1].text).toContain(`/bookings?focus=${bad.id}`);
 
-      const categories = (await notificationsFor('gaurav.jadhav@mmcoe.edu.in')).slice(-2).map((n) => n.category);
+      const categories = (await notificationsFor('gaurav.head.ittech@mmcoe.edu.in')).slice(-2).map((n) => n.category);
       expect(categories).toEqual(['BOOKING_APPROVED', 'BOOKING_REJECTED']);
     });
 
@@ -318,8 +318,8 @@ describeWithDb('approval workflow (database)', () => {
 
       await submit(itCoordinator, { venueId, date: day(30), startTime: '11:00', endTime: '12:00', title: 'Board Meeting' }).expect(201);
 
-      expect(live.sentMail('gaurav.jadhav@mmcoe.edu.in').map((m) => m.subject)).toEqual(['"Hack Night" not approved']);
-      const note = (await notificationsFor('gaurav.jadhav@mmcoe.edu.in')).at(-1);
+      expect(live.sentMail('gaurav.head.ittech@mmcoe.edu.in').map((m) => m.subject)).toEqual(['"Hack Night" not approved']);
+      const note = (await notificationsFor('gaurav.head.ittech@mmcoe.edu.in')).at(-1);
       expect(note).toMatchObject({ category: 'BOOKING_REJECTED', booking_id: booking.id });
     });
 
@@ -331,7 +331,7 @@ describeWithDb('approval workflow (database)', () => {
       await request(app).post(`/api/bookings/${byFaculty.id}/cancel`).set(auth(itCoordinator)).expect(200);
       await request(app).post(`/api/bookings/${bySelf.id}/cancel`).set(auth(gaurav)).expect(200);
 
-      expect(live.sentMail('gaurav.jadhav@mmcoe.edu.in').map((m) => m.subject)).toEqual(['"Hack Night" cancelled']);
+      expect(live.sentMail('gaurav.head.ittech@mmcoe.edu.in').map((m) => m.subject)).toEqual(['"Hack Night" cancelled']);
     });
 
     it('puts a new club request in every approver\'s bell, and a college-level one only with the Principal', async () => {
@@ -341,11 +341,11 @@ describeWithDb('approval workflow (database)', () => {
           WHERE n.booking_id = $1 AND n.category = 'BOOKING_REQUESTED' ORDER BY u.email`,
         [booking.id],
       );
-      expect(rows.map((r) => r.email)).toEqual(['coordinator.it@mmcoe.edu.in', 'principal@mmcoe.edu.in']);
+      expect(rows.map((r) => r.email)).toEqual(['gaurav.coordinator.it@mmcoe.edu.in', 'gaurav.principal@mmcoe.edu.in']);
 
       const { rows: [club] } = await db.query(
         `INSERT INTO clubs (club_name, department_id, club_head_id)
-         VALUES ($1, NULL, (SELECT user_id FROM users WHERE email = 'atharva.desai@mmcoe.edu.in')) RETURNING club_id`,
+         VALUES ($1, NULL, (SELECT user_id FROM users WHERE email = 'gaurav.head.envision@mmcoe.edu.in')) RETURNING club_id`,
         [`College Council ${Date.now()}`],
       );
       const college = await submit(atharva, { venueId: await newVenue(), clubId: club.club_id, date: day(33), startTime: '10:00', endTime: '11:00' }).expect(201);
@@ -353,7 +353,7 @@ describeWithDb('approval workflow (database)', () => {
         `SELECT u.email FROM notifications n JOIN users u ON u.user_id = n.user_id WHERE n.booking_id = $1`,
         [college.body.data.id],
       );
-      expect(collegeRows.map((r) => r.email)).toEqual(['principal@mmcoe.edu.in']);
+      expect(collegeRows.map((r) => r.email)).toEqual(['gaurav.principal@mmcoe.edu.in']);
     });
   });
 
