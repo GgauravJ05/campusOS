@@ -282,7 +282,7 @@ export default function EventDetailPage() {
               )}
 
               <div className="mt-6 grid gap-4 border-t border-zinc-100 pt-5 sm:grid-cols-3 dark:border-zinc-800">
-                <Detail icon={CalendarDays} label="Date">{formatLongDate(event.date)}</Detail>
+                <Detail icon={CalendarDays} label="Date"><time dateTime={event.date}>{formatLongDate(event.date)}</time></Detail>
                 <Detail icon={Clock} label="Time">{formatTimeRange(event.startTime, event.endTime)}</Detail>
                 <Detail icon={MapPin} label="Venue">
                   {event.venue

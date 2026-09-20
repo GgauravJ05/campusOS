@@ -57,9 +57,9 @@ export function AuthLayout() {
           </ul>
         </div>
 
-        <p className="relative text-xs text-zinc-500">
-          © {new Date().getFullYear()} Team A6 · Marathwada Mitra Mandal&apos;s College of Engineering, Pune
-        </p>
+        <footer className="relative text-xs text-zinc-500">
+          <small>© {new Date().getFullYear()} Team A6 · Marathwada Mitra Mandal&apos;s College of Engineering, Pune</small>
+        </footer>
       </aside>
 
       <main className="relative flex flex-col px-5 py-6 sm:px-10">

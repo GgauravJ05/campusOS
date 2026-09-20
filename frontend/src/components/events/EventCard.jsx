@@ -9,13 +9,14 @@ import { cn } from '@/lib/utils'
 /** The date block on the left of a card - the thing people scan for. */
 export function DateChip({ date, className }) {
   return (
-    <span
+    <time
+      dateTime={date}
       className={cn('grid size-12 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300', className)}
       aria-hidden
     >
       <span className="text-[10px] font-semibold tracking-wide uppercase">{shortMonth(date)}</span>
       <span className="-mt-0.5 text-lg leading-none font-semibold tabular-nums">{dayOfMonth(date)}</span>
-    </span>
+    </time>
   )
 }
 
@@ -56,6 +57,7 @@ export function EventCard({ event, reason }) {
 
   return (
     <li>
+      <article className="h-full">
       <Link
         to={`/events/${event.id}`}
         className="flex h-full flex-col rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-soft transition-all hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lift dark:border-zinc-800 dark:bg-zinc-900/60 dark:hover:border-zinc-700"
@@ -92,14 +94,15 @@ export function EventCard({ event, reason }) {
           </div>
         </dl>
 
-        <div className="mt-4 border-t border-zinc-100 pt-3 dark:border-zinc-800">
+        <figure className="mt-4 border-t border-zinc-100 pt-3 dark:border-zinc-800">
           <SeatMeter event={event} className="mb-2" />
-          <p className="flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400">
+          <figcaption className="flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400">
             <Users2 className="size-3.5" aria-hidden />
             {seatsLeftLabel(event)}
-          </p>
-        </div>
+          </figcaption>
+        </figure>
       </Link>
+      </article>
     </li>
   )
 }
