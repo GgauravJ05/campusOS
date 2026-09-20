@@ -163,7 +163,8 @@ describeWithDb('clubs (database)', () => {
       expect(renamed.body.data.name).toBe(`${club.name} 2`);
 
       await patch(itCoordinator, club.id, { name: `${club.name} 2`, isActive: true }).expect(200);
-      const { rows } = await db.query(`SELECT action FROM admin_logs WHERE target_type = 'CLUB' AND target_id = $1`, [club.id]);
+      const { rows } = await db.query(`SELECT action FROM admin_logs WHERE target_type = 'CLUB' AND target_id = $1 ORDER BY log_id`, [club.id]);
+      // Ordered: without ORDER BY, PostgreSQL returns rows in whatever order its plan finds them.
       expect(rows.map((r) => r.action)).toEqual(['CLUB_CREATED', 'CLUB_UPDATED']);
 
       await patch(itCoordinator, club.id, {}).expect(422);
