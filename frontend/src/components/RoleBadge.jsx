@@ -14,6 +14,6 @@ export function StatusBadge({ user }) {
 
 export function ScopeBadge({ scope }) {
   return scope === 'COLLEGE'
-    ? <Badge tone="violet">College-wide</Badge>
+    ? <Badge tone="accent">College-wide</Badge>
     : <Badge tone="zinc">Department</Badge>
 }

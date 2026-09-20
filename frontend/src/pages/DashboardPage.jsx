@@ -82,9 +82,9 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 via-brand-600 to-violet-700 p-6 text-white shadow-lift sm:p-8">
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 via-brand-600 to-indigo-700 p-6 text-white shadow-lift sm:p-8">
         <div className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-white/10 blur-2xl" aria-hidden />
-        <div className="pointer-events-none absolute -bottom-32 left-1/3 size-72 rounded-full bg-violet-400/20 blur-3xl" aria-hidden />
+        <div className="pointer-events-none absolute -bottom-32 left-1/3 size-72 rounded-full bg-indigo-400/20 blur-3xl" aria-hidden />
         <div className="relative flex flex-wrap items-end justify-between gap-6">
           <div>
             <p className="text-sm font-medium text-brand-100">{greeting()}</p>

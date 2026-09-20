@@ -2,8 +2,8 @@ import { Building2, Dumbbell, FlaskConical, Mic2, Presentation, School, Theater,
 import { cn } from '@/lib/utils'
 
 const TYPE_STYLE = {
-  AUDITORIUM: { icon: Theater, gradient: 'from-violet-500 to-fuchsia-500' },
-  SEMINAR_HALL: { icon: Mic2, gradient: 'from-brand-500 to-violet-500' },
+  AUDITORIUM: { icon: Theater, gradient: 'from-indigo-500 to-fuchsia-500' },
+  SEMINAR_HALL: { icon: Mic2, gradient: 'from-brand-500 to-indigo-500' },
   LABORATORY: { icon: FlaskConical, gradient: 'from-sky-500 to-cyan-500' },
   CLASSROOM: { icon: School, gradient: 'from-emerald-500 to-teal-500' },
   CONFERENCE_ROOM: { icon: Presentation, gradient: 'from-amber-500 to-orange-500' },

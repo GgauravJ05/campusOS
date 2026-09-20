@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [UI palette — Framer Modern](#ui-palette--framer-modern-2026-09-20) | Gaurav |
 | 2026-09-19 | [Phase D.4 — the report classes, and writing exports to disk](#phase-d4--the-report-classes-and-writing-exports-to-disk-2026-09-19) | Gaurav |
 | 2026-09-19 | [Test fix — a venues assertion that broke depending on suite order](#test-fix--a-venues-assertion-that-broke-depending-on-suite-order-2026-09-19) | Gaurav |
 | 2026-09-19 | [Phase D.3 — the Booking state-machine class](#phase-d3--the-booking-state-machine-class-2026-09-19) | Gaurav |
@@ -39,6 +40,40 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## UI palette — Framer Modern (2026-09-20)
+
+The web app now uses the palette in `reference/color-palatte.jpg`:
+**#005BFF** blue, **#E6F0FF** pale blue, **#0F172A** navy, **#6366F1** indigo.
+
+- **Mostly tokens, not components.** The UI already styled itself from one
+  `brand-*` scale, so `frontend/src/index.css` re-anchors it: `brand-600` is
+  #005BFF (the primary button), `brand-50` is #E6F0FF. The neutral (`zinc-*`)
+  scale is now navy-tinted with #0F172A as its darkest step, so dark mode's page
+  is the palette navy and light mode's greys are cool blue-greys.
+- **Accent.** #6366F1 is exactly Tailwind's `indigo-500`, so no new tokens: the
+  ~25 `violet-*` classes became `indigo-*`, and the badge tone `violet` was
+  renamed `accent` (it names the role, not a hue). Two avatar gradients that would
+  have gone flat after the rename were re-pointed to `brand`/`indigo`.
+- **Logo, favicon and `theme-color`** moved from indigo→violet to blue→indigo.
+- **Contrast was checked, not eyeballed.** I computed WCAG ratios for the 16
+  text/background pairs the UI uses (white on the primary button 5.3:1, dark-mode
+  links 5.4:1, body text 15:1). One pair (muted text on the page) missed AA by 0.01,
+  so `zinc-500` was nudged darker to 4.7:1. `CLAUDE.md` now records the palette and
+  the "re-check contrast" rule.
+- **Verified in a browser**, not only by tests: login, dashboard (dark) and venues
+  (light), against a freshly seeded database. Lint, 178 frontend tests and the
+  production build pass. I did **not** click through every page (events, bookings,
+  people, reports, dialogs); anything I did not open is untested visually.
+
+**Heads-up for the local `campusos` database:** it is still on the *old* schema
+(no `venue_equipment`, no `event_feedback`), so the API will error against it.
+Rebuild it with `db/reset.sql` + `schema.sql` + `seed.sql` (this deletes its data).
+I ran the app against the scratch `campusos_test` instead and did not touch `campusos`.
+
+No backend, API or dependency change.
 
 ---
 

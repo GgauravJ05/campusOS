@@ -7,18 +7,40 @@
 @theme {
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
-  /* Brand: indigo leaning violet. */
-  --color-brand-50: oklch(0.97 0.02 275);
-  --color-brand-100: oklch(0.94 0.04 275);
-  --color-brand-200: oklch(0.88 0.07 276);
-  --color-brand-300: oklch(0.79 0.11 277);
-  --color-brand-400: oklch(0.68 0.16 278);
-  --color-brand-500: oklch(0.59 0.2 279);
-  --color-brand-600: oklch(0.51 0.22 280);
-  --color-brand-700: oklch(0.45 0.2 281);
-  --color-brand-800: oklch(0.38 0.16 282);
-  --color-brand-900: oklch(0.32 0.12 283);
-  --color-brand-950: oklch(0.22 0.08 284);
+  /*
+   * Palette: "Framer Modern" (reference/color-palatte.jpg).
+   *   #005BFF  vivid blue   -> brand-600, the primary
+   *   #E6F0FF  pale blue    -> brand-50, tints and hover fills
+   *   #0F172A  deep navy    -> zinc-950, the dark-mode page and the ink
+   *   #6366F1  indigo       -> Tailwind's own indigo-500, the accent (indigo-*)
+   * Every step below was checked against WCAG AA for the text/background pairs
+   * the UI actually uses (white on brand-600 is 5.3:1; muted text on the page
+   * is 4.7:1), so re-tuning a shade means re-checking those.
+   */
+  --color-brand-50: #e6f0ff;
+  --color-brand-100: #cce0ff;
+  --color-brand-200: #99c2ff;
+  --color-brand-300: #66a3ff;
+  --color-brand-400: #3d8bff;
+  --color-brand-500: #0a64ff;
+  --color-brand-600: #005bff;
+  --color-brand-700: #0048cc;
+  --color-brand-800: #003799;
+  --color-brand-900: #002670;
+  --color-brand-950: #00143d;
+
+  /* Neutrals: the palette's navy at the dark end, cool blue-greys above it. */
+  --color-zinc-50: #f6f8fd;
+  --color-zinc-100: #edf1f9;
+  --color-zinc-200: #dce3f0;
+  --color-zinc-300: #bac5da;
+  --color-zinc-400: #8895ae;
+  --color-zinc-500: #617087;
+  --color-zinc-600: #4c5871;
+  --color-zinc-700: #364159;
+  --color-zinc-800: #232e47;
+  --color-zinc-900: #172038;
+  --color-zinc-950: #0f172a;
 
   --shadow-soft: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 16px rgb(15 23 42 / 0.06);
   --shadow-lift: 0 2px 4px rgb(15 23 42 / 0.05), 0 12px 32px rgb(15 23 42 / 0.1);

@@ -144,7 +144,7 @@ function BookingCard({ booking, onAction, showRequester, focused }) {
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="font-semibold tracking-tight">{booking.event.title}</h3>
           <Badge tone={meta.tone} dot>{meta.label}</Badge>
-          {booking.isDirect && <Badge tone="violet"><Zap className="size-3" aria-hidden /> Direct</Badge>}
+          {booking.isDirect && <Badge tone="accent"><Zap className="size-3" aria-hidden /> Direct</Badge>}
           {booking.revision > 0 && booking.status === 'PENDING' && <Badge tone="blue"><History className="size-3" aria-hidden /> Resubmitted</Badge>}
           {booking.status === 'PENDING' && booking.competingRequests > 0 && (
             <Badge tone="amber"><Swords className="size-3" aria-hidden /> {booking.competingRequests} competing</Badge>

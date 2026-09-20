@@ -30,7 +30,7 @@ export function CardHeader({ title, description, action, className }) {
 const TONES = {
   zinc: 'bg-zinc-100 text-zinc-700 ring-zinc-500/10 dark:bg-zinc-800 dark:text-zinc-300',
   brand: 'bg-brand-50 text-brand-700 ring-brand-600/15 dark:bg-brand-500/15 dark:text-brand-300',
-  violet: 'bg-violet-50 text-violet-700 ring-violet-600/15 dark:bg-violet-500/15 dark:text-violet-300',
+  accent: 'bg-indigo-50 text-indigo-700 ring-indigo-600/15 dark:bg-indigo-500/15 dark:text-indigo-300',
   blue: 'bg-sky-50 text-sky-700 ring-sky-600/15 dark:bg-sky-500/15 dark:text-sky-300',
   amber: 'bg-amber-50 text-amber-800 ring-amber-600/20 dark:bg-amber-500/15 dark:text-amber-300',
   emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-600/15 dark:bg-emerald-500/15 dark:text-emerald-300',
@@ -47,8 +47,8 @@ export function Badge({ tone = 'zinc', dot = false, className, children }) {
 }
 
 const AVATAR_TONES = [
-  'from-indigo-500 to-violet-500',
-  'from-sky-500 to-indigo-500',
+  'from-brand-500 to-indigo-500',
+  'from-sky-500 to-brand-500',
   'from-emerald-500 to-teal-500',
   'from-amber-500 to-orange-500',
   'from-rose-500 to-pink-500',

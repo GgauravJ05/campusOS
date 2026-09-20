@@ -6,7 +6,7 @@ export function cn(...inputs) {
 }
 
 export const ROLE_META = {
-  SUPER_ADMIN: { label: 'Principal & HOD', short: 'Super admin', tone: 'violet', description: 'Full authority across the college.' },
+  SUPER_ADMIN: { label: 'Principal & HOD', short: 'Super admin', tone: 'accent', description: 'Full authority across the college.' },
   DEPT_COORDINATOR: { label: 'Department Coordinator', short: 'Coordinator', tone: 'blue', description: 'Faculty. Approves venues and manages users in their department.' },
   CLUB_HEAD: { label: 'Club Head', short: 'Club head', tone: 'amber', description: 'Leads a club: requests venues and publishes events.' },
   CLUB_MEMBER: { label: 'Club Member', short: 'Member', tone: 'emerald', description: 'Part of a club organising team.' },

@@ -267,7 +267,7 @@ export default function EventDetailPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone="brand">{CATEGORY_LABELS[event.category]}</Badge>
                 <Badge tone={status.tone}>{status.label}</Badge>
-                {event.scope === 'COLLEGE' && <Badge tone="violet">College-wide</Badge>}
+                {event.scope === 'COLLEGE' && <Badge tone="accent">College-wide</Badge>}
               </div>
               <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">{event.title}</h1>
               <p className="mt-1.5 flex items-center gap-1.5 text-sm text-zinc-500">
