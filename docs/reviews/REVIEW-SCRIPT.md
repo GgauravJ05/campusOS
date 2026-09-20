@@ -20,7 +20,7 @@ That is what this session reports against. The development is done.
 | --- | --- | --- |
 | Files in the repository | 36 | **326** |
 | Functional requirements implemented | 0 | **21 of 21** |
-| Automated tests | 0 | **1240** |
+| Automated tests | 0 | **1247** |
 | Working application | — | API + web app, running |
 
 ---
@@ -30,7 +30,7 @@ That is what this session reports against. The development is done.
 > "At Week 1 we had finished the SRS and the schema, and the plan was to start
 > development. What I want to show you today is that the development is
 > finished. All twenty-one functional requirements in the SRS are implemented,
-> the system runs end to end, and there are 1,240 automated tests that prove it
+> the system runs end to end, and there are 1,247 automated tests that prove it
 > behaves the way the document says it should.
 >
 > Rather than walk through module by module, I'll follow one event through the
@@ -218,7 +218,7 @@ Set a seat cap and an audience, then publish.
 npm test
 ```
 
-> "That's 1,013 tests on the backend, and another 227 on the frontend. Every push
+> "That's 1,013 tests on the backend, and another 234 on the frontend. Every push
 > runs them in GitHub Actions against a real PostgreSQL database, with a
 > coverage threshold that we're not allowed to drop below."
 
@@ -270,7 +270,7 @@ psql -h localhost -p 55432 -U postgres -d campusos \
 | | |
 | --- | --- |
 | Functional requirements | **21 of 21** implemented |
-| Automated tests | **1240** — 1013 backend, 227 frontend (full report: `docs/TEST-REPORT.md`) |
+| Automated tests | **1247** — 1013 backend, 234 frontend (full report: `docs/TEST-REPORT.md`) |
 | API endpoints | about 70 route handlers |
 | Database | 24 tables, 44 indexes, 8 triggers, 4 views |
 | Code | ~10,800 lines backend, ~7,200 frontend, ~13,700 lines of tests |
