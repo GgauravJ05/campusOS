@@ -174,6 +174,7 @@ memory (not `localStorage`) and send it as `Authorization: Bearer <token>`.
 | GET | `/` | 🔑 | Search (FR6). Query: `q, building, floor, type, minCapacity, equipment=a,b, departmentId, includeInactive (faculty), page, pageSize` |
 | GET | `/meta` | 🔑 | Building → Floor → Venue tree, venue types, equipment list, scheduling rules |
 | POST | `/check-availability` | 🔑 | `{ venueId, date, startTime, endTime }` → `available`, `conflicts`, `competingRequests`, `suggestions` (FR7) |
+| GET | `/nearest?from&date&startTime&endTime&minCapacity&type&limit` | 🔑 | Free venues for a window, nearest first by walking distance from a building (Dijkstra over the campus map). Each result has `walkingMetres`, `route`, `buildingsAway` and `fewestPathsPossible` (BFS) |
 | GET | `/:id` | 🔑 | One venue with its effective buffer |
 | GET | `/:id/availability?from&to` | 🔑 | Calendar blocks, ≤ 31 days: `BOOKED` (red) and `PENDING` (yellow) |
 | POST | `/` | 🎓 | Add venue (coordinators: always in their own department) |
@@ -185,6 +186,7 @@ memory (not `localStorage`) and send it as `Authorization: Bearer <token>`.
 | ------ | ---- | ------ | ------- |
 | POST | `/` | club head, 🎓 | `{ venueId, date, startTime, endTime, title, category, expectedAttendance, description?, clubId?, scope? }`. Club heads create a `PENDING` request (approvers are notified); faculty book directly (`APPROVED`). `409 SLOT_UNAVAILABLE` carries `conflicts` and `suggestions`. |
 | GET | `/` | 🔑 | `view=mine` (default) · `decisions` (🎓: `PENDING` requests you decide, or `status=MODIFICATION_REQUESTED` for those waiting on the club) · `all`. Filters: `status, venueId, from, to, page, pageSize` |
+| GET | `/inbox?policy=fcfs\|sjf\|priority&baseMinutes&perCompetitorMinutes` | 🎓 | The approval inbox in the order a CPU-scheduling policy would serve it, with waiting and turnaround time per request and a comparison of all three policies. The review time is a stated assumption, not a measurement |
 | GET | `/summary` | 🔑 | Badge counts: `awaitingDecision`, `myChangesRequested`, `myAwaitingApproval`, `unreadNotifications` |
 | GET | `/:id` | 🔑 | One booking with `modificationNote`, `revision`, `competingRequests` and `permissions.canDecide / canReject / canEdit / canCancel` |
 | PATCH | `/:id` | requester, club head | Edit an open request (`PENDING` or `MODIFICATION_REQUESTED`) — any of `venueId, date, startTime, endTime, title, description, category, expectedAttendance`. Re-checks the slot, returns it to `PENDING`, bumps `revision`, notifies approvers. The club cannot change. |
@@ -219,6 +221,35 @@ Administrators are the Principal / HOD (any club) and a coordinator (their depar
 Written for: new and updated requests (to approvers), approved / not approved / changes requested / cancelled by faculty (to the requester, also emailed), and being added to a club team (also emailed). Rows commit with the change they describe; emails are sent only after commit.
 
 Dates and times are **campus local time** (`Asia/Kolkata`); the API stores UTC.
+
+### Events (`/api/events`) — Phase 4 (FR14–FR17)
+
+| Method | Path | Auth | Notes |
+| --- | --- | --- | --- |
+| GET | `/` | 🔑 | Discovery feed (FR14). Query: `q, category, status, scope, clubId, venueId, departmentId, from, to, upcoming, mine, page, pageSize (≤ 50)`. Students see published events; organisers and faculty also see their own drafts |
+| GET | `/recommended?limit` | 🔑 | Up to 20 upcoming events ranked by the student's own registration history, each with the reason (FR17). No machine learning |
+| GET | `/my-activity?limit` | 🔑 | Events I registered for and events I created, tagged `ATTENDEE` / `ORGANISER` (a SQL `UNION`) |
+| GET | `/:id` | 🔑 | One event with seats, eligibility, `myRegistration`, related events, and `permissions` |
+| POST | `/:id/publish` | organiser, 🎓 | `{ maxSeats?, eligibleDepartments?, eligibleYears?, description?, bannerUrl? }` on an event whose booking is approved. Locks first, so two simultaneous publishes send one broadcast |
+| PATCH | `/:id` | organiser, 🎓 | Edit details; a seat cap cannot drop below the seats already taken |
+| GET | `/:id/registrations` | organiser, 🎓 | The roster: reserved and waitlisted, with counts. Query `status, includeCancelled` |
+| POST | `/:id/registrations` | 🔑 | `{ seats: 1 }` (FR15). Eligibility is checked; the seat is taken under a row lock, so twenty students racing for the last seat produce one winner. `409 EVENT_FULL` when full and the waitlist is off |
+| DELETE | `/:id/registrations/me` | 🔑 | Cancel my registration (FR16); the freed seat goes to the longest-waiting party that fits |
+| GET | `/:id/attendance` | organiser, 🎓 | Who is marked, and who is still to mark (`NOT IN`) |
+| POST | `/:id/attendance` | organiser, 🎓 | `{ marks: [{ studentId, status: PRESENT\|ABSENT\|EXCUSED }] }` once the event has started |
+| GET | `/:id/feedback/form` | 🔑 | The questions for this event's category, so a client can draw the form |
+| POST | `/:id/feedback` | 🔑 | `{ rating: 1-5, answers? }`. Only a student who held a seat, only after the start; sending again replaces the answer. Answers are stored as JSONB |
+| GET | `/:id/feedback` | organiser, 🎓 | Anonymous summary: average, rating spread, a tally per question, comments |
+
+### Dashboard, reports and audit — Phase 6 (FR18, FR20, FR21)
+
+| Method | Path | Auth | Notes |
+| --- | --- | --- | --- |
+| GET | `/api/dashboard` | 🔑 | One endpoint, four shapes: student, club head, coordinator (their department) and Principal (the college) |
+| GET | `/api/reports` | 🎓 | The available reports |
+| GET | `/api/reports/:report?format&from&to&departmentId` | 🎓 | `venue-utilisation`, `club-activity`, `attendance` and `audit-trail` (super admin only) as `json`, `csv` or `pdf`. A coordinator's report is scoped to their department |
+| GET | `/api/admin/audit` | super admin | The audit trail. Query `group, action, actorId, q, from, to, page, pageSize`. Append-only in the database |
+| GET | `/api/admin/audit/vocabulary` | super admin | The action names and groups the filters accept |
 
 ## The scheduling engine (FR8–FR10, FR12)
 

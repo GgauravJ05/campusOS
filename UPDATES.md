@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Pre-review audit: docs brought in line with the code](#pre-review-audit-docs-brought-in-line-with-the-code-2026-09-20) | Gaurav |
 | 2026-09-20 | [Docker removed, and a spelling fix](#docker-removed-and-a-spelling-fix-2026-09-20) | Gaurav |
 | 2026-09-20 | [Admin Block and Campus rooms, one-floor booking](#admin-block-and-campus-rooms-one-floor-booking-2026-09-20) | Gaurav |
 | 2026-09-20 | [Floor-wise Clubs and Venues, real rooms, and Gaurav demo accounts](#floor-wise-clubs-and-venues-real-rooms-and-gaurav-demo-accounts-2026-09-20) | Gaurav |
@@ -67,6 +68,39 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Pre-review audit: docs brought in line with the code (2026-09-20)
+
+Checked before the project goes to the guide: a fresh clone of `dev`, installed
+with `npm ci`, ran clean (1,030 backend and 247 frontend tests, no skips, lint and
+build pass, `npm audit` reports 0 vulnerabilities in both packages), no secrets or
+`.env` files are tracked, and no relative link in any Markdown file is broken.
+
+**Fixed:**
+- Two tracked files, `docs/images/ReadME.md` and `ReadMe.md`, differed only in
+  capitals. Git warns on clone and one overwrites the other on Windows and macOS.
+  They were identical; one is removed.
+- The backend README's API reference had **no section for events, dashboard,
+  reports or the audit trail**, and lacked `recommended`, `my-activity`,
+  `feedback`, `nearest` and the approval `inbox`. All added, written from the route
+  and validator files.
+- `README.md` quoted 666 and 178 tests; now 1,030 and 247, and warns that a skipped
+  database suite is not a pass. The repository layout now lists `scripts/`.
+- `docs/SYLLABUS-MAPPING.md` had stale figures (18 tables, 75 joins, "no set
+  operators yet") from before Phase C; re-measured (24 tables, 120+ joins, 41
+  named CHECKs, 38 foreign keys, about 20 `FOR UPDATE` sites, 30 transaction
+  call sites) and DML lab 4 corrected.
+- `frontend/README.md` still said Events had no backend; corrected, and the public
+  page is documented.
+
+**Not done, and only the team can do:** fill in `docs/CONTRIBUTIONS.md`; write the
+final project report and deck; the demo video (a recorder is drafted in
+`scripts/demo-video/` but not finished or committed). `main` is 82 commits behind
+`dev` (`dev` is the default branch); merging `dev` to `main` is the release step in
+`CONTRIBUTING.md`. Five Dependabot pull requests are open, one of them (#1, a
+Docker base image) is now moot.
+
+**Teammates must do:** nothing.
 
 ## Docker removed, and a spelling fix (2026-09-20)
 
