@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Phase F.5 — the deadlock case study, and Phase F complete](#phase-f5--the-deadlock-case-study-and-phase-f-complete-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase F.4 — shell scripts for reset, backup and demo](#phase-f4--shell-scripts-for-reset-backup-and-demo-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase F.3 — an LRU cache with hit/miss counters](#phase-f3--an-lru-cache-with-hitmiss-counters-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase F.2 — CPU scheduling policies for the approval inbox](#phase-f2--cpu-scheduling-policies-for-the-approval-inbox-2026-09-20) | Gaurav |
@@ -53,6 +54,28 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Phase F.5 — the deadlock case study, and Phase F complete (2026-09-20)
+
+**Syllabus:** B25IT402 Operating Systems, Unit 3 (deadlocks).
+
+**What changed:** new `docs/DEADLOCK-CASE-STUDY.md`, telling the Phase B
+`addMember` vs `changeRole` bug as an OS case study: the four Coffman conditions
+mapped to the real code, prevention by resource ordering versus PostgreSQL's
+detection and recovery, the proof (`lockorder.concurrency.test.js` and the
+`db/demo/05*` two-terminal demo), and the same idea in `updateRequest`
+(dining philosophers). `docs/SYLLABUS-MAPPING.md` is updated for all of Phase F.
+
+**Honest scope decision:** **Banker's algorithm is not implemented**, and the
+mapping row now says so and why (CampusOS locks single rows as it goes, so there
+are no declared maximum needs for a safety check to use). The plan listed it as
+"maybe"; a toy detached from the system would be worse than declaring it out.
+
+**Phase F summary:** F.1 semaphore, F.2 scheduling, F.3 LRU cache, F.4 shell
+scripts, F.5 case study. Still not covered in OS: threads, round robin,
+preemption, a bounded-buffer producer-consumer, and the file-system and disk units.
+
+**Teammates must do:** nothing. Docs only.
 
 ## Phase F.4 — shell scripts for reset, backup and demo (2026-09-20)
 
