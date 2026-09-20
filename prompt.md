@@ -67,9 +67,8 @@ the simplest one and note why in the commit.
       that before concluding the run passed
 - [ ] Frontend: `cd frontend && npm test` — every suite passes
 - [ ] `npm run test:ci` in both packages — coverage gates still hold
-- [ ] Database-backed suites run against a **freshly reseeded** database if
-      the change touches seed data, campus structure, or anything a stale
-      database could mask (see `CLAUDE.md`'s reseed command)
+- [ ] Database-backed suites: the run rebuilds the `*_test` database itself, so
+      nothing to do by hand; confirm the summary says `N passed` with no skips
 
 ## 7. Lint and build
 
