@@ -116,14 +116,14 @@ Don't duplicate these documents' content here. Read them.
   unreachable**, and `npm test`'s summary line still prints the full test
   count either way. Always confirm the run says `N passed`, not
   `M passed, K skipped` — a skip is a silent false green, not a pass.
-- **Reseed before a full test run.** Several suites assume a freshly seeded
-  database (recommendation ranking, some venue/club name assertions):
-  ```
-  dropdb -h localhost -p 55432 -U postgres campusos_test
-  createdb -h localhost -p 55432 -U postgres -O postgres campusos_test
-  psql -h localhost -p 55432 -U postgres -d campusos_test -f db/schema.sql
-  psql -h localhost -p 55432 -U postgres -d campusos_test -f db/seed.sql
-  ```
+- **The test run rebuilds the test database itself.** Jest's global setup
+  (`backend/tests/globalSetup.js`) runs `db/reset.sql`, `schema.sql` and
+  `seed.sql` before every run, so the suites always start from the same rows.
+  It only does this to a database whose name **ends in `_test`** (it deletes
+  everything in it); `TEST_DATABASE_KEEP=1` skips the rebuild to keep data for
+  debugging a failure. To reset any other dev database by hand:
+  `scripts/db-reset.sh NAME` (`--yes` unless it is `campusos_test` or `campusos_demo`).
+  `db/reset.sql` drops the whole `public` schema, so it can no longer go stale.
 - **After adding any backend dependency, run `npm run lock:rebuild`** in
   `backend/`. npm on macOS drops Linux-only optional lockfile entries that
   CI's `npm ci` requires, and a stale lockfile fails the pipeline.

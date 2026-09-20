@@ -1,27 +1,15 @@
 -- ============================================================
--- CampusOS - DESTRUCTIVE schema reset. Development use only.
--- Drops every CampusOS object so schema.sql can be re-applied cleanly.
+-- CampusOS - DESTRUCTIVE reset. Development use only.
+-- Drops the whole `public` schema, and with it every CampusOS table, view,
+-- function, trigger and extension, so schema.sql can be applied to a clean
+-- slate. Dropping the schema, rather than listing objects one by one, means
+-- this file cannot go stale when the schema gains a table (an older list
+-- of DROP TABLE statements here had missed the newer tables and views).
+--
+-- Anything else living in `public` of the same database goes too: run it
+-- only against a database that holds CampusOS and nothing else.
 -- Never run this against a deployed database.
 -- ============================================================
 
-DROP TABLE IF EXISTS admin_logs           CASCADE;
-DROP TABLE IF EXISTS event_reminders      CASCADE;
-DROP TABLE IF EXISTS notifications        CASCADE;
-DROP TABLE IF EXISTS event_materials      CASCADE;
-DROP TABLE IF EXISTS certificates         CASCADE;
-DROP TABLE IF EXISTS attendance           CASCADE;
-DROP TABLE IF EXISTS event_registrations  CASCADE;
-DROP TABLE IF EXISTS bookings             CASCADE;
-DROP TABLE IF EXISTS events               CASCADE;
-DROP TABLE IF EXISTS club_members         CASCADE;
-DROP TABLE IF EXISTS clubs                CASCADE;
-DROP TABLE IF EXISTS venues               CASCADE;
-DROP TABLE IF EXISTS system_settings      CASCADE;
-DROP TABLE IF EXISTS otps                 CASCADE;
-DROP TABLE IF EXISTS refresh_tokens       CASCADE;
-DROP TABLE IF EXISTS users                CASCADE;
-DROP TABLE IF EXISTS roles                CASCADE;
-DROP TABLE IF EXISTS departments          CASCADE;
-
-DROP FUNCTION IF EXISTS set_updated_at()             CASCADE;
-DROP FUNCTION IF EXISTS reject_admin_log_mutation()  CASCADE;
+DROP SCHEMA IF EXISTS public CASCADE;
+CREATE SCHEMA public;
