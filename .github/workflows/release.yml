@@ -63,7 +63,7 @@ jobs:
       - name: Package
         run: tar -czf ../campusos-web-${{ github.ref_name }}.tar.gz -C dist .
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: campusos-web
           path: campusos-web-${{ github.ref_name }}.tar.gz
