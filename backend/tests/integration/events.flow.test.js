@@ -10,6 +10,7 @@
 jest.mock('../../src/services/mail/mailer');
 
 const live = require('../helpers/liveApp');
+const settingsService = require('../../src/services/settings.service');
 const tw = require('../../src/services/scheduling/timeWindow');
 
 const { request, db, describeWithDb } = live;
@@ -78,10 +79,13 @@ describeWithDb('events and RSVP (database)', () => {
       WHERE event_id = $1`, [eventId],
   ));
 
-  const setWaitlist = (on) => db.query(
-    `UPDATE system_settings SET setting_value = $1 WHERE setting_key = 'rsvp.allow_waitlist'`,
-    [on ? 'true' : 'false'],
-  );
+  const setWaitlist = async (on) => {
+    await db.query(
+      `UPDATE system_settings SET setting_value = $1 WHERE setting_key = 'rsvp.allow_waitlist'`,
+      [on ? 'true' : 'false'],
+    );
+    settingsService.invalidate(); // direct SQL bypasses the cache's write-invalidation
+  };
 
   beforeAll(async () => {
     app = live.createApp();

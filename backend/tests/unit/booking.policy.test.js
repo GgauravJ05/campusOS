@@ -59,6 +59,9 @@ describe('venue management scope', () => {
 });
 
 describe('scheduling settings', () => {
+  // Settings are cached; each case must start cold to exercise its own mocked rows.
+  beforeEach(() => settings.invalidate());
+
   it('reads configured values', async () => {
     db.query.mockResolvedValue({ rows: [
       { setting_key: 'venue.default_buffer_minutes', setting_value: '20' },

@@ -10,6 +10,7 @@ const ApiError = require('../../utils/ApiError');
 const rbac = require('../rbac');
 const audit = require('../audit.service');
 const settings = require('../settings.service');
+const lookupCache = require('../lookupCache');
 const tw = require('../scheduling/timeWindow');
 const { Tree } = require('../../lib/ds/Tree');
 
@@ -175,7 +176,17 @@ async function getDirectoryMeta() {
   };
 }
 
+/**
+ * A venue row, from the LRU cache when it can be. A locking read, or one inside
+ * a caller's transaction, must see the database itself, so those bypass it.
+ */
 async function findVenueRow(venueId, client = db, { forUpdate = false } = {}) {
+  const cacheable = client === db && !forUpdate;
+  const key = `venue:${venueId}`;
+  if (cacheable) {
+    const hit = lookupCache.get(key);
+    if (hit !== undefined) return hit;
+  }
   const { rows } = await client.query(
     `SELECT ${VENUE_COLUMNS}
        FROM venues v LEFT JOIN departments d ON d.department_id = v.department_id
@@ -183,7 +194,10 @@ async function findVenueRow(venueId, client = db, { forUpdate = false } = {}) {
       WHERE v.venue_id = $1 ${forUpdate ? 'FOR UPDATE OF v' : ''}`,
     [venueId],
   );
-  return rows[0] || null;
+  const row = rows[0] || null;
+  // A missing venue is not cached: it may be created a moment later.
+  if (cacheable && row) lookupCache.set(key, Object.freeze(row));
+  return row;
 }
 
 async function getVenue(actor, venueId) {
@@ -240,7 +254,10 @@ async function createVenue(actor, input, { ip } = {}) {
       details: { name: input.name, building: input.building },
     }, client);
     return row.venue_id;
-  }).then((id) => getVenue(actor, id));
+  }).then((id) => {
+    lookupCache.invalidate(`venue:${id}`);
+    return getVenue(actor, id);
+  });
 }
 
 const UPDATABLE = {
@@ -279,6 +296,8 @@ async function updateVenue(actor, venueId, changes, { ip } = {}) {
       details: { changed: Object.keys(changes) },
     }, client);
   });
+  // After the commit, so a reader cannot re-cache the old row in between.
+  lookupCache.invalidate(`venue:${venueId}`);
   return getVenue(actor, venueId);
 }
 

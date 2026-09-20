@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Phase F.3 — an LRU cache with hit/miss counters](#phase-f3--an-lru-cache-with-hitmiss-counters-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase F.2 — CPU scheduling policies for the approval inbox](#phase-f2--cpu-scheduling-policies-for-the-approval-inbox-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase F.1 — seats as a counting semaphore](#phase-f1--seats-as-a-counting-semaphore-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase E.6 — a hash table, and Phase E complete](#phase-e6--a-hash-table-and-phase-e-complete-2026-09-20) | Gaurav |
@@ -51,6 +52,41 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Phase F.3 — an LRU cache with hit/miss counters (2026-09-20)
+
+**Syllabus:** B25IT402 Operating Systems, Unit 4 (memory management, page
+replacement); Lab 8.
+
+**What changed**
+- `backend/src/lib/ds/LruCache.js`: a doubly linked list (recency order) plus
+  the hand-written `HashTable` (key → node). O(1) `get`/`set`/eviction, optional
+  TTL, injectable clock, counters.
+- `backend/src/services/lookupCache.js`: the shared instance, capacity 16, TTL
+  30 s. It sits in front of `getSchedulingRules`, `getRsvpRules`,
+  `getReminderRules` and non-locking `findVenueRow`. The seed has more than 16
+  venues, so evictions genuinely occur.
+- Cache only when the caller uses the shared pool. A transaction client, or a
+  `FOR UPDATE` read, always goes to the database. Cached values are frozen.
+- `createVenue`/`updateVenue` invalidate the venue's entry after commit.
+  New `settings.invalidate()`.
+- `GET /api/health/metrics` now includes `cache` (size, capacity, hits, misses,
+  hitRate, evictions, expirations, invalidations).
+
+**Why:** it turns "the settings table is re-read on every call" into a small,
+observable page-replacement demo, and the plan's hash-table lookup cache
+(deferred from E.6) lands here with a real invalidation rule.
+
+**Trade-off, stated plainly:** data can be up to 30 s stale if changed by raw SQL
+(nothing in the app writes settings). The two test files that edit
+`system_settings` directly now call `settings.invalidate()`; `booking.policy`'s
+unit test does so in `beforeEach`.
+
+**Teammates must do:** nothing (no new dependency, no schema change).
+
+**Open:** only LRU is implemented, with no FIFO/Optimal comparison. Not shared
+across processes, so multiple API instances would each hold their own cache.
+The FR17 recommendations test still needs a freshly reseeded database.
 
 ## Phase F.2 — CPU scheduling policies for the approval inbox (2026-09-20)
 
