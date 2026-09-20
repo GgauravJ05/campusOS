@@ -4,6 +4,7 @@ const { matchedData } = require('express-validator');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendSuccess } = require('../utils/ApiResponse');
 const bookings = require('../services/bookings/booking.service');
+const inboxService = require('../services/bookings/inbox.service');
 
 const list = asyncHandler(async (req, res) => {
   const { items, meta } = await bookings.listBookings(req.user, matchedData(req, { locations: ['query'] }));
@@ -42,4 +43,8 @@ const summary = asyncHandler(async (req, res) => {
   sendSuccess(res, 200, await bookings.getSummary(req.user));
 });
 
-module.exports = { list, getOne, create, approve, reject, cancel, requestChanges, update, summary };
+const inbox = asyncHandler(async (req, res) => {
+  sendSuccess(res, 200, await inboxService.inbox(req.user, matchedData(req, { locations: ['query'] })));
+});
+
+module.exports = { inbox, list, getOne, create, approve, reject, cancel, requestChanges, update, summary };

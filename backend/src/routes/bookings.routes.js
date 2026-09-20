@@ -14,6 +14,8 @@ router.get('/', rules.list, validate, controller.list);
 router.post('/', requireRole(ROLES.CLUB_HEAD, ...FACULTY_ROLES), rules.create, validate, controller.create);
 // Badge counts; declared before /:id so "summary" is never parsed as an id.
 router.get('/summary', controller.summary);
+// The approver's inbox ordered by a CPU-scheduling policy (FCFS / SJF / priority), faculty only.
+router.get('/inbox', requireRole(...FACULTY_ROLES), rules.inbox, validate, controller.inbox);
 router.get('/:id', rules.getOne, validate, controller.getOne);
 // Edit and resubmit an open request (the requester or their club head).
 router.patch('/:id', rules.update, validate, controller.update);
