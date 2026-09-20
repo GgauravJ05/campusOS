@@ -43,4 +43,15 @@ const availability = [
   query('to').isISO8601({ strict: true }).withMessage('to must be YYYY-MM-DD'),
 ];
 
-module.exports = { list, create, update, getOne: [venueId], availability };
+const nearest = [
+  query('from').isString().trim().isLength({ min: 1, max: 80 }).withMessage('Say which building you are in'),
+  query('date').isISO8601({ strict: true }).withMessage('Use YYYY-MM-DD'),
+  query('startTime').matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('Use HH:MM'),
+  query('endTime').matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('Use HH:MM'),
+  query('minCapacity').optional().isInt({ min: 1, max: 100000 }).toInt(),
+  query('type').optional().isIn(VENUE_TYPES).withMessage('Unknown venue type'),
+  query('limit').optional().isInt({ min: 1, max: 20 }).toInt(),
+];
+
+module.exports = {
+  nearest, list, create, update, getOne: [venueId], availability };
