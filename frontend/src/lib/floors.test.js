@@ -23,6 +23,12 @@ describe('groupVenuesByFloor', () => {
     ])
   })
 
+  it('labels the jump chips by floor for the academic building and by building for the rest', () => {
+    expect(groupVenuesByFloor(venues).map((g) => g.chip)).toEqual(['1st floor', '4th floor', 'Admin Block', 'Campus'])
+    const twoFloors = [venue('X', 1, 'CLASSROOM', { building: 'Annexe' }), venue('Y', 2, 'CLASSROOM', { building: 'Annexe' })]
+    expect(groupVenuesByFloor(twoFloors).map((g) => g.chip)).toEqual(['Annexe, 1st floor', 'Annexe, 2nd floor'])
+  })
+
   it('splits a floor into classrooms, labs and halls, each in natural order', () => {
     const floor4 = groupVenuesByFloor(venues).find((g) => g.floor === 4 && g.building === 'Academic Building')
     expect(floor4.sections.map((s) => [s.label, s.venues.map((v) => v.name)])).toEqual([

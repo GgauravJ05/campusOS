@@ -41,8 +41,8 @@ real browsers (the component tests run in jsdom), and anything at production sca
 | | Suites | Tests | Passed | Failed | Skipped |
 | --- | --- | --- | --- | --- | --- |
 | Backend (Jest) | 59 | 1030 | 1030 | 0 | 0 |
-| Frontend (Vitest) | 15 | 247 | 247 | 0 | 0 |
-| **Total** | **74** | **1277** | **1277** | **0** | **0** |
+| Frontend (Vitest) | 15 | 248 | 248 | 0 | 0 |
+| **Total** | **74** | **1278** | **1278** | **0** | **0** |
 
 The backend's database suites skip themselves silently when PostgreSQL is
 unreachable, so "0 skipped" is a real check here, not a default. Measured with
@@ -109,7 +109,7 @@ Every file is listed in `backend/tests/`; the per-file counts come from `jest --
 | `pages/bookings/bookings.flows` | 11 |
 | `pages/venues/venues.flows` | 10 |
 | `lib/campusTime` | 9 |
-| `lib/floors` | 8 |
+| `lib/floors` | 9 |
 | `components/ui/semantics` | 3 |
 
 ## 4. Functional requirements: where each is tested
@@ -219,7 +219,7 @@ says little about the real database size.
 # backend
 cd backend && npm run test:ci          # expect: 59 suites, 1030 passed, 0 skipped
 # frontend
-cd frontend && npx vitest run --coverage   # expect: 15 files, 247 passed
+cd frontend && npx vitest run --coverage   # expect: 15 files, 248 passed
 
 # response-time probe (raise the limits only for this measurement)
 cd backend

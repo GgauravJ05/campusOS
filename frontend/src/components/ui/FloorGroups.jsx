@@ -16,7 +16,7 @@ export function FloorNav({ groups, className }) {
           onClick={() => document.getElementById(anchorId(group.key))?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
           className="shrink-0 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium whitespace-nowrap text-zinc-600 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-brand-500/40 dark:hover:bg-brand-500/10 dark:hover:text-brand-300"
         >
-          {group.title}
+          {group.chip ?? group.title}
           <span className="ml-1.5 text-xs text-zinc-400 tabular-nums">{group.count}</span>
         </button>
       ))}

@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Venues jump chips labelled by building](#venues-jump-chips-labelled-by-building-2026-09-20) | Gaurav |
 | 2026-09-20 | [Contribution matrix: Gaurav's row filled in](#contribution-matrix-gauravs-row-filled-in-2026-09-20) | Gaurav |
 | 2026-09-20 | [Pre-review audit: docs brought in line with the code](#pre-review-audit-docs-brought-in-line-with-the-code-2026-09-20) | Gaurav |
 | 2026-09-20 | [Docker removed, and a spelling fix](#docker-removed-and-a-spelling-fix-2026-09-20) | Gaurav |
@@ -69,6 +70,18 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Venues jump chips labelled by building (2026-09-20)
+
+Found while scripting the demo video. The "jump to a floor" chips on the Venues page
+were labelled by floor only, so the Admin Block's first floor and the Academic
+Building's first floor were both "1st floor", and Campus was "Ground floor". Chips
+for the Academic Building are still "4th floor" and so on; every other building is
+labelled by its name ("Admin Block", "Campus"), or "Annexe, 2nd floor" when it has
+several floors. Section headings are unchanged. One new test on the labels, and the
+venues page test now checks the full chip list. Frontend: 248 tests.
+
+**Teammates must do:** nothing.
 
 ## Contribution matrix: Gaurav's row filled in (2026-09-20)
 
