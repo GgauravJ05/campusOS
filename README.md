@@ -169,7 +169,7 @@ docs/        SRS, diagrams, workflows, weekly reports, syllabus mapping, test re
 | Network write-up      | [`docs/NETWORK.md`](docs/NETWORK.md)                  |
 | Deadlock case study   | [`docs/DEADLOCK-CASE-STUDY.md`](docs/DEADLOCK-CASE-STUDY.md) |
 | Ethics and privacy    | [`docs/ETHICS-PRIVACY-SUSTAINABILITY.md`](docs/ETHICS-PRIVACY-SUSTAINABILITY.md) |
-| Contribution matrix (template) | [`docs/CONTRIBUTIONS.md`](docs/CONTRIBUTIONS.md) |
+| Contribution matrix | [`docs/CONTRIBUTIONS.md`](docs/CONTRIBUTIONS.md) |
 
 ---
 
