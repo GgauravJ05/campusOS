@@ -27,3 +27,6 @@ yarn-error.log*
 logs/
 *.log
 backups/
+
+# Demo video recorder output
+scripts/demo-video/out/
