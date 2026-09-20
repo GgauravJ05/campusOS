@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-20 | [Feedback screen on the event page](#feedback-screen-on-the-event-page-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase H.3 — ethics, privacy and sustainability](#phase-h3--ethics-privacy-and-sustainability-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase H.2 — contribution matrix template](#phase-h2--contribution-matrix-template-2026-09-20) | Gaurav |
 | 2026-09-20 | [Phase H.1 — the test report](#phase-h1--the-test-report-2026-09-20) | Gaurav |
@@ -61,6 +62,31 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Feedback screen on the event page (2026-09-20)
+
+**Syllabus:** B25IT405 Lab 3 (feedback form); B25IT401 Unit 5 (the JSONB data it
+feeds).
+
+**What changed:** the feedback API had no screen. `FeedbackCard` (students) and
+`FeedbackSummary` (organisers) are new in `frontend/src/components/events/` and
+are shown on the event page once the event has started. The card asks for a 1-5
+star rating (the only required answer), the questions the server sets for that
+event's category (yes/no, or a choice for difficulty), and an optional comment.
+The API's rules are unchanged: only a student who held a seat, only after the
+start, and sending again replaces the earlier answer. Wording for the question
+keys lives in `eventsApi.js`; an unknown key falls back to its own name.
+
+**Checked:** 7 new component-flow tests (form, rating required, only answered
+questions sent, server refusal shown, hidden before the event / when waitlisted /
+when unregistered, organiser summary and empty state). The exact request the
+screen sends was also replayed with `curl` against the real API: accepted, and a
+second send replaced the first. **Not checked in a browser:** signing in through
+the login form is not something the browser tooling here may do, so the screen
+has been tested in jsdom and its API calls against the real server, not opened
+by eye. Please open one past event as a student and as a coordinator.
+
+**Teammates must do:** nothing.
 
 ## Phase H.3 — ethics, privacy and sustainability (2026-09-20)
 

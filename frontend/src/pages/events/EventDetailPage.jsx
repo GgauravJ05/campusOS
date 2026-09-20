@@ -10,6 +10,7 @@ import { usersApi } from '@/features/users/usersApi'
 import { EventFormDialog } from '@/components/events/EventFormDialog'
 import { AttendanceDialog } from '@/components/events/AttendanceDialog'
 import { SeatMeter } from '@/components/events/EventCard'
+import { FeedbackCard, FeedbackSummary } from '@/components/events/FeedbackCard'
 import { Button } from '@/components/ui/Button'
 import { Dialog } from '@/components/ui/Dialog'
 import { Alert, Avatar, Badge, Card, CardHeader, EmptyState, Skeleton } from '@/components/ui/Surface'
@@ -316,6 +317,8 @@ export default function EventDetailPage() {
               onMarkAttendance={() => setDialog('attendance')}
             />
           )}
+
+          {canViewRoster && hasHappened && <FeedbackSummary eventId={event.id} />}
         </div>
 
         <div className="space-y-6">
@@ -331,6 +334,8 @@ export default function EventDetailPage() {
               </p>
             </Card>
           )}
+
+          {hasHappened && event.myRegistration?.status === 'RESERVED' && <FeedbackCard eventId={event.id} />}
 
           <Card className="p-5">
             <h2 className="text-sm font-semibold">Who can attend</h2>
