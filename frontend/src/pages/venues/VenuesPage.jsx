@@ -20,9 +20,10 @@ function VenueCard({ venue }) {
   const shown = venue.equipment.slice(0, 3)
   const more = venue.equipment.length - shown.length
   return (
+    <article className="flex">
     <Link
       to={`/venues/${venue.id}`}
-      className="group flex flex-col rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-soft transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift dark:border-zinc-800 dark:bg-zinc-900/60 dark:hover:border-brand-500/40"
+      className="group flex w-full flex-col rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-soft transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift dark:border-zinc-800 dark:bg-zinc-900/60 dark:hover:border-brand-500/40"
     >
       <div className="flex items-start gap-3.5">
         <VenueIcon type={venue.type} />
@@ -55,6 +56,7 @@ function VenueCard({ venue }) {
         {more > 0 && <Badge tone="brand">+{more} more</Badge>}
       </div>
     </Link>
+    </article>
   )
 }
 
