@@ -365,7 +365,7 @@ This course's rubric is reproduced and checked against the repository in
 | Weight | Criterion | State |
 | --- | --- | --- |
 | 5% | Idea inception | ✅ SRS, Week 0 slides, Review 1 deck |
-| 60% | Outcomes — individual and team | Product: ✅ strong (21/21 FRs, 1,277 tests). Individual: 🟡 **a blank template exists (`docs/CONTRIBUTIONS.md`); the team has not filled it in** |
+| 60% | Outcomes — individual and team | Product: ✅ strong (21/21 FRs, 1,277 tests). Individual: 🟡 **`docs/CONTRIBUTIONS.md` has Gaurav Jadhav's row and module ownership filled in; the other members' rows are still blank** |
 | 10% | Documentation (incl. final report) | 🟡 requirements, `docs/TEST-REPORT.md`, `docs/NETWORK.md`, `docs/DEADLOCK-CASE-STUDY.md`, `docs/DATABASE.md`; **still no final project report** |
 | 10% | Demonstration (presentation, UI, usability) | 🟡 review script exists; no usability evaluation, no final deck |
 | 10% | Contest participation / publication | ⬜ nothing yet |
