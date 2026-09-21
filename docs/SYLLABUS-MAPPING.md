@@ -144,7 +144,7 @@ syllabus literally.
 
 | Unit | Topic | Status | Where | How to see it |
 | --- | --- | --- | --- | --- |
-| U1 | ER model, keys, relationships | 🟡 | 24 tables in `db/schema.sql`; `docs/diagrams/Database Schema.pdf` | The PDF exists but is a table diagram, not a Chen-notation ER with cardinalities |
+| U1 | ER model, keys, relationships | ✅ | 24 tables in `db/schema.sql`; `docs/diagrams/er-diagram.png` is a **crow's-foot ER diagram with cardinalities**, generated from the schema's own keys by `scripts/er-diagram/generate.mjs` so it cannot drift (the older `Database Schema.pdf` predates normalisation) | Open `docs/diagrams/er-diagram.md` on GitHub, or the PNG. Not Chen notation |
 | U1 | Extended ER (generalization/specialization) | ⬜ | `users.role_id → roles` is a flattened lookup, not a drawn ISA hierarchy | — |
 | U2 | DDL / DML | ✅ | `db/schema.sql` (CREATE), `db/seed.sql` (INSERT … SELECT, `ON CONFLICT` upserts) | `psql -f db/schema.sql` |
 | U2 | DCL (GRANT/REVOKE) | ⬜ | App connects as a single `postgres` role | — |
@@ -177,7 +177,7 @@ syllabus literally.
 | Lab | Topic | Status | Note |
 | --- | --- | --- | --- |
 | 1 | Install/configure MySQL | 🟡 | Project uses **PostgreSQL**, not MySQL — same relational concepts, different product. the root README documents the equivalent setup |
-| 2 | ER diagram → tables | 🟡 | SRS and an ER-style PDF exist; a formal cardinality-annotated ER diagram has not been drawn |
+| 2 | ER diagram → tables | 🟡 | SRS and an ER-style PDF exist; a cardinality-annotated ER diagram (crow's foot) is generated from the schema: `docs/diagrams/er-diagram.png` |
 | 3 | DDL | ✅ | `db/schema.sql` |
 | 4 | DML (insert/select/update/delete, set operators) | ✅ | INSERT (incl. `ON CONFLICT` upserts), SELECT, UPDATE, and `DELETE` where it is right (replacing a venue's equipment or an event's eligibility rows); everything else soft-deletes via `is_active`/status. `UNION` in `myActivity()` |
 | 5 | Operators, LIKE, IN/NOT IN, built-ins | ✅ | LIKE, IN and `NOT IN` (`attendance.service.js`'s `stillToMark()`) all present, fixed in Phase C |

@@ -159,6 +159,7 @@ docs/        SRS, diagrams, workflows, weekly reports, syllabus mapping, test re
 | --------------------- | ----------------------------------------------------- |
 | Software Requirements | [`docs/src/`](docs/src/)                              |
 | Use case diagram      | [`docs/diagrams/use_case.png`](docs/diagrams/use_case.png) |
+| ER diagram            | [`docs/diagrams/er-diagram.md`](docs/diagrams/er-diagram.md) (PNG/SVG beside it) |
 | Database schema       | [`db/schema.sql`](db/schema.sql)                      |
 | Backend guide         | [`backend/README.md`](backend/README.md)              |
 | Frontend guide        | [`frontend/README.md`](frontend/README.md)            |
