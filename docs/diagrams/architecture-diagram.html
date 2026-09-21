@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusOS system architecture</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --color-paper: #F6F8FD; --color-ink: #0F172A; --color-muted: #4C5871;
+             --font-sans: 'Geist', system-ui, sans-serif; --font-serif: 'Instrument Serif', serif; --font-mono: 'Geist Mono', ui-monospace, monospace; }
+    body { font-family: var(--font-sans); background: var(--color-paper); color: var(--color-ink); min-height: 100vh;
+           display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1280px; width: 100%; }
+    .eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-muted); margin-bottom: 0.5rem; }
+    h1 { font-family: var(--font-serif); font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2.5rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Architecture · CampusOS · Review 2</p>
+    <h1>How CampusOS is built</h1>
+
+    <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="arch-title arch-desc">
+      <title id="arch-title">CampusOS system architecture</title>
+      <desc id="arch-desc">Layered architecture of CampusOS: a React web app and a public page call an Express API whose request pipeline authorises every call; services and a plain-code domain layer sit on PostgreSQL, whose constraints and triggers enforce the booking and seat rules; a background worker and an optional mail server complete the picture.</desc>
+        <defs><marker id="ar-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4C5871"/></marker></defs>
+        <rect width="100%" height="100%" fill="#F6F8FD"/>
+
+        <rect x="40" y="40" width="1200" height="120" rx="8" fill="rgba(15,23,42,0.03)" stroke="rgba(15,23,42,0.14)" stroke-width="1"/>
+        <text x="56" y="60" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">01 · CLIENT</text>
+        <rect x="40" y="200" width="1200" height="120" rx="8" fill="rgba(15,23,42,0.03)" stroke="rgba(15,23,42,0.14)" stroke-width="1"/>
+        <text x="56" y="220" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">02 · API · NODE 24</text>
+        <rect x="40" y="360" width="1200" height="120" rx="8" fill="rgba(15,23,42,0.03)" stroke="rgba(15,23,42,0.14)" stroke-width="1"/>
+        <text x="56" y="380" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">03 · APPLICATION</text>
+        <rect x="40" y="520" width="1200" height="120" rx="8" fill="rgba(15,23,42,0.03)" stroke="rgba(15,23,42,0.14)" stroke-width="1"/>
+        <text x="56" y="540" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">04 · DATA</text>
+        <path d="M 304,142 L 304,230" stroke="#4C5871" stroke-width="1.5" fill="none" marker-end="url(#ar-arrow)"/>
+        <path d="M 640,142 L 640,168 Q 640,176 632,176 L 508,176 Q 500,176 500,184 L 500,230" stroke="#4C5871" stroke-width="1.5" fill="none" marker-end="url(#ar-arrow)"/>
+        <path d="M 440,302 L 440,390" stroke="#4C5871" stroke-width="1.5" fill="none" marker-end="url(#ar-arrow)"/>
+        <path d="M 1000,302 L 1000,332 Q 1000,340 992,340 L 768,340 Q 760,340 760,348 L 760,390" stroke="#4C5871" stroke-width="1.5" fill="none" marker-end="url(#ar-arrow)"/>
+        <path d="M 1130,302 L 1130,390" stroke="#4C5871" stroke-width="1.5" fill="none" marker-end="url(#ar-arrow)"/>
+        <path d="M 832,426 L 912,426" stroke="#4C5871" stroke-width="1.5" fill="none" marker-end="url(#ar-arrow)"/>
+        <path d="M 392,426 L 344,426" stroke="#4C5871" stroke-width="1.5" fill="none" marker-end="url(#ar-arrow)"/>
+        <path d="M 612,462 L 612,550" stroke="#4C5871" stroke-width="1.5" fill="none" marker-end="url(#ar-arrow)"/>
+        <path d="M 912,586 L 832,586" stroke="#4C5871" stroke-width="1.5" fill="none" marker-end="url(#ar-arrow)"/>
+        <rect x="312" y="178" width="137.6" height="16" rx="2" fill="#F6F8FD"/><text x="380.8" y="190" fill="#617087" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">HTTPS · JSON · JWT</text>
+        <rect x="555.2" y="156" width="29.6" height="16" rx="2" fill="#F6F8FD"/><text x="570" y="168" fill="#617087" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">XHR</text>
+        <rect x="448" y="334" width="137.6" height="16" rx="2" fill="#F6F8FD"/><text x="516.8" y="346" fill="#617087" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">AUTHORISED REQUEST</text>
+        <rect x="858" y="320" width="44" height="16" rx="2" fill="#F6F8FD"/><text x="880" y="332" fill="#617087" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">SWEEP</text>
+        <rect x="1138" y="334" width="44" height="16" rx="2" fill="#F6F8FD"/><text x="1160" y="346" fill="#617087" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">EMAIL</text>
+        <rect x="850" y="406" width="44" height="16" rx="2" fill="#F6F8FD"/><text x="872" y="418" fill="#617087" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">EMAIL</text>
+        <rect x="349.6" y="406" width="36.8" height="16" rx="2" fill="#F6F8FD"/><text x="368" y="418" fill="#617087" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">USES</text>
+        <rect x="620" y="500" width="159.2" height="16" rx="2" fill="#F6F8FD"/><text x="699.6" y="512" fill="#617087" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">SQL · ONE TRANSACTION</text>
+        <rect x="846.4" y="566" width="51.2" height="16" rx="2" fill="#F6F8FD"/><text x="872" y="578" fill="#617087" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.04em">GUARDS</text>
+        <rect x="64" y="70" width="480" height="72" rx="6" fill="#F6F8FD"/>
+        <rect x="64" y="70" width="480" height="72" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"/>
+        <text x="80" y="86" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">CLIENT · :5173</text>
+        <text x="80" y="104" fill="#0F172A" font-size="16" font-weight="600" font-family="'Geist', sans-serif">Web app · React 19</text>
+        <text x="80" y="120" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">student · club member · club head</text>
+        <text x="80" y="134" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">coordinator · principal · role dashboards</text>
+        <rect x="592" y="70" width="304" height="72" rx="6" fill="#F6F8FD"/>
+        <rect x="592" y="70" width="304" height="72" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"/>
+        <text x="608" y="86" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">STATIC PAGE</text>
+        <text x="608" y="104" fill="#0F172A" font-size="16" font-weight="600" font-family="'Geist', sans-serif">Public page</text>
+        <text x="608" y="120" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">Bootstrap · jQuery</text>
+        <text x="608" y="134" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">hand-written CSS · XHR</text>
+        <rect x="64" y="230" width="480" height="72" rx="6" fill="#F6F8FD"/>
+        <rect x="64" y="230" width="480" height="72" rx="6" fill="rgba(0,91,255,0.05)" stroke="#005BFF" stroke-width="1"/>
+        <text x="80" y="246" fill="#005BFF" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">API · :5050 · EXPRESS 5</text>
+        <text x="80" y="264" fill="#0F172A" font-size="16" font-weight="600" font-family="'Geist', sans-serif">Request pipeline</text>
+        <text x="80" y="280" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">request id · helmet · CORS · rate limit</text>
+        <text x="80" y="294" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">JWT check · role check · input validation</text>
+        <rect x="912" y="230" width="304" height="72" rx="6" fill="#F6F8FD"/>
+        <rect x="912" y="230" width="304" height="72" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"/>
+        <text x="928" y="246" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">IN-PROCESS TIMER</text>
+        <text x="928" y="264" fill="#0F172A" font-size="16" font-weight="600" font-family="'Geist', sans-serif">Background worker</text>
+        <text x="928" y="280" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">reminders 48 h and 2 h before</text>
+        <text x="928" y="294" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">closes finished events</text>
+        <rect x="64" y="390" width="280" height="72" rx="6" fill="#F6F8FD"/>
+        <rect x="64" y="390" width="280" height="72" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"/>
+        <text x="80" y="406" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">PLAIN CODE</text>
+        <text x="80" y="424" fill="#0F172A" font-size="16" font-weight="600" font-family="'Geist', sans-serif">Domain layer</text>
+        <text x="80" y="440" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">roles · booking states · seats</text>
+        <text x="80" y="454" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">heap · graph · hash table · LRU</text>
+        <rect x="392" y="390" width="440" height="72" rx="6" fill="#F6F8FD"/>
+        <rect x="392" y="390" width="440" height="72" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"/>
+        <text x="408" y="406" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">8 MODULES</text>
+        <text x="408" y="424" fill="#0F172A" font-size="16" font-weight="600" font-family="'Geist', sans-serif">Services</text>
+        <text x="408" y="440" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">auth · users · venues · bookings · clubs · events</text>
+        <text x="408" y="454" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">notifications · reminders · reports · audit trail</text>
+        <rect x="912" y="390" width="304" height="72" rx="6" fill="#F6F8FD"/>
+        <rect x="912" y="390" width="304" height="72" rx="6" fill="rgba(15,23,42,0.03)" stroke="#4C5871" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="928" y="406" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">EXTERNAL · OPTIONAL</text>
+        <text x="928" y="424" fill="#0F172A" font-size="16" font-weight="600" font-family="'Geist', sans-serif">Mail server (SMTP)</text>
+        <text x="928" y="440" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">OTP codes · decisions · reminders</text>
+        <text x="928" y="454" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">no SMTP: written to the log</text>
+        <rect x="64" y="550" width="768" height="72" rx="6" fill="#F6F8FD"/>
+        <rect x="64" y="550" width="768" height="72" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"/>
+        <text x="80" y="566" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">POSTGRESQL 16 · :55432</text>
+        <text x="80" y="584" fill="#0F172A" font-size="16" font-weight="600" font-family="'Geist', sans-serif">24 tables in third normal form</text>
+        <text x="80" y="600" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">views · JSONB feedback · cursor and stored function</text>
+        <text x="80" y="614" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">row locks: SELECT FOR UPDATE</text>
+        <rect x="912" y="550" width="304" height="72" rx="6" fill="#F6F8FD"/>
+        <rect x="912" y="550" width="304" height="72" rx="6" fill="rgba(0,91,255,0.05)" stroke="#005BFF" stroke-width="1"/>
+        <text x="928" y="566" fill="#005BFF" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">ENFORCED BY THE DATABASE</text>
+        <text x="928" y="584" fill="#0F172A" font-size="16" font-weight="600" font-family="'Geist', sans-serif">Database-enforced rules</text>
+        <text x="928" y="600" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">no overlapping bookings (exclusion)</text>
+        <text x="928" y="614" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace">seat-capacity and audit triggers</text>
+        <line x1="40" y1="664" x2="1240" y2="664" stroke="rgba(15,23,42,0.12)" stroke-width="0.8"/>
+        <text x="40" y="682" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+        <rect x="40" y="696" width="20" height="12" rx="2" fill="rgba(0,91,255,0.05)" stroke="#005BFF"/>
+        <text x="70" y="706" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">Where correctness is enforced</text>
+        <rect x="300" y="696" width="20" height="12" rx="2" fill="#ffffff" stroke="#0F172A"/>
+        <text x="330" y="706" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">Component</text>
+        <rect x="450" y="696" width="20" height="12" rx="2" fill="rgba(15,23,42,0.03)" stroke="#4C5871" stroke-dasharray="3,2"/>
+        <text x="480" y="706" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">External or optional</text>
+        <line x1="680" y1="702" x2="708" y2="702" stroke="#4C5871" stroke-width="1.5" marker-end="url(#ar-arrow)"/>
+        <text x="710" y="706" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">Request or data flow</text>
+        <text x="920" y="706" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">Ports are the local development ports</text>
+      </svg>
+  </div>
+</body>
+</html>
