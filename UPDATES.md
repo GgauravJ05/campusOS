@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-21 | [Use case and architecture diagrams, and a complete README](#use-case-and-architecture-diagrams-and-a-complete-readme-2026-09-21) | Gaurav |
 | 2026-09-21 | [Database map: all 24 tables on one slide](#database-map-all-24-tables-on-one-slide-2026-09-21) | Gaurav |
 | 2026-09-21 | [A slide-ready core ER diagram (diagram-design plugin)](#a-slide-ready-core-er-diagram-diagram-design-plugin-2026-09-21) | Gaurav |
 | 2026-09-21 | [A current ER diagram, generated from the schema](#a-current-er-diagram-generated-from-the-schema-2026-09-21) | Gaurav |
@@ -75,6 +76,34 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Use case and architecture diagrams, and a complete README (2026-09-21)
+
+**Diagrams** (made with the `diagram-design` plugin, `slide-16x9`, project palette; each in
+`docs/diagrams/` as `.html` source, `.svg` and `.png`, self-check passed, viewed after
+rendering, two fixes made from what the render showed):
+* `use-case-diagram`: five roles in two inheritance chains (student, club member, club head; coordinator,
+  principal), an abstract signed-in user, a timer and an optional mail server, and 17 use cases,
+  drawn so no lines cross. It **replaces the Review 1 diagram**, which showed "Login using Gmail" (not built)
+  and one undifferentiated "Admin".
+* `architecture-diagram`: client, API, application and data layers with the request pipeline,
+  services, domain layer, background worker, optional SMTP server and the database-enforced rules. It
+  replaces `docs/images/CampusOS_Structure_Overview.png`, which had overlapping text and lacked those parts.
+  A first draft said "5 role dashboards"; the API has four dashboard shapes, so it now says "role dashboards".
+  The Review 1 images are left in place, marked outdated in the brief.
+
+**README** rewritten as a complete document: overview, what each role can do, the three diagrams,
+database section (map, core ER, full ER), requirement status (**FR1 stated as partly done: Gmail sign-in is
+not built**), tech stack, getting started (with a Linux note and the `scripts/demo.sh` shortcut), demo
+accounts, tests, scripts, security summary, repository layout, documentation index, an honest
+"Known limitations" list, and team. Every relative link, anchor and image was checked. Section
+headings lost their emoji so the contents links work reliably.
+
+**Limits:** the use-case diagram shows headline use cases, not every endpoint (about 70). The
+diagram field of view is a design choice, so an endpoint can exist without a bubble. Fonts load from
+Google Fonts when a diagram HTML file is opened or re-rendered.
+
+**Teammates must do:** nothing.
 
 ## Database map: all 24 tables on one slide (2026-09-21)
 

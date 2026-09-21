@@ -69,7 +69,7 @@ Each slide lists: what goes on it, the picture, who presents it (fill in), and t
 Picture: a timeline of the phases (auth → venues and scheduling → approvals and clubs → events and RSVP → reminders → dashboards, reports, audit).
 
 ### Slide 4 — Requirement status · *Implementation Progress (5)*
-A compact table of FR1–FR21 with a tick. Group them:
+**Picture: `docs/diagrams/use-case-diagram.png`** (who can do what; roles inherit downwards). Then a compact table of FR1–FR21 with a tick. Group them:
 - **Access (FR1–FR5):** registration with college email + email OTP, login with JWT, 5 roles, sessions with rotating refresh tokens, profile. **FR1 note:** Gmail OAuth for external participants is designed into the database but the sign-in flow is **not built** — mark FR1 as partly done.
 - **Venues and scheduling (FR6–FR10):** directory by floor, calendar, overlap detection, 15-minute buffer, row locking.
 - **Governance (FR11–FR13):** clubs, two-track approvals, approval inbox with decision log.
@@ -90,7 +90,7 @@ Express REST API (Node.js, port 5050)
 PostgreSQL 16 (port 55432)
    tables, views, triggers, stored functions, row locks, audit trigger
 ```
-Picture source: `docs/images/CampusOS_Structure_Overview.png` is the older overview; redraw it to match the box diagram above (it predates several modules).
+**Picture: `docs/diagrams/architecture-diagram.png`** (16:9, made for a slide, matches the box diagram above and adds the background worker, the optional mail server and the rules enforced by the database). Do not use the older `docs/images/CampusOS_Structure_Overview.png`.
 
 ### Slide 6 — How the modules integrate · *Integration (10)*
 Show **one request travelling through every module** (this is the strongest integration story we have):
@@ -280,8 +280,10 @@ Gmail sign-in for external users; real room data; load testing at 500 users; tes
 | --- | --- |
 | Previous deck (template) | `reference/Review.pptx` |
 | SRS | `docs/src/EDI – A6 – Smart Campus Management Platform – SRS.pdf` |
-| Use case diagram | `docs/diagrams/use_case.png` |
-| Architecture overview (older, redraw) | `docs/images/CampusOS_Structure_Overview.png` |
+| Use case diagram (current, show this) | `docs/diagrams/use-case-diagram.png` |
+| Use case diagram from Review 1 (**outdated**: has Gmail login and a single Admin) | `docs/diagrams/use_case.png` |
+| Architecture diagram (current, show this) | `docs/diagrams/architecture-diagram.png` |
+| Architecture overview from Review 1 (**outdated**) | `docs/images/CampusOS_Structure_Overview.png` |
 | Database map, all 24 tables (**show first**) | `docs/diagrams/database-map.png` / `.svg` / `.html` |
 | ER diagram, core, slide-ready | `docs/diagrams/er-core-diagram.png` / `.svg` / `.html` |
 | ER diagram, all 24 tables (generated) | `docs/diagrams/er-diagram.png` / `.svg` (source: `er-diagram.md`) |
