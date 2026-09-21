@@ -519,7 +519,7 @@ consent notice and data export.
 | The scheduler and LRU cache | `backend/src/lib/os/scheduler.js`, `backend/src/lib/ds/LruCache.js` |
 | The schema, constraints, triggers | `db/schema.sql` |
 | Locking and ACID demos | `db/demo/` (two `psql` windows) |
-| The concurrency proofs | `backend/tests/integration/*.concurrency.test.js` (seats, publish, lock order) and the approval race in `backend/tests/integration/bookings.flow.test.js` and `backend/tests/concurrency.test.js` |
+| The concurrency proofs | `backend/tests/integration/*.concurrency.test.js` (seats, publish, lock order) and the approval race in `backend/tests/integration/bookings.flow.test.js` |
 | The public page | `frontend/public/about/` |
 | The diagrams | `docs/diagrams/` |
 | Syllabus mapping (every unit and lab) | `docs/SYLLABUS-MAPPING.md` |
