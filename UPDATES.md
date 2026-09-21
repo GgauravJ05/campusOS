@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-21 | [A current ER diagram, generated from the schema](#a-current-er-diagram-generated-from-the-schema-2026-09-21) | Gaurav |
 | 2026-09-21 | [Review 2 presentation brief](#review-2-presentation-brief-2026-09-21) | Gaurav |
 | 2026-09-20 | [The demo video and its recorder](#the-demo-video-and-its-recorder-2026-09-20) | Gaurav |
 | 2026-09-20 | [Venues jump chips labelled by building](#venues-jump-chips-labelled-by-building-2026-09-20) | Gaurav |
@@ -72,6 +73,31 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## A current ER diagram, generated from the schema (2026-09-21)
+
+**Syllabus:** B25IT401 DBMS Unit 1 (ER model, keys, cardinality), Lab 2.
+
+**What:** `docs/diagrams/er-diagram.md` (Mermaid source, renders on GitHub),
+`er-diagram.svg` and `er-diagram.png` (5734×3875): crow's-foot notation, all 24
+tables with their columns, PK/FK/UK marked, and the 38 foreign keys drawn with their
+cardinality. Produced by `scripts/er-diagram/generate.mjs`, which builds a scratch
+database from `db/schema.sql`, reads the keys from PostgreSQL's catalog and renders
+with Chrome. Cardinality is derived, not drawn by hand: a NOT NULL foreign key gives
+"exactly one" parent, a nullable one "zero or one", and the child side is "zero or
+many" unless the column is unique on its own (one-to-one). Rerun after any schema
+change: `cd scripts/er-diagram && npm install && node generate.mjs`.
+
+**Why:** the old `docs/diagrams/Database Schema.pdf` predates the normalisation
+(it still shows the array columns) and was needed for the Review 2 deck. It is left in
+place but marked out of date in the brief and the mapping.
+
+**Limits:** crow's foot, not Chen notation; the four views are not drawn; `otps` and
+`campus_paths` have no foreign keys and stand alone; rendering fetches Mermaid from the
+jsDelivr CDN, so it needs internet. Tool dependency `playwright-core` lives only in
+`scripts/er-diagram/package.json`.
+
+**Teammates must do:** nothing.
 
 ## Review 2 presentation brief (2026-09-21)
 

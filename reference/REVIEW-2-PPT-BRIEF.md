@@ -108,7 +108,7 @@ Proof it is integrated, not just separate parts: 19 integration test suites driv
 - 24 tables in **third normal form**: arrays were split into junction tables with composite keys (`venue_equipment`, `event_eligible_departments`, `event_eligible_years`)
 - Integrity in the database itself: 41 CHECK constraints, 38 foreign keys, an **exclusion constraint** that makes two approved bookings for the same room and time impossible, an **append-only audit trigger**
 - 4 reporting views (`GROUP BY`/`HAVING`), a stored function, a **cursor**, and event feedback stored as **JSONB with a GIN index** (our NoSQL substitute)
-- Picture: an ER diagram. **Warning:** `docs/diagrams/Database Schema.pdf` is from before the normalisation and is out of date. Redraw it from `db/schema.sql` (or ask Gaurav for a regenerated one) before using it.
+- Picture: the ER diagram **`docs/diagrams/er-diagram.png`** (crow's foot, all 24 tables, generated from the real schema on 21 Sept). It is large (5734×3875): put it on its own slide, or crop the core (users, clubs, venues, events, bookings, event_registrations). Do **not** use the old `docs/diagrams/Database Schema.pdf`, which predates normalisation.
 
 ### Slide 8 — Technical problems we solved (1/2) · *Technical Problem Solving (5)*
 **A. Two clubs, one venue, same time (race condition).**
@@ -278,7 +278,8 @@ Gmail sign-in for external users; real room data; load testing at 500 users; tes
 | SRS | `docs/src/EDI – A6 – Smart Campus Management Platform – SRS.pdf` |
 | Use case diagram | `docs/diagrams/use_case.png` |
 | Architecture overview (older, redraw) | `docs/images/CampusOS_Structure_Overview.png` |
-| ER diagram (**out of date**, redraw) | `docs/diagrams/Database Schema.pdf` |
+| ER diagram (current, generated) | `docs/diagrams/er-diagram.png` / `.svg` (source: `er-diagram.md`) |
+| Old ER diagram (**out of date**, don't use) | `docs/diagrams/Database Schema.pdf` |
 | 32 real app screenshots | `scripts/demo-video/out/*.png` (after running the recorder) |
 | Demo video | `scripts/demo-video/out/CampusOS-demo.mp4` |
 | Test report | `docs/TEST-REPORT.md` |
