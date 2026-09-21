@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-21 | [Test fix: a racy password-reset test](#test-fix-a-racy-password-reset-test-2026-09-21) | Gaurav |
 | 2026-09-21 | [Feedback on the team's Review 2 deck](#feedback-on-the-teams-review-2-deck-2026-09-21) | Gaurav |
 | 2026-09-21 | [Use case and architecture diagrams, and a complete README](#use-case-and-architecture-diagrams-and-a-complete-readme-2026-09-21) | Gaurav |
 | 2026-09-21 | [Database map: all 24 tables on one slide](#database-map-all-24-tables-on-one-slide-2026-09-21) | Gaurav |
@@ -77,6 +78,18 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Test fix: a racy password-reset test (2026-09-21)
+
+Found while checking the project before the review: `auth.flows.test.jsx` "requests a code, sets a
+new password, and returns to sign in" failed about half of the full frontend runs (3 of 6) with the
+email `sha@…` instead of `Asha@…`. **Cause (test, not app):** after clicking "Forgot password?" the
+test typed into the first "College email" field it found, which could still be the sign-in page's
+field (same label) while the route changed, so the first letter went to the old field. **Fix:** wait for
+the "Forgot your password?" heading before typing. Eight consecutive full runs now pass (248/248).
+It would also have failed CI intermittently.
+
+**Teammates must do:** nothing.
 
 ## Feedback on the team's Review 2 deck (2026-09-21)
 
