@@ -100,7 +100,7 @@ Show **one request travelling through every module** (this is the strongest inte
 4. Organiser publishes the event → **Events** broadcasts to eligible students
 5. Student reserves a seat → seat counter taken under a row lock; a **trigger** refuses overbooking even if code is bypassed
 6. **Reminder worker** sends reminders 2 days and 2 hours before
-7. After the event → attendance and **JSONB feedback** → **Reports** and **Dashboard** read from SQL views
+7. After the event → attendance and **JSONB feedback** → **Reports** and **Dashboard** read the data with plain `GROUP BY` / `HAVING` SQL (the same shape as the four reporting views in the database, which you can query directly in `psql`)
 
 Proof it is integrated, not just separate parts: 19 integration test suites drive the real HTTP API against a real PostgreSQL database.
 
