@@ -83,8 +83,8 @@ build history. Every change that lands gets an entry (see
 `docs/diagrams/` as `.html` source, `.svg` and `.png`, self-check passed, viewed after
 rendering, two fixes made from what the render showed):
 * `use-case-diagram`: five roles in two inheritance chains (student, club member, club head; coordinator,
-  principal), an abstract signed-in user, a timer and an optional mail server, and 17 use cases,
-  drawn so no lines cross. It **replaces the Review 1 diagram**, which showed "Login using Gmail" (not built)
+  principal), an abstract signed-in user, a timer and an optional mail server, and 20 use cases (3 shared, 8 on the
+  student side, 9 faculty and system), drawn so no lines cross. It **replaces the Review 1 diagram**, which showed "Login using Gmail" (not built)
   and one undifferentiated "Admin".
 * `architecture-diagram`: client, API, application and data layers with the request pipeline,
   services, domain layer, background worker, optional SMTP server and the database-enforced rules. It
