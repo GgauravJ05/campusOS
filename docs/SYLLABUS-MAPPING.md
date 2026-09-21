@@ -36,7 +36,7 @@ single line of this project was written.
 | PO5 Modern tool usage | Apply appropriate techniques and modern engineering tools | Git, CI/CD, automated testing, PostgreSQL, React |
 | PO9 Individual and team work | Function as a member/leader in a team | 12-member team, see the PBL section |
 | PO10 Communication | Write reports, design documentation, give presentations | SRS, UPDATES.md, review script |
-| PSO1 | Develop quality computer applications by applying principles of software engineering | Phased build, 845 automated tests, CI gates |
+| PSO1 | Develop quality computer applications by applying principles of software engineering | Phased build, 1,278 automated tests, CI gates |
 | PSO2 | Pursue advancement in the field of data engineering | Database design, normalization, reporting/analytics |
 
 ---

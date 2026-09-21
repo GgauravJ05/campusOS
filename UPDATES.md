@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-21 | [Project guide for the review](#project-guide-for-the-review-2026-09-21) | Gaurav |
 | 2026-09-21 | [Test fix: a racy password-reset test](#test-fix-a-racy-password-reset-test-2026-09-21) | Gaurav |
 | 2026-09-21 | [Feedback on the team's Review 2 deck](#feedback-on-the-teams-review-2-deck-2026-09-21) | Gaurav |
 | 2026-09-21 | [Use case and architecture diagrams, and a complete README](#use-case-and-architecture-diagrams-and-a-complete-readme-2026-09-21) | Gaurav |
@@ -78,6 +79,21 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Project guide for the review (2026-09-21)
+
+**What:** `docs/PROJECT.md`, a speaking guide for explaining the whole project: one- and
+three-minute scripts, a word-for-word demo, the architecture and why each technology was
+chosen, the database in depth, every syllabus subject with what/where/why/honest limit,
+the four concurrency stories, testing, security, limits, 41 likely questions with answers,
+a glossary and a numbers cheat sheet. Linked from the README. Also corrected the test count
+in the PSO1 row of `docs/SYLLABUS-MAPPING.md` (845 to 1,278).
+
+**Why:** the presenter needs to explain the reasoning behind each choice, not only list it.
+
+**Teammates must do:** nothing.
+
+**Open:** the guide states FR1 (outside participants) as pending; update it when built.
 
 ## Test fix: a racy password-reset test (2026-09-21)
 

@@ -308,6 +308,7 @@ reference/   syllabus, colour palette, review notices and the Review 2 presentat
 | Test report           | [`docs/TEST-REPORT.md`](docs/TEST-REPORT.md)          |
 | Network write-up      | [`docs/NETWORK.md`](docs/NETWORK.md)                  |
 | Deadlock case study   | [`docs/DEADLOCK-CASE-STUDY.md`](docs/DEADLOCK-CASE-STUDY.md) |
+| Project explained (script, Q&A) | [`docs/PROJECT.md`](docs/PROJECT.md) |
 | Syllabus mapping      | [`docs/SYLLABUS-MAPPING.md`](docs/SYLLABUS-MAPPING.md) |
 | Ethics, privacy, sustainability | [`docs/ETHICS-PRIVACY-SUSTAINABILITY.md`](docs/ETHICS-PRIVACY-SUSTAINABILITY.md) |
 | Contribution matrix   | [`docs/CONTRIBUTIONS.md`](docs/CONTRIBUTIONS.md)      |
