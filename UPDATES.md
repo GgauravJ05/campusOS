@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-21 | [Feedback on the team's Review 2 deck](#feedback-on-the-teams-review-2-deck-2026-09-21) | Gaurav |
 | 2026-09-21 | [Use case and architecture diagrams, and a complete README](#use-case-and-architecture-diagrams-and-a-complete-readme-2026-09-21) | Gaurav |
 | 2026-09-21 | [Database map: all 24 tables on one slide](#database-map-all-24-tables-on-one-slide-2026-09-21) | Gaurav |
 | 2026-09-21 | [A slide-ready core ER diagram (diagram-design plugin)](#a-slide-ready-core-er-diagram-diagram-design-plugin-2026-09-21) | Gaurav |
@@ -76,6 +77,18 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Feedback on the team's Review 2 deck (2026-09-21)
+
+`reference/REVIEW-2-DECK-FEEDBACK.md`: a slide-by-slide review of the team's
+`CampusOS_Review_2_Presentation_.pptx.pdf` (all 15 slides rendered and read), with must-fix
+items (a database slide with fields and links that do not exist, a team slide with three names and
+no contributions against a 12-member SRS roster, misleading progress cards, a wrong "reports read
+SQL views" claim, wrong title and header for the course, name spellings that disagree with the SRS),
+should-fix items and what to keep. **Correction to my own earlier work:** the Review 2 brief said reports
+read from SQL views; they use plain parameterised SQL, and the brief is fixed.
+
+**Teammates must do:** apply the changes in the file before 10:00 on 22.09.2026.
 
 ## Use case and architecture diagrams, and a complete README (2026-09-21)
 
