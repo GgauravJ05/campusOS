@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusOS · core data model</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:  #F6F8FD;
+      --color-ink:    #0F172A;
+      --color-muted:  #4C5871;
+      --color-accent: #005BFF;
+      --font-sans:    'Geist', system-ui, sans-serif;
+      --font-serif:   'Instrument Serif', serif;
+      --font-mono:    'Geist Mono', ui-monospace, monospace;
+    }
+    body { font-family: var(--font-sans); background: var(--color-paper); color: var(--color-ink); min-height: 100vh;
+           display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1280px; width: 100%; }
+    .eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase;
+               color: var(--color-muted); margin-bottom: 0.5rem; }
+    h1 { font-family: var(--font-serif); font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2.5rem); font-weight: 400; letter-spacing: -0.02em;
+         line-height: 1.15; color: var(--color-ink); margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">ER · CampusOS · Review 2</p>
+    <h1>From a venue request to a reserved seat</h1>
+
+    <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="er-core-title er-core-desc">
+      <title id="er-core-title">CampusOS core data model</title>
+      <desc id="er-core-desc">Entity-relationship diagram of the seven tables on the path from a department's club requesting a venue to a student reserving a seat, showing that bookings and event registrations are where scheduling and capacity are enforced.</desc>
+        <defs></defs>
+        <rect width="100%" height="100%" fill="#F6F8FD"/>
+
+        <line x1="248" y1="80" x2="304" y2="80" stroke="#4C5871" stroke-width="1.5"/>
+        <line x1="488" y1="80" x2="544" y2="80" stroke="#4C5871" stroke-width="1.5"/>
+        <line x1="728" y1="80" x2="784" y2="80" stroke="#4C5871" stroke-width="1.5"/>
+        <line x1="968" y1="80" x2="1024" y2="80" stroke="#4C5871" stroke-width="1.5"/>
+        <line x1="728" y1="360" x2="784" y2="360" stroke="#4C5871" stroke-width="1.5"/>
+        <line x1="876" y1="280" x2="876" y2="328" stroke="#4C5871" stroke-width="1.5"/>
+        <rect x="252" y="56" width="48" height="16" rx="2" fill="#F6F8FD"/><text x="276" y="68" fill="#617087" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">HAS</text>
+        <text x="252" y="98" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" font-weight="600">0..1</text>
+        <text x="300" y="98" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">N</text>
+        <rect x="492" y="56" width="48" height="16" rx="2" fill="#F6F8FD"/><text x="516" y="68" fill="#617087" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">HEADS</text>
+        <text x="492" y="98" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" font-weight="600">0..1</text>
+        <text x="540" y="98" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">N</text>
+        <rect x="732" y="56" width="48" height="16" rx="2" fill="#F6F8FD"/><text x="756" y="68" fill="#617087" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">RUNS</text>
+        <text x="732" y="98" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" font-weight="600">0..1</text>
+        <text x="780" y="98" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">N</text>
+        <rect x="972" y="56" width="48" height="16" rx="2" fill="#F6F8FD"/><text x="996" y="68" fill="#617087" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">SEATS</text>
+        <text x="972" y="98" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" font-weight="600">1</text>
+        <text x="1020" y="98" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">N</text>
+        <rect x="732" y="336" width="48" height="16" rx="2" fill="#F6F8FD"/><text x="756" y="348" fill="#617087" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">HOSTS</text>
+        <text x="732" y="378" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" font-weight="600">1</text>
+        <text x="780" y="378" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">N</text>
+        <text x="868" y="296" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">1</text>
+        <text x="868" y="322" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" font-weight="600" text-anchor="end">N</text>
+        <rect x="884" y="296" width="44" height="16" rx="2" fill="#F6F8FD"/><text x="906" y="308" fill="#617087" font-size="12" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">NEEDS</text>
+        <rect x="64" y="48" width="184" height="168" rx="6" fill="#F6F8FD"/>
+        <rect x="64" y="48" width="184" height="168" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"/>
+        <rect x="64" y="48" width="184" height="44" rx="6" fill="rgba(15,23,42,0.05)"/>
+        <rect x="64" y="84" width="184" height="8" fill="rgba(15,23,42,0.05)"/>
+        <line x1="64" y1="92" x2="248" y2="92" stroke="rgba(15,23,42,0.22)" stroke-opacity="1" stroke-width="1"/>
+        <text x="80" y="64" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">ENTITY</text>
+        <text x="80" y="82" fill="#0F172A" font-size="14" font-weight="600" font-family="'Geist', sans-serif">departments</text>
+        <text x="80" y="112" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace"># department_id</text>
+        <text x="232" y="112" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="80" y="134" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">dept_code</text>
+        <text x="232" y="134" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">varchar</text>
+        <text x="80" y="156" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">dept_name</text>
+        <text x="232" y="156" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">varchar</text>
+        <text x="80" y="178" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">floor</text>
+        <text x="232" y="178" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">smallint</text>
+        <text x="80" y="200" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">is_active</text>
+        <text x="232" y="200" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">boolean</text>
+        <rect x="304" y="48" width="184" height="188" rx="6" fill="#F6F8FD"/>
+        <rect x="304" y="48" width="184" height="188" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"/>
+        <rect x="304" y="48" width="184" height="44" rx="6" fill="rgba(15,23,42,0.05)"/>
+        <rect x="304" y="84" width="184" height="8" fill="rgba(15,23,42,0.05)"/>
+        <line x1="304" y1="92" x2="488" y2="92" stroke="rgba(15,23,42,0.22)" stroke-opacity="1" stroke-width="1"/>
+        <text x="320" y="64" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">ENTITY</text>
+        <text x="320" y="82" fill="#0F172A" font-size="14" font-weight="600" font-family="'Geist', sans-serif">users</text>
+        <text x="320" y="112" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace"># user_id</text>
+        <text x="472" y="112" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="320" y="134" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">full_name</text>
+        <text x="472" y="134" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">varchar</text>
+        <text x="320" y="156" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">email</text>
+        <text x="472" y="156" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">varchar</text>
+        <text x="320" y="178" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">→ department_id</text>
+        <text x="472" y="178" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="320" y="200" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">→ role_id</text>
+        <text x="472" y="200" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="320" y="222" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">is_verified</text>
+        <text x="472" y="222" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">boolean</text>
+        <rect x="544" y="48" width="184" height="168" rx="6" fill="#F6F8FD"/>
+        <rect x="544" y="48" width="184" height="168" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"/>
+        <rect x="544" y="48" width="184" height="44" rx="6" fill="rgba(15,23,42,0.05)"/>
+        <rect x="544" y="84" width="184" height="8" fill="rgba(15,23,42,0.05)"/>
+        <line x1="544" y1="92" x2="728" y2="92" stroke="rgba(15,23,42,0.22)" stroke-opacity="1" stroke-width="1"/>
+        <text x="560" y="64" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">ENTITY</text>
+        <text x="560" y="82" fill="#0F172A" font-size="14" font-weight="600" font-family="'Geist', sans-serif">clubs</text>
+        <text x="560" y="112" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace"># club_id</text>
+        <text x="712" y="112" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="560" y="134" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">club_name</text>
+        <text x="712" y="134" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">varchar</text>
+        <text x="560" y="156" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">→ department_id</text>
+        <text x="712" y="156" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="560" y="178" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">→ club_head_id</text>
+        <text x="712" y="178" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="560" y="200" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">is_active</text>
+        <text x="712" y="200" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">boolean</text>
+        <rect x="784" y="48" width="184" height="232" rx="6" fill="#F6F8FD"/>
+        <rect x="784" y="48" width="184" height="232" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"/>
+        <rect x="784" y="48" width="184" height="44" rx="6" fill="rgba(15,23,42,0.05)"/>
+        <rect x="784" y="84" width="184" height="8" fill="rgba(15,23,42,0.05)"/>
+        <line x1="784" y1="92" x2="968" y2="92" stroke="rgba(15,23,42,0.22)" stroke-opacity="1" stroke-width="1"/>
+        <text x="800" y="64" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">ENTITY</text>
+        <text x="800" y="82" fill="#0F172A" font-size="14" font-weight="600" font-family="'Geist', sans-serif">events</text>
+        <text x="800" y="112" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace"># event_id</text>
+        <text x="952" y="112" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="800" y="134" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">title</text>
+        <text x="952" y="134" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">varchar</text>
+        <text x="800" y="156" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">category</text>
+        <text x="952" y="156" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">varchar</text>
+        <text x="800" y="178" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">event_date</text>
+        <text x="952" y="178" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">date</text>
+        <text x="800" y="200" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">→ club_id</text>
+        <text x="952" y="200" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="800" y="222" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">→ created_by</text>
+        <text x="952" y="222" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="800" y="244" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">max_seats</text>
+        <text x="952" y="244" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="800" y="266" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">booked_seats</text>
+        <text x="952" y="266" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <rect x="1024" y="48" width="184" height="168" rx="6" fill="#F6F8FD"/>
+        <rect x="1024" y="48" width="184" height="168" rx="6" fill="rgba(0,91,255,0.05)" stroke="#005BFF" stroke-width="1"/>
+        <rect x="1024" y="48" width="184" height="44" rx="6" fill="rgba(0,91,255,0.12)"/>
+        <rect x="1024" y="84" width="184" height="8" fill="rgba(0,91,255,0.12)"/>
+        <line x1="1024" y1="92" x2="1208" y2="92" stroke="#005BFF" stroke-opacity="0.45" stroke-width="1"/>
+        <text x="1040" y="64" fill="#005BFF" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">ENTITY · SEATS</text>
+        <text x="1040" y="82" fill="#0F172A" font-size="14" font-weight="600" font-family="'Geist', sans-serif">event_registrations</text>
+        <text x="1040" y="112" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace"># registration_id</text>
+        <text x="1192" y="112" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="1040" y="134" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">→ event_id</text>
+        <text x="1192" y="134" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="1040" y="156" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">→ student_id</text>
+        <text x="1192" y="156" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="1040" y="178" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">status</text>
+        <text x="1192" y="178" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">varchar</text>
+        <text x="1040" y="200" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">seats</text>
+        <text x="1192" y="200" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">smallint</text>
+        <rect x="544" y="328" width="184" height="212" rx="6" fill="#F6F8FD"/>
+        <rect x="544" y="328" width="184" height="212" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"/>
+        <rect x="544" y="328" width="184" height="44" rx="6" fill="rgba(15,23,42,0.05)"/>
+        <rect x="544" y="364" width="184" height="8" fill="rgba(15,23,42,0.05)"/>
+        <line x1="544" y1="372" x2="728" y2="372" stroke="rgba(15,23,42,0.22)" stroke-opacity="1" stroke-width="1"/>
+        <text x="560" y="344" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">ENTITY</text>
+        <text x="560" y="362" fill="#0F172A" font-size="14" font-weight="600" font-family="'Geist', sans-serif">venues</text>
+        <text x="560" y="392" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace"># venue_id</text>
+        <text x="712" y="392" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="560" y="414" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">venue_name</text>
+        <text x="712" y="414" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">varchar</text>
+        <text x="560" y="436" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">building</text>
+        <text x="712" y="436" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">varchar</text>
+        <text x="560" y="458" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">floor</text>
+        <text x="712" y="458" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">smallint</text>
+        <text x="560" y="480" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">venue_type</text>
+        <text x="712" y="480" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">varchar</text>
+        <text x="560" y="502" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">capacity</text>
+        <text x="712" y="502" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="560" y="524" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">→ department_id</text>
+        <text x="712" y="524" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <rect x="784" y="328" width="184" height="232" rx="6" fill="#F6F8FD"/>
+        <rect x="784" y="328" width="184" height="232" rx="6" fill="rgba(0,91,255,0.05)" stroke="#005BFF" stroke-width="1"/>
+        <rect x="784" y="328" width="184" height="44" rx="6" fill="rgba(0,91,255,0.12)"/>
+        <rect x="784" y="364" width="184" height="8" fill="rgba(0,91,255,0.12)"/>
+        <line x1="784" y1="372" x2="968" y2="372" stroke="#005BFF" stroke-opacity="0.45" stroke-width="1"/>
+        <text x="800" y="344" fill="#005BFF" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">ENTITY · APPROVAL</text>
+        <text x="800" y="362" fill="#0F172A" font-size="14" font-weight="600" font-family="'Geist', sans-serif">bookings</text>
+        <text x="800" y="392" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace"># booking_id</text>
+        <text x="952" y="392" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="800" y="414" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">→ event_id</text>
+        <text x="952" y="414" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="800" y="436" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">→ venue_id</text>
+        <text x="952" y="436" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="800" y="458" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">→ requested_by</text>
+        <text x="952" y="458" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="800" y="480" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">→ approved_by</text>
+        <text x="952" y="480" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">int</text>
+        <text x="800" y="502" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">start_at</text>
+        <text x="952" y="502" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">timestamptz</text>
+        <text x="800" y="524" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">end_at</text>
+        <text x="952" y="524" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">timestamptz</text>
+        <text x="800" y="546" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace">status</text>
+        <text x="952" y="546" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" text-anchor="end">varchar</text>
+        <path d="M 876 600 Q 868 582 876 563" fill="none" stroke="rgba(15,23,42,0.40)" stroke-width="1" stroke-dasharray="4,3"/>
+        <circle cx="876" cy="562" r="2.5" fill="#0F172A"/>
+        <text x="876" y="622" fill="#0F172A" font-size="16" font-style="italic" font-family="'Instrument Serif', serif" text-anchor="middle">an exclusion constraint forbids overlapping approved bookings</text>
+        <path d="M 1116 344 Q 1130 272 1116 219" fill="none" stroke="rgba(15,23,42,0.40)" stroke-width="1" stroke-dasharray="4,3"/>
+        <circle cx="1116" cy="218" r="2.5" fill="#0F172A"/>
+        <text x="1024" y="368" fill="#0F172A" font-size="16" font-style="italic" font-family="'Instrument Serif', serif">a trigger refuses</text>
+        <text x="1024" y="388" fill="#0F172A" font-size="16" font-style="italic" font-family="'Instrument Serif', serif">seats beyond max_seats</text>
+        <line x1="64" y1="664" x2="1216" y2="664" stroke="rgba(15,23,42,0.12)" stroke-width="0.8"/>
+        <text x="64" y="682" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+        <rect x="64" y="696" width="16" height="12" rx="2" fill="rgba(0,91,255,0.05)" stroke="#005BFF" stroke-width="1"/>
+        <text x="86" y="706" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">Where scheduling is enforced</text>
+        <rect x="268" y="696" width="16" height="12" rx="2" fill="#ffffff" stroke="#0F172A" stroke-width="1"/>
+        <text x="290" y="706" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">Entity</text>
+        <text x="352" y="706" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace" font-weight="600">#</text><text x="366" y="706" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">Primary key</text>
+        <text x="470" y="706" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace" font-weight="600">→</text><text x="488" y="706" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">Foreign key (a line is drawn only for the main path)</text>
+        <text x="820" y="706" fill="#4C5871" font-size="12" font-family="'Geist Mono', monospace" font-weight="600">1 · N · 0..1</text><text x="932" y="706" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">Cardinality: exactly one, many, zero or one</text>
+      </svg>
+  </div>
+</body>
+</html>
