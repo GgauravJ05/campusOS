@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-21 | [Database map: all 24 tables on one slide](#database-map-all-24-tables-on-one-slide-2026-09-21) | Gaurav |
 | 2026-09-21 | [A slide-ready core ER diagram (diagram-design plugin)](#a-slide-ready-core-er-diagram-diagram-design-plugin-2026-09-21) | Gaurav |
 | 2026-09-21 | [A current ER diagram, generated from the schema](#a-current-er-diagram-generated-from-the-schema-2026-09-21) | Gaurav |
 | 2026-09-21 | [Review 2 presentation brief](#review-2-presentation-brief-2026-09-21) | Gaurav |
@@ -74,6 +75,33 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Database map: all 24 tables on one slide (2026-09-21)
+
+`docs/diagrams/database-map.{html,svg,png}`, made with the `diagram-design` plugin at the
+`faithful` detail level (its one exemption from the 9-node budget: zoned, at most 24
+nodes) and the `slide-16x9` preset. It puts **every table** on one page in five areas
+(identity and access; clubs and governance; campus and scheduling; events and seats; after
+the event). Each table shows the tables it points to, so a reader can trace relationships
+without a tangle of 38 lines; tags mark lookups, many-to-many junction tables with composite
+keys, the JSONB feedback table, and the three rules enforced in the database (booking
+exclusion constraint, seat-capacity trigger, append-only audit trigger).
+
+**Everything on it is derived or checked:** the "points to" lists and the hub counts (`users`
+referenced by 13 tables, `events` by 10, 16 of the 24 tables point at one of them) are read
+from `docs/diagrams/er-diagram.md`, which is generated from `db/schema.sql`; 41 CHECK
+constraints, four composite primary keys and the two unused tables (`certificates`,
+`event_materials`, referenced nowhere in `backend/src` or `frontend/src`) were counted
+against the repository. The per-table tags are hand-written.
+
+**Limits:** it shows *which* tables reference which, not columns or cardinality (that is what
+`er-core-diagram` and `er-diagram` are for), and the stated "third normal form" carries the two
+documented exceptions (`venues.location`, `events.booked_seats`). Skill self-check passes;
+its geometry verifier is repository-only and was not run. Rebuild:
+`python3 scripts/er-diagram/database-map.py`, then `node scripts/er-diagram/render.mjs <abs path
+to database-map.html> <png> <svg>` (needs internet for the fonts).
+
+**Teammates must do:** nothing.
 
 ## A slide-ready core ER diagram (diagram-design plugin) (2026-09-21)
 
