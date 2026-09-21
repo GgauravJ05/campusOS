@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-21 | [Review 2 presentation brief](#review-2-presentation-brief-2026-09-21) | Gaurav |
 | 2026-09-20 | [The demo video and its recorder](#the-demo-video-and-its-recorder-2026-09-20) | Gaurav |
 | 2026-09-20 | [Venues jump chips labelled by building](#venues-jump-chips-labelled-by-building-2026-09-20) | Gaurav |
 | 2026-09-20 | [Contribution matrix: Gaurav's row filled in](#contribution-matrix-gauravs-row-filled-in-2026-09-20) | Gaurav |
@@ -71,6 +72,20 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Review 2 presentation brief (2026-09-21)
+
+New `reference/REVIEW-2-PPT-BRIEF.md` for the team building the Review 2 deck (EDI-1
+Review 2, Tue 22.09.2026, 10 am, MB 408 B). It follows the notice's six criteria
+(50 marks) slide by slide, and gives a live demo script with a video backup, the
+technical problems to present, a question bank, a teamwork split, and a "do not
+claim" list. Written from the repository, the notice and the Review 1 deck (both
+added to `reference/` by Gaurav; they are not committed here).
+
+**Found while writing it:** Gmail/Google sign-in (part of FR1) is **not implemented**;
+only the database supports an OAuth identity. The brief marks FR1 as partly done.
+`README.md` and `docs/reviews/REVIEW-SCRIPT.md` still say "21 of 21" and need the
+same correction. The ER diagram in `docs/diagrams/` predates normalisation.
 
 ## The demo video and its recorder (2026-09-20)
 
