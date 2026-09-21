@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-21 | [A slide-ready core ER diagram (diagram-design plugin)](#a-slide-ready-core-er-diagram-diagram-design-plugin-2026-09-21) | Gaurav |
 | 2026-09-21 | [A current ER diagram, generated from the schema](#a-current-er-diagram-generated-from-the-schema-2026-09-21) | Gaurav |
 | 2026-09-21 | [Review 2 presentation brief](#review-2-presentation-brief-2026-09-21) | Gaurav |
 | 2026-09-20 | [The demo video and its recorder](#the-demo-video-and-its-recorder-2026-09-20) | Gaurav |
@@ -73,6 +74,30 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## A slide-ready core ER diagram (diagram-design plugin) (2026-09-21)
+
+Made with the `diagram-design` Claude Code plugin (ER type, `slide-16x9` preset, its
+presentation type sizes) on the project palette (blue `#005BFF`, tint `#E6F0FF`, navy
+`#0F172A`, indigo `#6366F1`): `docs/diagrams/er-core-diagram.{html,svg,png}`.
+
+**What it shows:** 7 of the 24 tables, the path from a venue request to a reserved seat:
+`departments → users → clubs → events → event_registrations`, and `venues → bookings ←
+events`. The plugin caps an ER diagram at 8 entities, so it is deliberately not the whole
+schema; `er-diagram.png` (generated, all 24 tables) stays as the appendix. The two focal
+entities are `bookings` and `event_registrations`, with two callouts for the database rules
+that protect them: the exclusion constraint against overlapping approved bookings and the
+capacity trigger against overbooking. Foreign keys without a drawn line (for example
+`bookings.requested_by`) still appear as `→` fields, and the legend says so.
+
+**Honest limits:** the field lists are a hand-picked subset (5 to 8 columns per table,
+chosen on 21 Sept 2026), not generated: rerun `scripts/er-diagram/generate.mjs` for the
+full truth. `club_members`, `roles` and the other 16 tables are not drawn. The skill's
+own self-check passes (`self_check.py`); its geometry verifier is repository-only and was
+not run, so line and label spacing were checked by eye on the rendered PNG. Fonts load from
+Google Fonts, so re-rendering needs internet.
+
+**Teammates must do:** nothing.
 
 ## A current ER diagram, generated from the schema (2026-09-21)
 
