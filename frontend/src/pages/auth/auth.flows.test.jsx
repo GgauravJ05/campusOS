@@ -192,6 +192,9 @@ describe('password reset', () => {
     const { user } = renderApp('/login')
 
     await user.click(await screen.findByRole('link', { name: 'Forgot password?' }))
+    // Wait for the new page before typing: the sign-in page's "College email" field has the same
+    // label and can still be mounted for a moment, which swallowed the first letter typed.
+    await screen.findByRole('heading', { name: 'Forgot your password?' })
     await user.type(await screen.findByLabelText('College email'), 'Asha@mmcoe.edu.in')
     await user.click(screen.getByRole('button', { name: 'Send reset code' }))
 
