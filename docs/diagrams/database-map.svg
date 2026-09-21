@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="db-map-title db-map-desc">
+      <title id="db-map-title">CampusOS database map, all 24 tables</title>
+      <desc id="db-map-desc">All 24 tables of the CampusOS database in five areas: identity and access, clubs and governance, campus and scheduling, events and seats, and after the event. Each table lists the tables it points to; users and events are the two hub tables.</desc>
+        <defs><style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap');</style></defs>
+        <rect width="100%" height="100%" fill="#F6F8FD"></rect>
+
+        <rect x="40" y="40" width="224" height="476" rx="8" fill="#0f172a" fill-opacity="0.03" stroke="#0f172a" stroke-opacity="0.14" stroke-width="1"></rect>
+        <text x="56" y="58" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">01</text>
+        <text x="56" y="76" fill="#0F172A" font-size="14" font-weight="600" font-family="'Geist', sans-serif">Identity &amp; access</text>
+        <text x="56" y="92" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">who signs in, and as what</text>
+        <rect x="52" y="104" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="52" y="104" width="200" height="60" rx="6" fill="#005bff" fill-opacity="0.05" stroke="#005BFF" stroke-width="1"></rect>
+        <text x="62" y="118" fill="#005BFF" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">HUB · REFERENCED BY 13 TABLES</text>
+        <text x="62" y="137" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">users</text>
+        <text x="62" y="154" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ departments, roles</text>
+        <rect x="52" y="172" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="52" y="172" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="62" y="186" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">LOOKUP</text>
+        <text x="62" y="205" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">roles</text>
+        <text x="62" y="222" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">no foreign keys</text>
+        <rect x="52" y="240" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="52" y="240" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="62" y="254" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">LOOKUP</text>
+        <text x="62" y="273" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">departments</text>
+        <text x="62" y="290" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">no foreign keys</text>
+        <rect x="52" y="308" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="52" y="308" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="62" y="322" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">SESSIONS · ROTATING</text>
+        <text x="62" y="341" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">refresh_tokens</text>
+        <text x="62" y="358" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ users</text>
+        <rect x="52" y="376" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="52" y="376" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="62" y="390" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">ONE-TIME CODES · HASHED</text>
+        <text x="62" y="409" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">otps</text>
+        <text x="62" y="426" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">no foreign keys</text>
+        <rect x="284" y="40" width="224" height="476" rx="8" fill="#0f172a" fill-opacity="0.03" stroke="#0f172a" stroke-opacity="0.14" stroke-width="1"></rect>
+        <text x="300" y="58" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">02</text>
+        <text x="300" y="76" fill="#0F172A" font-size="14" font-weight="600" font-family="'Geist', sans-serif">Clubs &amp; governance</text>
+        <text x="300" y="92" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">clubs, members, audit, settings</text>
+        <rect x="296" y="104" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="296" y="104" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="306" y="118" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">ENTITY</text>
+        <text x="306" y="137" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">clubs</text>
+        <text x="306" y="154" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ users, departments</text>
+        <rect x="296" y="172" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="296" y="172" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="306" y="186" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">M:N JUNCTION</text>
+        <text x="306" y="205" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">club_members</text>
+        <text x="306" y="222" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ clubs, users</text>
+        <rect x="296" y="240" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="296" y="240" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="306" y="254" fill="#4338CA" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">APPEND-ONLY · TRIGGER</text>
+        <text x="306" y="273" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">admin_logs</text>
+        <text x="306" y="290" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ users, bookings</text>
+        <rect x="296" y="308" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="296" y="308" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="306" y="322" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">CONFIG</text>
+        <text x="306" y="341" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">system_settings</text>
+        <text x="306" y="358" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ users</text>
+        <rect x="528" y="40" width="224" height="476" rx="8" fill="#0f172a" fill-opacity="0.03" stroke="#0f172a" stroke-opacity="0.14" stroke-width="1"></rect>
+        <text x="544" y="58" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">03</text>
+        <text x="544" y="76" fill="#0F172A" font-size="14" font-weight="600" font-family="'Geist', sans-serif">Campus &amp; scheduling</text>
+        <text x="544" y="92" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">rooms, equipment, booking requests</text>
+        <rect x="540" y="104" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="540" y="104" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="550" y="118" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">ENTITY</text>
+        <text x="550" y="137" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">venues</text>
+        <text x="550" y="154" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ departments</text>
+        <rect x="540" y="172" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="540" y="172" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="550" y="186" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">LOOKUP</text>
+        <text x="550" y="205" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">equipment</text>
+        <text x="550" y="222" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">no foreign keys</text>
+        <rect x="540" y="240" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="540" y="240" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="550" y="254" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">M:N · COMPOSITE KEY</text>
+        <text x="550" y="273" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">venue_equipment</text>
+        <text x="550" y="290" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ equipment, venues</text>
+        <rect x="540" y="308" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="540" y="308" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="550" y="322" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">GRAPH EDGES · COMPOSITE KEY</text>
+        <text x="550" y="341" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">campus_paths</text>
+        <text x="550" y="358" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">no foreign keys</text>
+        <rect x="540" y="376" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="540" y="376" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="550" y="390" fill="#4338CA" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">RULE · EXCLUSION CONSTRAINT</text>
+        <text x="550" y="409" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">bookings</text>
+        <text x="550" y="426" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ users, events, venues</text>
+        <rect x="772" y="40" width="224" height="476" rx="8" fill="#0f172a" fill-opacity="0.03" stroke="#0f172a" stroke-opacity="0.14" stroke-width="1"></rect>
+        <text x="788" y="58" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">04</text>
+        <text x="788" y="76" fill="#0F172A" font-size="14" font-weight="600" font-family="'Geist', sans-serif">Events &amp; seats</text>
+        <text x="788" y="92" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">publishing, eligibility, seats</text>
+        <rect x="784" y="104" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="784" y="104" width="200" height="60" rx="6" fill="#005bff" fill-opacity="0.05" stroke="#005BFF" stroke-width="1"></rect>
+        <text x="794" y="118" fill="#005BFF" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">HUB · REFERENCED BY 10 TABLES</text>
+        <text x="794" y="137" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">events</text>
+        <text x="794" y="154" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ clubs, users, departments</text>
+        <rect x="784" y="172" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="784" y="172" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="794" y="186" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">M:N · COMPOSITE KEY</text>
+        <text x="794" y="205" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">event_eligible_departments</text>
+        <text x="794" y="222" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ departments, events</text>
+        <rect x="784" y="240" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="784" y="240" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="794" y="254" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">M:N · COMPOSITE KEY</text>
+        <text x="794" y="273" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">event_eligible_years</text>
+        <text x="794" y="290" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ events</text>
+        <rect x="784" y="308" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="784" y="308" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="794" y="322" fill="#4338CA" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">RULE · CAPACITY TRIGGER</text>
+        <text x="794" y="341" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">event_registrations</text>
+        <text x="794" y="358" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ events, users</text>
+        <rect x="1016" y="40" width="224" height="476" rx="8" fill="#0f172a" fill-opacity="0.03" stroke="#0f172a" stroke-opacity="0.14" stroke-width="1"></rect>
+        <text x="1032" y="58" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">05</text>
+        <text x="1032" y="76" fill="#0F172A" font-size="14" font-weight="600" font-family="'Geist', sans-serif">After the event</text>
+        <text x="1032" y="92" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">attendance, feedback, alerts</text>
+        <rect x="1028" y="104" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="1028" y="104" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="1038" y="118" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">ENTITY</text>
+        <text x="1038" y="137" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">attendance</text>
+        <text x="1038" y="154" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ events, users</text>
+        <rect x="1028" y="172" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="1028" y="172" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="1038" y="186" fill="#4338CA" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">JSONB · GIN INDEX</text>
+        <text x="1038" y="205" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">event_feedback</text>
+        <text x="1038" y="222" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ events, users</text>
+        <rect x="1028" y="240" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="1028" y="240" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="1038" y="254" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">ENTITY</text>
+        <text x="1038" y="273" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">event_reminders</text>
+        <text x="1038" y="290" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ events</text>
+        <rect x="1028" y="308" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="1028" y="308" width="200" height="60" rx="6" fill="#ffffff" stroke="#0F172A" stroke-width="1"></rect>
+        <text x="1038" y="322" fill="#4C5871" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">ENTITY</text>
+        <text x="1038" y="341" fill="#0F172A" font-size="12" font-weight="600" font-family="'Geist', sans-serif">notifications</text>
+        <text x="1038" y="358" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ bookings, events, users</text>
+        <rect x="1028" y="376" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="1028" y="376" width="200" height="60" rx="6" fill="#0f172a" fill-opacity="0.02" stroke="#0f172a" stroke-opacity="0.30" stroke-width="1" stroke-dasharray="4,3"></rect>
+        <text x="1038" y="390" fill="#617087" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">NOT USED YET</text>
+        <text x="1038" y="409" fill="#617087" font-size="12" font-weight="600" font-family="'Geist', sans-serif">certificates</text>
+        <text x="1038" y="426" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ events, users</text>
+        <rect x="1028" y="444" width="200" height="60" rx="6" fill="#F6F8FD"></rect>
+        <rect x="1028" y="444" width="200" height="60" rx="6" fill="#0f172a" fill-opacity="0.02" stroke="#0f172a" stroke-opacity="0.30" stroke-width="1" stroke-dasharray="4,3"></rect>
+        <text x="1038" y="458" fill="#617087" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.12em">NOT USED YET</text>
+        <text x="1038" y="477" fill="#617087" font-size="12" font-weight="600" font-family="'Geist', sans-serif">event_materials</text>
+        <text x="1038" y="494" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace">→ events, users</text>
+        <text x="40" y="572" fill="#005BFF" font-size="28" font-family="'Instrument Serif', serif">24 tables, 38 foreign keys</text>
+        <text x="40" y="594" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">Third normal form apart from two documented exceptions;</text>
+        <text x="40" y="610" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">four tables use composite primary keys.</text>
+        <text x="452" y="572" fill="#005BFF" font-size="28" font-family="'Instrument Serif', serif">Two hub tables</text>
+        <text x="452" y="594" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">users is referenced by 13 tables and events by 10.</text>
+        <text x="452" y="610" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">16 of the 24 tables point to at least one of the two.</text>
+        <text x="864" y="572" fill="#005BFF" font-size="28" font-family="'Instrument Serif', serif">Rules in the database itself</text>
+        <text x="864" y="594" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">41 CHECK constraints, an exclusion constraint against double</text>
+        <text x="864" y="610" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">booking, a capacity trigger, an append-only audit trigger.</text>
+        <line x1="40" y1="664" x2="1240" y2="664" stroke="#0f172a" stroke-opacity="0.12" stroke-width="0.8"></line>
+        <text x="40" y="682" fill="#4C5871" font-size="10" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+        <rect x="40" y="696" width="16" height="12" rx="2" fill="#005bff" fill-opacity="0.05" stroke="#005BFF"></rect>
+        <text x="62" y="706" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">Hub table</text>
+        <rect x="140" y="696" width="16" height="12" rx="2" fill="#ffffff" stroke="#0F172A"></rect>
+        <text x="162" y="706" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">Table</text>
+        <text x="216" y="706" fill="#0F172A" font-size="12" font-family="'Geist Mono', monospace" font-weight="600">→</text><text x="234" y="706" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">Tables it points to through foreign keys</text>
+        <text x="502" y="706" fill="#4338CA" font-size="10" font-family="'Geist Mono', monospace" font-weight="600" letter-spacing="0.08em">RULE</text><text x="536" y="706" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">A rule the database itself enforces</text>
+        <rect x="760" y="696" width="16" height="12" rx="2" fill="#0f172a" fill-opacity="0.02" stroke="#0f172a" stroke-opacity="0.30" stroke-dasharray="3,2"></rect>
+        <text x="782" y="706" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">In the schema, not used by the app</text>
+        <text x="1010" y="706" fill="#4C5871" font-size="11" font-family="'Geist', sans-serif">M:N = many-to-many junction table</text>
+      </svg>

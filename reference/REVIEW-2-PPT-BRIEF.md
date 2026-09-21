@@ -108,8 +108,10 @@ Proof it is integrated, not just separate parts: 19 integration test suites driv
 - 24 tables in **third normal form**: arrays were split into junction tables with composite keys (`venue_equipment`, `event_eligible_departments`, `event_eligible_years`)
 - Integrity in the database itself: 41 CHECK constraints, 38 foreign keys, an **exclusion constraint** that makes two approved bookings for the same room and time impossible, an **append-only audit trigger**
 - 4 reporting views (`GROUP BY`/`HAVING`), a stored function, a **cursor**, and event feedback stored as **JSONB with a GIN index** (our NoSQL substitute)
-- **Main slide picture: `docs/diagrams/er-core-diagram.png`** (16:9, made for a slide): the 7 tables on the path from a venue request to a reserved seat, with the two database rules called out (the booking exclusion constraint and the seat-capacity trigger).
-- **Appendix slide (if asked "show all tables"): `docs/diagrams/er-diagram.png`**, all 24 tables, crow's foot, generated from the real schema. It is large (5734×3875), so put it on a slide of its own.
+Use **three pictures, in this order** (each is 16:9 and made for a slide):
+1. **`docs/diagrams/database-map.png`, the whole database on one page.** All 24 tables in five areas; every table lists the tables it points to; the two hub tables (`users`, `events`) are highlighted; tags mark junction tables, lookups, JSONB feedback and the rules the database enforces. Show this first: it is what lets the guide understand the entire database in one look.
+2. **`docs/diagrams/er-core-diagram.png`, the core ER.** 7 tables on the path from a venue request to a reserved seat, with the booking exclusion constraint and the seat-capacity trigger called out.
+3. **Appendix, if asked "show every relationship": `docs/diagrams/er-diagram.png`**, all 24 tables and all 38 foreign keys as a crow's-foot ER, generated from the schema. It is large (5734×3875), so put it on a slide of its own.
 - Do **not** use the old `docs/diagrams/Database Schema.pdf`, which predates normalisation.
 
 ### Slide 8 — Technical problems we solved (1/2) · *Technical Problem Solving (5)*
@@ -280,6 +282,7 @@ Gmail sign-in for external users; real room data; load testing at 500 users; tes
 | SRS | `docs/src/EDI – A6 – Smart Campus Management Platform – SRS.pdf` |
 | Use case diagram | `docs/diagrams/use_case.png` |
 | Architecture overview (older, redraw) | `docs/images/CampusOS_Structure_Overview.png` |
+| Database map, all 24 tables (**show first**) | `docs/diagrams/database-map.png` / `.svg` / `.html` |
 | ER diagram, core, slide-ready | `docs/diagrams/er-core-diagram.png` / `.svg` / `.html` |
 | ER diagram, all 24 tables (generated) | `docs/diagrams/er-diagram.png` / `.svg` (source: `er-diagram.md`) |
 | Old ER diagram (**out of date**, don't use) | `docs/diagrams/Database Schema.pdf` |
