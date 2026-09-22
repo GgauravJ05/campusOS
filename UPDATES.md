@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-22 | [Team video script for the working demo](#team-video-script-for-the-working-demo-2026-09-22) | Gaurav |
 | 2026-09-21 | [Project guide for the review](#project-guide-for-the-review-2026-09-21) | Gaurav |
 | 2026-09-21 | [Test fix: a racy password-reset test](#test-fix-a-racy-password-reset-test-2026-09-21) | Gaurav |
 | 2026-09-21 | [Feedback on the team's Review 2 deck](#feedback-on-the-teams-review-2-deck-2026-09-21) | Gaurav |
@@ -79,6 +80,25 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Team video script for the working demo (2026-09-22)
+
+**What:** `docs/VIDEO-SCRIPT.md` — a 9-speaker script (~9 minutes) for the required
+working-demo video, split by sub-team: database (Chitrali, Tushar, Tanishka), backend
+(Gaurav, lead, with Srushiti and Sarvesh), frontend (Atharva, Gayatri, Shravani). Gaurav
+opens, anchors the backend segment and closes, matching his major contribution. Each
+speaker's lines point at one syllabus topic they can defend live (composite keys,
+exclusion constraint, triggers vs checks, OOP polymorphism, DSA structures, OS semaphore
+and deadlock fix, RBAC scope, public-page separation). Linked from the README.
+
+**Why:** the team needs a script that is crisp, assigns real speaking parts to all 9
+listed members, and keeps the syllabus mapping visible on camera, not just in documents.
+
+**Teammates must do:** each speaker reads their section of `docs/VIDEO-SCRIPT.md` and
+rehearses their "one line to defend" before recording; rebuild demo data and restart the
+API right before recording, per the pre-recording checklist in the file.
+
+**Open:** none.
 
 ## Project guide for the review (2026-09-21)
 
