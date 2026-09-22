@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-22 | [Fix: blue leftovers on the public about page after the palette change](#fix-blue-leftovers-on-the-public-about-page-after-the-palette-change-2026-09-22) | Gaurav |
 | 2026-09-22 | [New colour palette: Clay & Teal, replacing a stock template look](#new-colour-palette-clay--teal-replacing-a-stock-template-look-2026-09-22) | Gaurav |
 | 2026-09-22 | [Team video script for the working demo](#team-video-script-for-the-working-demo-2026-09-22) | Gaurav |
 | 2026-09-21 | [Project guide for the review](#project-guide-for-the-review-2026-09-21) | Gaurav |
@@ -81,6 +82,31 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Fix: blue leftovers on the public about page after the palette change (2026-09-22)
+
+**What:** the earlier Clay & Teal palette change (previous entry) missed the public
+`frontend/public/about/` page in three ways: (1) hardcoded blue/indigo `rgb()` literals
+in the hero's radial-gradient glow, (2) Bootstrap's `.btn-primary`/`.btn-outline-primary`
+hard-code Bootstrap's own blue hex values rather than reading `--bs-primary`, so every
+button and the feature filter pills stayed blue, and (3) two inline styles
+(`var(--navy)`, `var(--blue-tint)`) still referenced variable names that no longer exist
+in `campus.css` after the rename, so the navbar and "Is it running?" section silently
+lost their background. Fixed all three: hero glow now uses the clay/teal `rgb()` values,
+`.btn-primary`/`.btn-outline-primary` are overridden directly with the new palette (only
+place this was needed — `.text-primary`/`.bg-primary`/`.border-primary` already picked
+up the fix via `--bs-primary-rgb`), and the inline styles point at the renamed variables.
+A few remaining cool-toned literals (`#cbd5e1`, `#93c5fd`, `#e2e8f0`, `#0d9488`) were also
+swapped for the warm equivalents already in the palette.
+
+**Why:** verified visually in a real browser after the earlier change — a `grep` for the
+old hex codes wasn't enough because Bootstrap's button styles never used them in the
+first place, and the renamed CSS variables failed silently (an unknown `var()` just
+resolves to nothing, it doesn't error).
+
+**Teammates must do:** nothing.
+
+**Open:** none.
 
 ## New colour palette: Clay & Teal, replacing a stock template look (2026-09-22)
 
