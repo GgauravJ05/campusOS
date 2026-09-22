@@ -16,7 +16,7 @@ export function AuthLayout() {
       <aside className="relative hidden overflow-hidden bg-zinc-950 lg:flex lg:flex-col lg:justify-between lg:p-12">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <div className="absolute -top-40 -left-32 size-[34rem] rounded-full bg-brand-600/35 blur-3xl" />
-          <div className="absolute -right-40 bottom-0 size-[30rem] rounded-full bg-indigo-600/25 blur-3xl" />
+          <div className="absolute -right-40 bottom-0 size-[30rem] rounded-full bg-accent-600/25 blur-3xl" />
           <div
             className="absolute inset-0 opacity-[0.15]"
             style={{
@@ -36,7 +36,7 @@ export function AuthLayout() {
             MMCOE Smart Campus Platform
           </p>
           <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight text-balance text-white xl:text-5xl">
-            Your campus, <span className="bg-gradient-to-r from-brand-300 to-indigo-300 bg-clip-text text-transparent">beautifully organised.</span>
+            Your campus, <span className="bg-gradient-to-r from-brand-300 to-accent-300 bg-clip-text text-transparent">beautifully organised.</span>
           </h1>
           <p className="mt-5 text-lg leading-relaxed text-zinc-400">
             Clubs request venues, faculty approve, events go live, and students never miss what matters.

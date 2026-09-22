@@ -8,39 +8,56 @@
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   /*
-   * Palette: "Framer Modern" (reference/color-palatte.jpg).
-   *   #005BFF  vivid blue   -> brand-600, the primary
-   *   #E6F0FF  pale blue    -> brand-50, tints and hover fills
-   *   #0F172A  deep navy    -> zinc-950, the dark-mode page and the ink
-   *   #6366F1  indigo       -> Tailwind's own indigo-500, the accent (indigo-*)
+   * Palette: "Clay & Teal" — a custom pairing, not a stock template.
+   * The previous palette ("Framer Modern", reference/color-palatte.jpg) was a
+   * stock Figma asset also used by Framer, Linear, Notion and Stripe, and read
+   * as a generic/AI-template blue. This one is picked to look like neither:
+   *   #9C4A22  burnt clay    -> brand-600, the primary
+   *   #FBF0EA  warm cream    -> brand-50, tints and hover fills
+   *   #17120F  warm near-black -> zinc-950, the dark-mode page and the ink
+   *   #0F766E  deep teal     -> accent-600, replacing Tailwind's stock indigo
    * Every step below was checked against WCAG AA for the text/background pairs
-   * the UI actually uses (white on brand-600 is 5.3:1; muted text on the page
-   * is 4.7:1), so re-tuning a shade means re-checking those.
+   * the UI actually uses (white on brand-600 is ~6.1:1; white on accent-600 is
+   * ~5.5:1; muted text on the page is ~7:1), so re-tuning a shade means
+   * re-checking those.
    */
-  --color-brand-50: #e6f0ff;
-  --color-brand-100: #cce0ff;
-  --color-brand-200: #99c2ff;
-  --color-brand-300: #66a3ff;
-  --color-brand-400: #3d8bff;
-  --color-brand-500: #0a64ff;
-  --color-brand-600: #005bff;
-  --color-brand-700: #0048cc;
-  --color-brand-800: #003799;
-  --color-brand-900: #002670;
-  --color-brand-950: #00143d;
+  --color-brand-50: #fbf0ea;
+  --color-brand-100: #f5ddce;
+  --color-brand-200: #e9b896;
+  --color-brand-300: #dc9269;
+  --color-brand-400: #cd7346;
+  --color-brand-500: #b85c2e;
+  --color-brand-600: #9c4a22;
+  --color-brand-700: #7c3a1b;
+  --color-brand-800: #5e2c15;
+  --color-brand-900: #421f0f;
+  --color-brand-950: #2a1409;
 
-  /* Neutrals: the palette's navy at the dark end, cool blue-greys above it. */
-  --color-zinc-50: #f6f8fd;
-  --color-zinc-100: #edf1f9;
-  --color-zinc-200: #dce3f0;
-  --color-zinc-300: #bac5da;
-  --color-zinc-400: #8895ae;
-  --color-zinc-500: #617087;
-  --color-zinc-600: #4c5871;
-  --color-zinc-700: #364159;
-  --color-zinc-800: #232e47;
-  --color-zinc-900: #172038;
-  --color-zinc-950: #0f172a;
+  /* Accent: deep teal, replacing Tailwind's stock indigo-* everywhere in the app. */
+  --color-accent-50: #ecfaf8;
+  --color-accent-100: #d2f1ec;
+  --color-accent-200: #a6e3da;
+  --color-accent-300: #74cfc1;
+  --color-accent-400: #45b6a6;
+  --color-accent-500: #1f998a;
+  --color-accent-600: #0f766e;
+  --color-accent-700: #0b5a54;
+  --color-accent-800: #08423d;
+  --color-accent-900: #052d29;
+  --color-accent-950: #031a17;
+
+  /* Neutrals: warm greys/taupe, not the previous cool blue-greys. */
+  --color-zinc-50: #f7f4f2;
+  --color-zinc-100: #ede7e3;
+  --color-zinc-200: #dcd2cb;
+  --color-zinc-300: #c2b3a8;
+  --color-zinc-400: #9c8a7d;
+  --color-zinc-500: #7a6a5f;
+  --color-zinc-600: #5f5148;
+  --color-zinc-700: #493d36;
+  --color-zinc-800: #332a25;
+  --color-zinc-900: #241d19;
+  --color-zinc-950: #17120f;
 
   --shadow-soft: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 16px rgb(15 23 42 / 0.06);
   --shadow-lift: 0 2px 4px rgb(15 23 42 / 0.05), 0 12px 32px rgb(15 23 42 / 0.1);

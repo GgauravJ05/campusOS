@@ -2,15 +2,15 @@
  * Hand-written CSS for the public page (B25IT404 Unit 2, B25IT405 Lab 2 and 7).
  * Bootstrap supplies the grid and components; everything here is plain CSS so the
  * selectors, box model, Flexbox, Grid and media queries are visible in source.
- * Colours are the project palette (reference/color-palatte.jpg).
+ * Colours are the project palette (frontend/src/index.css: brand-600 clay, accent-600 teal).
  */
 
 /* ---- Custom properties (variables) ------------------------------------------ */
 :root {
-  --blue: #005bff;        /* brand-600 */
-  --blue-tint: #e6f0ff;   /* brand-50 */
-  --navy: #0f172a;        /* zinc-950 */
-  --indigo: #6366f1;      /* accent */
+  --clay: #9c4a22;        /* brand-600 */
+  --clay-tint: #fbf0ea;   /* brand-50 */
+  --ink: #17120f;         /* zinc-950 */
+  --teal: #0f766e;        /* accent-600 */
   --slate: #475569;       /* body text on white, 7.6:1 */
   --radius: 0.75rem;
   --gap: 1.5rem;
@@ -23,7 +23,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 4.5rem; }   /* anchors clear
 
 body {
   margin: 0;
-  color: var(--navy);
+  color: var(--ink);
   background-color: #fff;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   line-height: 1.6;
@@ -40,7 +40,7 @@ p { color: var(--slate); }
   margin-right: 0.5rem;
   vertical-align: middle;
   border-radius: 0.5rem;
-  background: linear-gradient(135deg, var(--blue), var(--indigo));
+  background: linear-gradient(135deg, var(--clay), var(--teal));
 }
 
 .hero {
@@ -49,11 +49,11 @@ p { color: var(--slate); }
   background:
     radial-gradient(circle at 15% 20%, rgb(0 91 255 / 0.55), transparent 45%),
     radial-gradient(circle at 85% 80%, rgb(99 102 241 / 0.45), transparent 40%),
-    var(--navy);
+    var(--ink);
 }
 .hero p { color: #cbd5e1; max-width: 38rem; }
 
-#status-card { border: 1px solid var(--blue-tint); border-left: 0.35rem solid var(--blue); }
+#status-card { border: 1px solid var(--clay-tint); border-left: 0.35rem solid var(--clay); }
 
 /* ---- CSS Grid: an auto-fitting card layout ------------------------------------ */
 .feature-grid {
@@ -77,8 +77,8 @@ p { color: var(--slate); }
 }
 .feature-card:hover { transform: translateY(-3px); box-shadow: 0 0.75rem 1.5rem rgb(15 23 42 / 0.1); }
 .feature-card h3 { margin-top: 0; font-size: 1.125rem; }         /* descendant selector */
-.feature-card[data-audience="faculty"] { border-top: 0.25rem solid var(--indigo); }   /* attribute selector */
-.feature-card[data-audience="student"] { border-top: 0.25rem solid var(--blue); }
+.feature-card[data-audience="faculty"] { border-top: 0.25rem solid var(--teal); }   /* attribute selector */
+.feature-card[data-audience="student"] { border-top: 0.25rem solid var(--clay); }
 .feature-card[data-audience="club"]    { border-top: 0.25rem solid #0d9488; }
 
 /* Adjacent-sibling selector and pseudo-elements */
@@ -90,13 +90,13 @@ h2 + p { margin-top: -0.25rem; }
   height: 0.25rem;
   margin-top: 0.5rem;
   border-radius: 0.25rem;
-  background: var(--blue);
+  background: var(--clay);
 }
 
 /* ---- Flexbox: the footer row -------------------------------------------------- */
 .site-footer {
   color: #cbd5e1;
-  background-color: var(--navy);
+  background-color: var(--ink);
 }
 .site-footer .footer-row {
   display: flex;
@@ -114,7 +114,7 @@ h2 + p { margin-top: -0.25rem; }
 .field-error { min-height: 1.25rem; margin: 0.25rem 0 0; font-size: 0.875rem; color: #b91c1c; }
 
 /* Keyboard focus must be visible everywhere */
-:focus-visible { outline: 3px solid var(--indigo); outline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
 
 /* ---- Media queries: responsive breakpoints ------------------------------------ */
 @media (max-width: 768px) {
