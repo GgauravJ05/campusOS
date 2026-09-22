@@ -14,7 +14,7 @@ them; the mentor (Mrs. Nishanti Naidu) reviews before submission.
 | # | Name | Roll no. | Sub-team | Role (e.g. backend, frontend, database, testing, documentation) |
 | --- | --- | --- | --- | --- |
 | 1 | Gaurav Jadhav |TI151| Whole project | Full stack: database, backend, frontend, testing, CI, documentation |
-| 2 | | | | |
+| 2 | Gayatri Muttepawar |TI166| Whole project | Frontend |
 | 3 | | | | |
 | 4 | | | | |
 | 5 | | | | |
