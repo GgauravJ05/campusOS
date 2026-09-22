@@ -14,6 +14,48 @@
   --slate: #475569;       /* body text on white, 7.6:1 */
   --radius: 0.75rem;
   --gap: 1.5rem;
+
+  /*
+   * Bootstrap ships its own blue "primary" theme as CSS custom properties, which
+   * .btn-primary, .btn-outline-primary and the focus ring read from directly.
+   * Re-point them at our own palette so Bootstrap's stock blue never shows through.
+   */
+  --bs-primary: var(--clay);
+  --bs-primary-rgb: 156, 74, 34;
+  --bs-primary-text-emphasis: #5e2c15;
+  --bs-primary-bg-subtle: var(--clay-tint);
+  --bs-primary-border-subtle: #e9b896;
+  --bs-link-color: var(--teal);
+  --bs-link-color-rgb: 15, 118, 110;
+  --bs-link-hover-color: #0b5a54;
+  --bs-link-hover-color-rgb: 11, 90, 84;
+  --bs-focus-ring-color: rgb(156 74 34 / 0.25);
+}
+
+/*
+ * .btn-primary and .btn-outline-primary hard-code Bootstrap's blue rather than
+ * reading --bs-primary, so they need their own override (utility classes like
+ * .text-primary/.bg-primary already pick up the --bs-primary-rgb change above).
+ */
+.btn-primary {
+  --bs-btn-bg: var(--clay);
+  --bs-btn-border-color: var(--clay);
+  --bs-btn-hover-bg: #7c3a1b;
+  --bs-btn-hover-border-color: #7c3a1b;
+  --bs-btn-active-bg: #5e2c15;
+  --bs-btn-active-border-color: #5e2c15;
+  --bs-btn-disabled-bg: var(--clay);
+  --bs-btn-disabled-border-color: var(--clay);
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--clay);
+  --bs-btn-border-color: var(--clay);
+  --bs-btn-hover-bg: var(--clay);
+  --bs-btn-hover-border-color: var(--clay);
+  --bs-btn-active-bg: var(--clay);
+  --bs-btn-active-border-color: var(--clay);
+  --bs-btn-disabled-color: var(--clay);
+  --bs-btn-disabled-border-color: var(--clay);
 }
 
 /* ---- Element selectors and the box model ------------------------------------- */
@@ -47,11 +89,11 @@ p { color: var(--slate); }
   padding: 8rem 0 5rem;              /* padding: top | left-right | bottom */
   color: #fff;
   background:
-    radial-gradient(circle at 15% 20%, rgb(0 91 255 / 0.55), transparent 45%),
-    radial-gradient(circle at 85% 80%, rgb(99 102 241 / 0.45), transparent 40%),
+    radial-gradient(circle at 15% 20%, rgb(156 74 34 / 0.55), transparent 45%),
+    radial-gradient(circle at 85% 80%, rgb(15 118 110 / 0.45), transparent 40%),
     var(--ink);
 }
-.hero p { color: #cbd5e1; max-width: 38rem; }
+.hero p { color: #dcd2cb; max-width: 38rem; }
 
 #status-card { border: 1px solid var(--clay-tint); border-left: 0.35rem solid var(--clay); }
 
@@ -70,7 +112,7 @@ p { color: var(--slate); }
 .feature-card {
   flex: 1;
   padding: 1.5rem;                                     /* the box: content + padding + border + margin */
-  border: 1px solid #e2e8f0;
+  border: 1px solid #ede7e3;
   border-radius: var(--radius);
   background: #fff;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -79,7 +121,7 @@ p { color: var(--slate); }
 .feature-card h3 { margin-top: 0; font-size: 1.125rem; }         /* descendant selector */
 .feature-card[data-audience="faculty"] { border-top: 0.25rem solid var(--teal); }   /* attribute selector */
 .feature-card[data-audience="student"] { border-top: 0.25rem solid var(--clay); }
-.feature-card[data-audience="club"]    { border-top: 0.25rem solid #0d9488; }
+.feature-card[data-audience="club"]    { border-top: 0.25rem solid #45b6a6; }
 
 /* Adjacent-sibling selector and pseudo-elements */
 h2 + p { margin-top: -0.25rem; }
@@ -95,7 +137,7 @@ h2 + p { margin-top: -0.25rem; }
 
 /* ---- Flexbox: the footer row -------------------------------------------------- */
 .site-footer {
-  color: #cbd5e1;
+  color: #dcd2cb;
   background-color: var(--ink);
 }
 .site-footer .footer-row {
@@ -107,7 +149,7 @@ h2 + p { margin-top: -0.25rem; }
   padding: 2.5rem 0;
 }
 .site-footer address { margin: 0; font-style: normal; }
-.site-footer a { color: #93c5fd; }
+.site-footer a { color: #74cfc1; }
 .site-footer a:hover, .site-footer a:focus-visible { color: #fff; }
 
 /* Form states (Bootstrap adds is-valid / is-invalid; the message sits under the field) */
