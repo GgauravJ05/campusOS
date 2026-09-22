@@ -62,11 +62,16 @@ Don't duplicate these documents' content here. Read them.
   states what changed, why, what teammates must do (env vars, `npm install`,
   a database rebuild), and anything left open.
 - **Conventional commits**: `type(scope): summary` — see `CONTRIBUTING.md` §3.
-- **UI colours come from one palette**, "Framer Modern" (`reference/color-palatte.jpg`):
-  #005BFF blue (`brand-600`), #E6F0FF tint (`brand-50`), #0F172A navy (`zinc-950`),
-  #6366F1 indigo (Tailwind `indigo-500`, the accent). The scales live in
-  `frontend/src/index.css`. Change a shade there, not in a component, and
-  re-check WCAG AA contrast for the text/background pairs it affects.
+- **UI colours come from one palette**, "Clay & Teal" (a custom pairing, replacing
+  the earlier stock "Framer Modern" palette a faculty reviewer flagged as looking
+  like a generic AI/SaaS template — `reference/color-palatte.jpg` is kept for
+  history only, it is no longer what the app uses):
+  #9C4A22 clay (`brand-600`), #FBF0EA tint (`brand-50`), #17120F ink (`zinc-950`),
+  #0F766E teal (`accent-600`, our own scale — not Tailwind's stock `indigo-*`,
+  which is no longer referenced anywhere). The scales live in
+  `frontend/src/index.css`; the public page's hand-written CSS mirrors them in
+  `frontend/public/about/campus.css`. Change a shade there, not in a component,
+  and re-check WCAG AA contrast for the text/background pairs it affects.
 - Phase 2+3 and Phase 4+5 were built as independent vertical slices sharing
   only Phase 1 auth, so parallel work is possible along those seams.
 

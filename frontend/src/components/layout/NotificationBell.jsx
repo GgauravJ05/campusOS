@@ -11,7 +11,7 @@ const CATEGORY_ICONS = {
   BOOKING_REJECTED: { icon: CalendarX2, cls: 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400' },
   BOOKING_CHANGES_REQUESTED: { icon: MessageSquareWarning, cls: 'bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400' },
   BOOKING_CANCELLED: { icon: CalendarX2, cls: 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800' },
-  CLUB_MEMBERSHIP: { icon: Flag, cls: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400' },
+  CLUB_MEMBERSHIP: { icon: Flag, cls: 'bg-accent-50 text-accent-600 dark:bg-accent-500/10 dark:text-accent-400' },
   EVENT_PUBLISHED: { icon: PartyPopper, cls: 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400' },
   REGISTRATION_CONFIRMED: { icon: Ticket, cls: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' },
   EVENT_REMINDER: { icon: AlarmClock, cls: 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400' },
