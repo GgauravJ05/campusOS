@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-22 | [New colour palette: Clay & Teal, replacing a stock template look](#new-colour-palette-clay--teal-replacing-a-stock-template-look-2026-09-22) | Gaurav |
 | 2026-09-22 | [Team video script for the working demo](#team-video-script-for-the-working-demo-2026-09-22) | Gaurav |
 | 2026-09-21 | [Project guide for the review](#project-guide-for-the-review-2026-09-21) | Gaurav |
 | 2026-09-21 | [Test fix: a racy password-reset test](#test-fix-a-racy-password-reset-test-2026-09-21) | Gaurav |
@@ -80,6 +81,31 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## New colour palette: Clay & Teal, replacing a stock template look (2026-09-22)
+
+**What:** replaced the whole UI palette. The old one, "Framer Modern"
+(`reference/color-palatte.jpg`), was a stock Figma asset also used by Framer, Linear,
+Notion and Stripe, and a faculty reviewer read it as a generic AI/SaaS-template look. The
+new palette, "Clay & Teal", is a custom pairing: `brand-*` moves from blue (#005BFF) to
+burnt clay (#9C4A22), `zinc-*` moves from cool blue-grey to warm taupe/near-black
+(#17120F ink), and a new `accent-*` teal scale (#0F766E) replaces every use of Tailwind's
+stock `indigo-*` in the app. Updated: `frontend/src/index.css` (the tokens), six
+components/pages that used `indigo-*` classes, `Logo.jsx`, `favicon.svg`,
+`index.html`'s theme-color, and the public page's hand-written
+`frontend/public/about/campus.css` + `index.html` (kept in sync with the same colours,
+variables renamed `--clay`/`--clay-tint`/`--ink`/`--teal`). `CLAUDE.md`'s palette rule
+updated to match; `reference/color-palatte.jpg` kept only for history.
+
+**Why:** the palette needed to look like a deliberate design choice for this project,
+not a recognisable off-the-shelf template. Contrast was re-checked for every
+text/background pair the UI uses (white on `brand-600` ~6.1:1, white on `accent-600`
+~5.5:1, muted text on the page ~7:1) — all pass WCAG AA.
+
+**Teammates must do:** nothing code-wise. If anyone has screenshots or the deck using
+the old blue/indigo look, they no longer match the live app — retake them.
+
+**Open:** none.
 
 ## Team video script for the working demo (2026-09-22)
 

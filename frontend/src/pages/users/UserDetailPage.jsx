@@ -224,7 +224,7 @@ export default function UserDetailPage() {
       {back}
 
       <Card className="overflow-hidden">
-        <div className="h-24 bg-gradient-to-r from-brand-500/15 via-indigo-500/10 to-transparent dark:from-brand-500/20" aria-hidden />
+        <div className="h-24 bg-gradient-to-r from-brand-500/15 via-accent-500/10 to-transparent dark:from-brand-500/20" aria-hidden />
         <div className="flex flex-wrap items-start justify-between gap-4 px-5 pb-6 sm:px-8">
           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:gap-5">
             <Avatar name={person.fullName} src={person.avatarUrl} size="xl" className="-mt-10 ring-4 ring-white dark:ring-zinc-900" />
