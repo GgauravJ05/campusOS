@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-23 | [Review 2 deck content, slide by slide](#review-2-deck-content-slide-by-slide-2026-09-23) | Gaurav |
 | 2026-09-22 | [Fix: blue leftovers on the public about page after the palette change](#fix-blue-leftovers-on-the-public-about-page-after-the-palette-change-2026-09-22) | Gaurav |
 | 2026-09-22 | [New colour palette: Clay & Teal, replacing a stock template look](#new-colour-palette-clay--teal-replacing-a-stock-template-look-2026-09-22) | Gaurav |
 | 2026-09-22 | [Team video script for the working demo](#team-video-script-for-the-working-demo-2026-09-22) | Gaurav |
@@ -82,6 +83,29 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Review 2 deck content, slide by slide (2026-09-23)
+
+**What:** `docs/INFO.md` — plain content for the Review 2 deck, following the exact
+slide order of the team's `reference/Review 2_A6.pptx.pdf` template (Project Recap,
+Foundational Subject Mapping, Implementation Progress, Integration of HW/SW/Modules,
+System Architecture, Module Integration Details, Demo Screenshots, Technical
+Problem-Solving, Testing & Validation, Individual Contribution, Remaining Work, Thank
+You). Written in short, direct sentences with no promotional language, and only content
+that is actually built — the subject mapping is honest about two rows that don't apply
+(SFF: no business model was built; AI: none used, by project rule — the recommendation
+feature is a weighted-scoring algorithm with a heap, not AI/ML). Linked from the README.
+
+**Why:** the team needs deck content that matches their own template and states plainly
+what maps to which SY subject, without inflating it — the panel wants plain and simple,
+not a fancy pitch.
+
+**Teammates must do:** paste the matching section into each slide; fill your own row in
+`docs/CONTRIBUTIONS.md` and Slide 12 of `docs/INFO.md`.
+
+**Open:** two things flagged at the top of `docs/INFO.md` need the team's own decision —
+the deck's date field (24/09/2026) doesn't match the notice's date (22.09.2026), and the
+title slide lists only 3 of the 9 team members.
 
 ## Fix: blue leftovers on the public about page after the palette change (2026-09-22)
 
