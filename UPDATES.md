@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-23 | [Testing explained, and a code map for the course mapping](#testing-explained-and-a-code-map-for-the-course-mapping-2026-09-23) | Gaurav |
 | 2026-09-23 | [Presenter cue card and a full backend explanation](#presenter-cue-card-and-a-full-backend-explanation-2026-09-23) | Gaurav |
 | 2026-09-23 | [Future scope: classroom ownership and multi-level approval](#future-scope-classroom-ownership-and-multi-level-approval-2026-09-23) | Gaurav |
 | 2026-09-23 | [Review 2 deck content, slide by slide](#review-2-deck-content-slide-by-slide-2026-09-23) | Gaurav |
@@ -85,6 +86,29 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Testing explained, and a code map for the course mapping (2026-09-23)
+
+**What:** `docs/TESTING-EXPLAINED.md` covers every kind of testing done (unit, integration
+on a real database, concurrency, schema/constraint, equivalence, security, frontend
+component tests with a fake API, static checks, response-time probe, manual walkthrough), why
+each was done, how it is implemented (Jest + supertest, self-rebuilding `*_test` database,
+Vitest + MSW, coverage gates, CI with a real PostgreSQL service), the bugs testing found, what
+was not tested, a 90-second spoken script and Q&A. `docs/CODE-MAP.md` gives, for every
+syllabus topic (DSA, OOP, DBMS, OS, CN, WD, SE), the file and line where it is written, where
+the app uses it, the test that proves it, and how to see it. The cue card and `docs/INFO.md`
+point to both. While checking, two overstatements were found and corrected in
+`docs/PROJECT.md` and stated plainly in the code map: the four SQL views and the
+`register_for_event()` function are defined, tested and demonstrable in `psql`, but the app's
+own report screens and seat registration run equivalent logic in the service layer rather than
+calling them.
+
+**Why:** the presenter must be able to say how it was tested and to open the exact code for any
+topic the panel asks about, without overclaiming.
+
+**Teammates must do:** nothing.
+
+**Open:** none.
 
 ## Presenter cue card and a full backend explanation (2026-09-23)
 
