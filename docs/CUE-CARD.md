@@ -52,4 +52,4 @@ Unit → integration (real PostgreSQL, not mocks) → **concurrency** (20 reques
 - Some campus room data (capacity, equipment) is placeholder.
 
 ## If stuck
-"I'd check the code for that." → open the file. Detail: `docs/BACKEND-EXPLAINED.md`, `docs/TESTING-EXPLAINED.md`, `docs/CODE-MAP.md`, `docs/PROJECT.md` Part 11 (Q&A).
+"I'd check the code for that." → open the file. Full script: `docs/PRESENTATION-SCRIPT.md`. Detail: `docs/BACKEND-EXPLAINED.md`, `docs/TESTING-EXPLAINED.md`, `docs/CODE-MAP.md`, `docs/PROJECT.md` Part 11 (Q&A).
