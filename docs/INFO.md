@@ -202,6 +202,41 @@ honestly for them.
 
 ---
 
+## Slide — Future Scope (MMCOE-specific, not built)
+
+**Classroom ownership and multi-level approval.** Right now every venue —
+seminar halls, labs, and classrooms alike — is approved by one department
+coordinator. Classrooms are different from the rest: at MMCOE they are
+already timed out by the regular teaching timetable, which this project does
+not see. Booking one for an event risks clashing with a class the system
+doesn't know about.
+
+The planned fix is a longer, classroom-specific approval chain instead of
+one coordinator's sign-off:
+
+1. **Club head** raises a classroom request.
+2. **Faculty coordinator** (the department that owns the room) reviews it
+   first.
+3. **Institute-level timetable coordinator** checks it against the
+   college-wide teaching timetable.
+4. **Department-level timetable coordinator** (the department whose lectures
+   use that room) gives the final sign-off.
+5. Approved only after all four steps agree.
+
+This only applies to classrooms — seminar halls, labs and outdoor venues
+keep the current single-approval flow, since they aren't tied to a teaching
+timetable.
+
+**What it would need (not built yet):** two new roles (institute timetable
+coordinator, department timetable coordinator) in the role hierarchy
+(`backend/src/domain/User.js`), a longer approval chain in the `Booking`
+state machine (`backend/src/domain/Booking.js`) instead of the current
+single approve/reject, and a way to mark a venue as "classroom" versus
+"dedicated venue" so only classrooms go through the longer chain. No design
+work has started on this; it is future scope only.
+
+---
+
 ## Slide — Thank You
 
 Questions & Discussion.

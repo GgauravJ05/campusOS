@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-23 | [Future scope: classroom ownership and multi-level approval](#future-scope-classroom-ownership-and-multi-level-approval-2026-09-23) | Gaurav |
 | 2026-09-23 | [Review 2 deck content, slide by slide](#review-2-deck-content-slide-by-slide-2026-09-23) | Gaurav |
 | 2026-09-22 | [Fix: blue leftovers on the public about page after the palette change](#fix-blue-leftovers-on-the-public-about-page-after-the-palette-change-2026-09-22) | Gaurav |
 | 2026-09-22 | [New colour palette: Clay & Teal, replacing a stock template look](#new-colour-palette-clay--teal-replacing-a-stock-template-look-2026-09-22) | Gaurav |
@@ -83,6 +84,24 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Future scope: classroom ownership and multi-level approval (2026-09-23)
+
+**What:** added a "Future Scope" slide to `docs/INFO.md`, an MMCOE-specific idea: a
+longer approval chain for classrooms only, since classrooms (unlike seminar halls/labs)
+are already timed out by the regular teaching timetable, which this project can't see.
+Planned chain: club head -> faculty coordinator -> institute-level timetable coordinator
+-> department-level timetable coordinator -> approved. Seminar halls, labs and outdoor
+venues keep the current single-coordinator approval. Not built — no design work started.
+Also saved to memory alongside the other tracked future-scope item (external
+participants).
+
+**Why:** requested by the user as a future-scope item for the Review 2 deck.
+
+**Teammates must do:** nothing; this is documentation only.
+
+**Open:** would need two new roles, a longer `Booking` state chain, and a way to flag a
+venue as classroom vs dedicated venue. Do not start building without explicit direction.
 
 ## Review 2 deck content, slide by slide (2026-09-23)
 
