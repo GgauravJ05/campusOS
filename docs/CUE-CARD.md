@@ -37,6 +37,12 @@ Browser (React :5173) → Express API (:5050) → PostgreSQL (:55432)
 
 **Why layered:** DB enforces what must never break; code is the friendly layer on top.
 
+## Testing (60 s)
+Unit → integration (real PostgreSQL, not mocks) → **concurrency** (20 requests at once: exactly one wins) → schema/constraint → equivalence (fast vs slow algorithm agree) → frontend screens with a fake API (MSW) → lint + `npm audit`. CI runs all on every push, and fails if coverage drops. **1,278 tests, 0 failing.** Not done: 500-user load, real devices. Detail: `docs/TESTING-EXPLAINED.md`.
+
+## "Show me the code"
+`db/schema.sql:560` exclusion constraint · `booking.service.js:504` approveBooking · `domain/User.js` role classes · `domain/SeatSemaphore.js` · `tests/integration/rsvp.concurrency.test.js`. Everything else: `docs/CODE-MAP.md`.
+
 ## Numbers (memorise)
 24 tables · 38 FKs · 70 endpoints (34 GET, 26 POST, 8 PATCH, 2 DELETE) · 1,278 tests (1,030 backend + 248 frontend) · coverage 98.7% backend · access token 15 min · refresh token 7 days · bcrypt cost 12 · ports 5173 / 5050 / 55432
 
@@ -46,4 +52,4 @@ Browser (React :5173) → Express API (:5050) → PostgreSQL (:55432)
 - Some campus room data (capacity, equipment) is placeholder.
 
 ## If stuck
-"I'd check the code for that." → open the file. Detail: `docs/BACKEND-EXPLAINED.md`, `docs/PROJECT.md` Part 11 (Q&A).
+"I'd check the code for that." → open the file. Detail: `docs/BACKEND-EXPLAINED.md`, `docs/TESTING-EXPLAINED.md`, `docs/CODE-MAP.md`, `docs/PROJECT.md` Part 11 (Q&A).

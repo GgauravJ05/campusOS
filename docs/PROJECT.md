@@ -171,14 +171,14 @@ Diagrams: `docs/diagrams/database-map.png` (all 24 tables), `er-core-diagram.png
 | **Keys and composite keys** (U3) | `venue_equipment(venue_id, equipment_id)`, `event_eligible_departments`, `event_eligible_years`, `campus_paths` have composite primary keys | A junction row is identified by *both* sides; a surrogate id would allow duplicates |
 | **1NF / 3NF / 4NF** (U3) | Arrays replaced by junction tables; two independent facts kept separate | Arrays inside a column cannot be joined, indexed or constrained |
 | **Domain, referential, business-rule integrity** (U3) | 41 `CHECK`s, 38 foreign keys, the exclusion constraint | A double-booked hall is a business-rule violation; only a database can guarantee it |
-| **Views, updatable view** (U2) | `v_venue_utilisation`, `v_club_activity`, `v_event_attendance`, `v_active_venues` | Reporting queries reused by name; one is a simple updatable view |
+| **Views, updatable view** (U2) | `v_venue_utilisation`, `v_club_activity`, `v_event_attendance`, `v_active_venues` | Defined in the schema and shown in `psql`; the app's report screens run the same `GROUP BY`/`HAVING` logic as their own queries. One view is a simple updatable view |
 | **`GROUP BY` / `HAVING`** (U2) | `v_club_activity` keeps only clubs that ran at least one event | `HAVING` filters on the aggregate, which `WHERE` cannot |
 | **Set operations** (U2) | "My activity" = events I registered for `UNION` events I created | Two different relationships to the same table |
 | **`NOT IN`, subquery** (U2) | Attendance: registered students not yet marked | The organiser's "still to mark" list |
 | **Self-join** (U2) | "Related events": the same club's other events | A table joined to itself |
 | **`MIN`/`MAX`/`AVG`** (U2) | Busiest, quietest and typical venue in the utilisation report | Aggregates over a period |
 | **Trigger** (U2) | Capacity trigger, append-only audit trigger, `updated_at` | Rules that must run whatever code writes the row |
-| **Stored function and cursor** (U2) | `register_for_event()`, `close_past_events()` (explicit cursor, row by row) | A cursor is for row-by-row work a single `UPDATE` cannot do |
+| **Stored function and cursor** (U2) | `register_for_event()`, `close_past_events()` (explicit cursor, row by row) | A cursor is for row-by-row work a single `UPDATE` cannot do. `close_past_events()` is called by the reminder worker; `register_for_event()` is defined and tested in the database, while the app's own registration runs in `event.service.js` |
 | **Transactions, ACID** (U4) | Approval changes bookings, events and the audit log in one transaction | All or nothing: a crash mid-approval leaves nothing half-done |
 | **Locking** (U4) | `SELECT … FOR UPDATE`; one global lock order | Only one approver at a time wins a slot |
 | **Isolation levels** (U4) | Default `READ COMMITTED`; `db/demo/` shows the difference with `REPEATABLE READ` | You can see it in two `psql` windows |

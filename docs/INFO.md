@@ -66,6 +66,8 @@ Reports and an audit trail record what happened.
 | **SFF** — Startup Fundamentals and Financing | Not applicable. CampusOS is an internal college tool with no revenue model, funding, or business plan attached — we did not build one and are not claiming one. |
 | **AI** — Fundamentals of AI | Not used, on purpose. Project rule is no AI/ML dependency (`CLAUDE.md`). The "recommendations" feature that might look like AI is a plain weighted-scoring algorithm sorted with a heap — a data structure, not a model. |
 
+Exact file and line for every topic above: `docs/CODE-MAP.md`.
+
 ---
 
 ## Slide 5 — Implementation Progress

@@ -265,6 +265,8 @@ Each is proved by a test that fires many requests at the same instant.
 
 ---
 
+*(How all of this is tested, in full: `docs/TESTING-EXPLAINED.md`. Where each syllabus topic is written: `docs/CODE-MAP.md`.)*
+
 ## Part 9. Domain layer: OOP, data structures, OS ideas inside the backend
 
 | Where | What | Syllabus |
