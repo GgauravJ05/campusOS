@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-23 | [A syllabus map page to show the panel](#a-syllabus-map-page-to-show-the-panel-2026-09-23) | Gaurav |
 | 2026-09-23 | [One presentation script, intro to testing](#one-presentation-script-intro-to-testing-2026-09-23) | Gaurav |
 | 2026-09-23 | [Testing explained, and a code map for the course mapping](#testing-explained-and-a-code-map-for-the-course-mapping-2026-09-23) | Gaurav |
 | 2026-09-23 | [Presenter cue card and a full backend explanation](#presenter-cue-card-and-a-full-backend-explanation-2026-09-23) | Gaurav |
@@ -87,6 +88,24 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## A syllabus map page to show the panel (2026-09-23)
+
+**What:** `docs/showcase.html`, a single page to show the judges: the project's rule for choosing
+topics, one Approve request traced through browser, pipeline, transaction and database with the
+subjects each step applies, then every subject (DSA, OOP, DBMS, OS, CN, WD, SE) as topic → its job
+in CampusOS → the file it is written in → the test that proves it, a "how we know it works" strip,
+and a "what we did not force in" block (SFF, AI, unused structures, unfinished work). Filter tabs
+by subject; light and dark themes; the app's own Clay & Teal palette. Content follows
+`docs/CODE-MAP.md`, including the caveat that the SQL views and `register_for_event()` are shown in
+`psql` while the screens run the same logic in service code. Also published privately as a
+claude.ai artifact.
+
+**Why:** the presenter wants one clean page the panel can read directly.
+
+**Teammates must do:** nothing. Open the file in any browser; it needs internet only for its fonts.
+
+**Open:** none.
 
 ## One presentation script, intro to testing (2026-09-23)
 
