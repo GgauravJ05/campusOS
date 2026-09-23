@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-23 | [Presenter cue card and a full backend explanation](#presenter-cue-card-and-a-full-backend-explanation-2026-09-23) | Gaurav |
 | 2026-09-23 | [Future scope: classroom ownership and multi-level approval](#future-scope-classroom-ownership-and-multi-level-approval-2026-09-23) | Gaurav |
 | 2026-09-23 | [Review 2 deck content, slide by slide](#review-2-deck-content-slide-by-slide-2026-09-23) | Gaurav |
 | 2026-09-22 | [Fix: blue leftovers on the public about page after the palette change](#fix-blue-leftovers-on-the-public-about-page-after-the-palette-change-2026-09-22) | Gaurav |
@@ -84,6 +85,27 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Presenter cue card and a full backend explanation (2026-09-23)
+
+**What:** two documents for the Review 2 presentation. `docs/CUE-CARD.md` is a one-page
+cue card (running order with timings, one line per subject, the request walk-through,
+numbers to memorise, the honest gaps to state first). `docs/BACKEND-EXPLAINED.md` explains
+the backend end to end: the stack and why, whether and how it is REST (with the two
+honest caveats: a few action-style endpoints such as `/approve`, and REST maturity
+Level 2), the folder layers, one request followed step by step, authentication and token
+rotation, validation and errors, database access and transactions, the four concurrency
+problems, the domain/DSA/OS parts, background work, an endpoint table, a five-minute
+spoken script and backend Q&A. Every fact was checked against the code (70 endpoints:
+34 GET, 26 POST, 8 PATCH, 2 DELETE; access token 15 min, refresh 7 days, bcrypt cost 12).
+
+**Why:** the presenter opens with the introduction, shows the working video, then explains
+the course mapping, the backend and the architecture, and needs to be able to explain each
+part with confidence.
+
+**Teammates must do:** nothing.
+
+**Open:** none.
 
 ## Future scope: classroom ownership and multi-level approval (2026-09-23)
 

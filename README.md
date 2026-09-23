@@ -311,6 +311,8 @@ reference/   syllabus, colour palette, review notices and the Review 2 presentat
 | Project explained (script, Q&A) | [`docs/PROJECT.md`](docs/PROJECT.md) |
 | Team video script (9 speakers) | [`docs/VIDEO-SCRIPT.md`](docs/VIDEO-SCRIPT.md) |
 | Review 2 deck content (plain, slide-by-slide) | [`docs/INFO.md`](docs/INFO.md) |
+| Presenter cue card (one page) | [`docs/CUE-CARD.md`](docs/CUE-CARD.md) |
+| Backend explained end to end (REST, layers, script, Q&A) | [`docs/BACKEND-EXPLAINED.md`](docs/BACKEND-EXPLAINED.md) |
 | Syllabus mapping      | [`docs/SYLLABUS-MAPPING.md`](docs/SYLLABUS-MAPPING.md) |
 | Ethics, privacy, sustainability | [`docs/ETHICS-PRIVACY-SUSTAINABILITY.md`](docs/ETHICS-PRIVACY-SUSTAINABILITY.md) |
 | Contribution matrix   | [`docs/CONTRIBUTIONS.md`](docs/CONTRIBUTIONS.md)      |
