@@ -312,6 +312,7 @@ reference/   syllabus, colour palette, review notices and the Review 2 presentat
 | Team video script (9 speakers) | [`docs/VIDEO-SCRIPT.md`](docs/VIDEO-SCRIPT.md) |
 | Review 2 deck content (plain, slide-by-slide) | [`docs/INFO.md`](docs/INFO.md) |
 | Full presentation script (intro, architecture, working, testing) | [`docs/PRESENTATION-SCRIPT.md`](docs/PRESENTATION-SCRIPT.md) |
+| Syllabus map page for the panel (open in a browser) | [`docs/showcase.html`](docs/showcase.html) |
 | Presenter cue card (one page) | [`docs/CUE-CARD.md`](docs/CUE-CARD.md) |
 | Backend explained end to end (REST, layers, script, Q&A) | [`docs/BACKEND-EXPLAINED.md`](docs/BACKEND-EXPLAINED.md) |
 | Testing explained (kinds, why, how, script, Q&A) | [`docs/TESTING-EXPLAINED.md`](docs/TESTING-EXPLAINED.md) |
