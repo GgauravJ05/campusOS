@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-23 | [One presentation script, intro to testing](#one-presentation-script-intro-to-testing-2026-09-23) | Gaurav |
 | 2026-09-23 | [Testing explained, and a code map for the course mapping](#testing-explained-and-a-code-map-for-the-course-mapping-2026-09-23) | Gaurav |
 | 2026-09-23 | [Presenter cue card and a full backend explanation](#presenter-cue-card-and-a-full-backend-explanation-2026-09-23) | Gaurav |
 | 2026-09-23 | [Future scope: classroom ownership and multi-level approval](#future-scope-classroom-ownership-and-multi-level-approval-2026-09-23) | Gaurav |
@@ -86,6 +87,25 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## One presentation script, intro to testing (2026-09-23)
+
+**What:** `docs/PRESENTATION-SCRIPT.md`, a single spoken script in presenting order:
+introduction, architecture and backend (three tiers, REST, layers, one Approve request followed
+through the pipeline, service transaction and database constraint, OOP and data structures,
+security), working demo (one line per scene tied to its subject), testing (levels, why a real
+database, the 20-way concurrency proofs, an offer to run the test live with the verified output,
+the deadlock found by testing), and a close. Each point carries the second-year subject it
+belongs to and the file to open. "Pre-empt" lines answer likely cross-questions before they are
+asked. Ends with a one-page subject-to-code table and the remaining one-line answers. Linked
+from the README and the cue card.
+
+**Why:** the presenter needs one continuous script, rather than several separate guides, that
+leaves the panel few cross-questions.
+
+**Teammates must do:** nothing.
+
+**Open:** none.
 
 ## Testing explained, and a code map for the course mapping (2026-09-23)
 
