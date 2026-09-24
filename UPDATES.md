@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-24 | [The complete backend, module by module](#the-complete-backend-module-by-module-2026-09-24) | Gaurav |
 | 2026-09-24 | [Backend deep-dive Q&A](#backend-deep-dive-qa-2026-09-24) | Gaurav |
 | 2026-09-23 | [A syllabus map page to show the panel](#a-syllabus-map-page-to-show-the-panel-2026-09-23) | Gaurav |
 | 2026-09-23 | [One presentation script, intro to testing](#one-presentation-script-intro-to-testing-2026-09-23) | Gaurav |
@@ -89,6 +90,26 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## The complete backend, module by module (2026-09-24)
+
+**What:** `docs/BACKEND-COMPLETE.md` explains the whole backend for in-depth questions:
+start-up and graceful shutdown, the request pipeline, then every module (auth, users and
+roles, venues, scheduling rules, bookings and their lifecycle, the approval inbox as CPU
+scheduling, nearest free venue, clubs, events with publish, eligibility, seat semaphore,
+waitlist and recommendation scoring, attendance, JSONB feedback, notifications and the email
+outbox, the reminder worker, reports, dashboards, audit trail, settings and the LRU cache,
+health), each with how it works step by step, its rules and numbers, library versus our own
+code, its syllabus topic and likely questions. Also the error-code mapping, design decisions
+with their trade-offs, honest limits and rapid-fire answers. All checked against the code.
+
+**Found while checking:** the RSVP waitlist is off by default (`rsvp.allow_waitlist = false`
+in `system_settings`), so a full event refuses rather than waitlists in the demo. The promotion
+logic is built and tested. `docs/CODE-MAP.md` now says so. No code change.
+
+**Teammates must do:** nothing.
+
+**Open:** none.
 
 ## Backend deep-dive Q&A (2026-09-24)
 
