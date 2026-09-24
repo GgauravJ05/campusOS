@@ -181,8 +181,8 @@ approve: { from: [STATUSES.PENDING], to: STATUSES.APPROVED, ... },
 reject:  { from: OPEN_STATUSES,      to: STATUSES.REJECTED, ... },
 ```
 
-> "The `#` makes `#status` truly private. Writing `booking.status = 'APPROVED'` from outside does
-> nothing. The only way is to call `approve()`, and `approve()` checks that the booking is
+> "The `#` makes `#status` truly private. `status` has only a getter, so writing `booking.status = 'APPROVED'`
+> from outside is refused (in our strict-mode code it throws an error). The only way is to call `approve()`, and `approve()` checks that the booking is
 > currently PENDING and the event hasn't started. So an illegal jump like 'rejected to approved' is
 > **impossible**, not just checked in some places."
 
