@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-24 | [Backend deep-dive Q&A](#backend-deep-dive-qa-2026-09-24) | Gaurav |
 | 2026-09-23 | [A syllabus map page to show the panel](#a-syllabus-map-page-to-show-the-panel-2026-09-23) | Gaurav |
 | 2026-09-23 | [One presentation script, intro to testing](#one-presentation-script-intro-to-testing-2026-09-23) | Gaurav |
 | 2026-09-23 | [Testing explained, and a code map for the course mapping](#testing-explained-and-a-code-map-for-the-course-mapping-2026-09-23) | Gaurav |
@@ -88,6 +89,28 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Backend deep-dive Q&A (2026-09-24)
+
+**What:** `docs/BACKEND-DEEP-QA.md`, for in-depth panel questions. It opens with one table
+saying, for every part of the backend, whether it is a library, Node's built-in `crypto`, or
+written by us. Then: hashing versus signing versus encryption (and that TLS and encryption at
+rest are not in place because the project isn't deployed), passwords (bcrypt cost 12, salt,
+72-byte limit, policy, dummy-hash timing defence, lockout), JWT (HS256, thin payload, pinned
+algorithm, role re-read per request, access token in memory only), refresh tokens (48 random
+bytes, SHA-256 at rest, cookie flags, rotation, family revocation, 10-second grace), one-time
+codes (randomInt, HMAC-SHA256 bound to email and purpose, constant-time compare, limits),
+authorisation, API protections, database access, and rapid-fire answers. All checked against
+the code.
+
+**Found while checking:** the demo password `Campus@123` is on our own common-password block
+list (`services/auth/password.js`), so a judge registering with it would be refused. That is
+correct behaviour; the demo accounts are seeded with a pre-computed hash. The document tells
+the presenter how to answer if it comes up. No code change.
+
+**Teammates must do:** nothing.
+
+**Open:** none.
 
 ## A syllabus map page to show the panel (2026-09-23)
 
