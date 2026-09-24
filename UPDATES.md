@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-09-24 | [OOP and OS explanation script](#oop-and-os-explanation-script-2026-09-24) | Gaurav |
 | 2026-09-24 | [The complete backend, module by module](#the-complete-backend-module-by-module-2026-09-24) | Gaurav |
 | 2026-09-24 | [Backend deep-dive Q&A](#backend-deep-dive-qa-2026-09-24) | Gaurav |
 | 2026-09-23 | [A syllabus map page to show the panel](#a-syllabus-map-page-to-show-the-panel-2026-09-23) | Gaurav |
@@ -90,6 +91,26 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## OOP and OS explanation script (2026-09-24)
+
+**What:** `docs/gj.md`, a detailed presenter script for the OOP and OS concepts. OOP: classes and
+objects (`fromActor`), multilevel and hierarchical inheritance (the role classes), runtime
+polymorphism (overridden permission methods replacing role `if` chains), encapsulation
+(`Booking`'s private `#status` and its transition table), abstraction and the template method
+(`Report`, `Faculty`), the exception hierarchy and try/catch/finally, file I/O. OS: race
+condition, critical section and mutual exclusion (`SELECT ... FOR UPDATE`), the seat counting
+semaphore (P, V, blocked queue, and why its atomicity comes from the row lock), the real
+deadlock mapped to the four Coffman conditions and prevented by lock order, FCFS/SJF/priority
+scheduling with waiting and turnaround times, the LRU cache as page replacement, plus resource
+pools, timeouts, the worker, `SKIP LOCKED`, signals and shell scripts. Each concept quotes the
+real code, says why it was done that way, and lists likely questions.
+
+**Why:** the presenter will explain the OOP and OS parts in detail.
+
+**Teammates must do:** nothing.
+
+**Open:** none.
 
 ## The complete backend, module by module (2026-09-24)
 
