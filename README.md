@@ -315,6 +315,7 @@ reference/   syllabus, colour palette, review notices and the Review 2 presentat
 | Syllabus map page for the panel (open in a browser) | [`docs/showcase.html`](docs/showcase.html) |
 | Presenter cue card (one page) | [`docs/CUE-CARD.md`](docs/CUE-CARD.md) |
 | Backend explained end to end (REST, layers, script, Q&A) | [`docs/BACKEND-EXPLAINED.md`](docs/BACKEND-EXPLAINED.md) |
+| The complete backend, module by module | [`docs/BACKEND-COMPLETE.md`](docs/BACKEND-COMPLETE.md) |
 | Backend deep-dive Q&A (library vs self-written, hashing, tokens, security) | [`docs/BACKEND-DEEP-QA.md`](docs/BACKEND-DEEP-QA.md) |
 | Testing explained (kinds, why, how, script, Q&A) | [`docs/TESTING-EXPLAINED.md`](docs/TESTING-EXPLAINED.md) |
 | Where each syllabus topic is in the code (file and line) | [`docs/CODE-MAP.md`](docs/CODE-MAP.md) |
