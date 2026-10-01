@@ -304,9 +304,11 @@ psql -h localhost -p 55432 -U postgres -d campusos \
    and holding the club-member role are two separate things.
 4. **Should coordinators administer college-level clubs,** or is that the
    Principal's alone? Currently it is Principal only.
-5. **Hosting and email.** We need a deployment target, and an SMTP account so
-   verification codes and reminders go out as real email — today they are
-   written to the server log.
+5. **Hosting.** We still need a deployment target — deployment remains out of
+   scope by team decision (see `docs/SYLLABUS-MAPPING.md`). **Email is
+   resolved**: a real Gmail SMTP account is now configured
+   (`backend/.env`, 2026-10-01), so verification codes and reminders go out as
+   real email instead of only to the server log.
 6. **Branch protection on `dev`** requires the repository to be public or on a
    GitHub Pro plan. That's the repository owner's call.
 7. **From Week 0, still unanswered:** should the final review weight
