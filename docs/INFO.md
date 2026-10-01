@@ -195,8 +195,6 @@ honestly for them.
 
 ## Slide — Remaining Work & Next Steps
 
-- Build sign-in for students from other colleges: email address + a one-time
-  code, with a per-event "open to other colleges" switch (off by default).
 - Load-test the system at higher concurrency than one laptop allows.
 - Replace placeholder venue capacity and equipment data with real, verified
   values.
@@ -205,6 +203,28 @@ honestly for them.
 ---
 
 ## Slide — Future Scope (MMCOE-specific, not built)
+
+**External participants — sign-in for students from other colleges.** FR1
+mentions letting outside students join select events; the SRS wording names
+Gmail OAuth specifically. Decided instead to complete it with **email + a
+one-time code** — the same OTP mechanism already built and tested for
+registration and password reset (`backend/src/services/auth/otp.service.js`),
+real SMTP for which is now configured — rather than Google OAuth, which would
+need a Google Cloud project, a consent screen and an HTTPS redirect the
+project (not deployed) has no use for elsewhere. A deliberate substitution of
+mechanism, not a smaller version of the goal.
+
+**What it would need (not built yet):** a per-event "open to other colleges"
+switch (off by default, set by the club head/coordinator when publishing); a
+separate sign-up path for outside participants (name, college name, email,
+OTP) that does not loosen `ALLOWED_EMAIL_DOMAINS` for the normal path; one
+more rule in `backend/src/services/events/eligibility.js`'s
+`checkEligibility`; external accounts limited to browsing switched-on events,
+reserving/cancelling one seat and leaving feedback — no venue requests, no
+clubs. Estimated about half a day once started. No design work has started;
+it is future scope only.
+
+---
 
 **Classroom ownership and multi-level approval.** Right now every venue —
 seminar halls, labs, and classrooms alike — is approved by one department

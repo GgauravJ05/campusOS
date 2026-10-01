@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-10-01 | [External participants moved to future scope, with a full design](#external-participants-moved-to-future-scope-with-a-full-design-2026-10-01) | Gaurav |
 | 2026-10-01 | [Password-reset email flow verified end-to-end](#password-reset-email-flow-verified-end-to-end-2026-10-01) | Gaurav |
 | 2026-10-01 | [Real SMTP configured — verification emails now actually send](#real-smtp-configured--verification-emails-now-actually-send-2026-10-01) | Gaurav |
 | 2026-09-24 | [OOP and OS explanation script](#oop-and-os-explanation-script-2026-09-24) | Gaurav |
@@ -91,6 +92,26 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## External participants moved to future scope, with a full design (2026-10-01)
+
+**What:** `docs/INFO.md`'s "Remaining Work & Next Steps" slide used to list
+"sign-in for students from other colleges" as something to finish before the
+final review. Moved it to the "Future Scope" slide instead, alongside the
+classroom-ownership item, with the full design written out: a per-event "open
+to other colleges" switch, a separate email+OTP sign-up path for outside
+participants (no Gmail OAuth — reuses the existing, tested OTP mechanism,
+which now has real SMTP behind it), one more rule in `eligibility.js`'s
+`checkEligibility`, and the scope limits on an external account (browse
+switched-on events, one seat, feedback; no venue requests, no clubs).
+
+**Why:** explicit decision — not a near-term to-do, not started, no design
+work beyond this write-up.
+
+**What teammates need to do:** nothing; documentation only. Do not start
+building this without the decision being revisited.
 
 ---
 
