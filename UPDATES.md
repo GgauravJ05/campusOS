@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-10-01 | [Password-reset email flow verified end-to-end](#password-reset-email-flow-verified-end-to-end-2026-10-01) | Gaurav |
 | 2026-10-01 | [Real SMTP configured — verification emails now actually send](#real-smtp-configured--verification-emails-now-actually-send-2026-10-01) | Gaurav |
 | 2026-09-24 | [OOP and OS explanation script](#oop-and-os-explanation-script-2026-09-24) | Gaurav |
 | 2026-09-24 | [The complete backend, module by module](#the-complete-backend-module-by-module-2026-09-24) | Gaurav |
@@ -90,6 +91,37 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Password-reset email flow verified end-to-end (2026-10-01)
+
+**What:** followed the real SMTP setup above with a second, separate proof:
+the forgot-password / reset-password pair, not just registration's OTP.
+`ALLOWED_EMAIL_DOMAINS` was again temporarily widened to include `gmail.com`,
+a fresh test account was registered, `POST /api/auth/forgot-password` was
+called for it, and the password-reset code arrived by real email. The first
+code expired (10-minute TTL) before it reached `reset-password` — a genuine,
+useful proof that `OTP_TTL_MINUTES` is enforced, not a bug — so a second code
+was requested and consumed promptly: `reset-password` succeeded, and a
+follow-up `login` with the new password succeeded too.
+
+One side effect worth recording: `resetPassword` in `auth.service.js` marks
+the account `isVerified: true` on a successful reset ("a successful reset
+also proves inbox ownership") — confirmed in the login response.
+
+**Cleanup differed from the first test** and is worth noting for next time:
+this account had already logged in, which wrote a row to `admin_logs`
+(FR20's append-only audit trail). The `fk_admin_logs_admin` foreign key then
+refuses a hard delete of the user — exactly as designed, see `CLAUDE.md`'s
+"a user who has written audit log rows cannot be hard deleted" rule. The test
+account was deactivated (`is_active = FALSE`) instead of deleted; the earlier
+registration-only test account genuinely had no audit rows yet and could be
+deleted outright. `ALLOWED_EMAIL_DOMAINS` was reverted and re-verified
+(`someone@gmail.com` rejected again).
+
+**What this closes:** demonstrates FR2 (password reset) and the audit trail's
+append-only guarantee together, for real, not simulated.
 
 ---
 
