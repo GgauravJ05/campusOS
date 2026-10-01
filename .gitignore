@@ -30,3 +30,12 @@ backups/
 
 # Demo video recorder output
 scripts/demo-video/out/
+
+# Scratch/local-only material: review decks, presentation exports, ad-hoc
+# screenshots and video-recording scripts. Files already tracked here before
+# this rule (db-reset.sh, demo.sh, the er-diagram generator, the syllabus PDF,
+# etc.) are unaffected - .gitignore only stops NEW untracked files in these
+# folders from being picked up by `git add`. Screenshots meant to be pushed
+# live in docs/screenshots/ instead.
+/reference/
+/scripts/
