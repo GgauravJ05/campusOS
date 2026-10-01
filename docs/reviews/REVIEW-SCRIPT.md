@@ -338,6 +338,38 @@ they should be added to the document.
 The database normalization, deployment, and the decisions above. No functional
 requirement is outstanding.
 
+**"How does email actually work, and what is SMTP doing here?"**
+SMTP is the protocol used to hand an email to a mail server for delivery —
+the "S" in `SMTP_HOST`. `backend/src/services/mail/mailer.js` has always
+supported it, but until 2026-10-01 no real mail account was configured, so it
+fell back to its dev mode: writing the email's contents to the server log
+instead of sending them, which is fine for development but not a real
+demonstration.
+
+We now have a real Gmail account connected over SMTP, authenticated with a
+Google **app password** (a 16-character password generated specifically for
+this purpose, separate from — and revocable without changing — the account's
+real login password). No code changed; `mailer.js` already switched to real
+sending the moment `SMTP_HOST` was non-empty in `backend/.env` (which is
+git-ignored, so the credential is local only and never reached the
+repository).
+
+Two features in the SRS depend on it, both through this one mailer:
+
+1. **OTP verification (FR1/FR2)** — `otp.service.js` generates a 6-digit
+   code, stores only its hash in the `otps` table, and emails the code to the
+   user. The user types it back; the backend checks it against the hash and
+   consumes it. Registration and password reset both use this.
+2. **Automated event reminders (FR19)** — the background worker
+   (`services/reminders/worker.js`) emails registered students 2 days and 2
+   hours before an event starts, through the same mailer.
+
+We verified this end-to-end, not just configured it: temporarily widened
+`ALLOWED_EMAIL_DOMAINS` to include `gmail.com`, registered a test account
+with a real Gmail address, confirmed the OTP email arrived in that inbox,
+then reverted the allow-list to `mmcoe.edu.in` only and deleted the test
+account. See `UPDATES.md`, "Real SMTP configured" (2026-10-01).
+
 ---
 
 ## Pre-demo checklist
