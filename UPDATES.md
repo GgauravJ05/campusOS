@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-10-01 | [Real SMTP configured — verification emails now actually send](#real-smtp-configured--verification-emails-now-actually-send-2026-10-01) | Gaurav |
 | 2026-09-24 | [OOP and OS explanation script](#oop-and-os-explanation-script-2026-09-24) | Gaurav |
 | 2026-09-24 | [The complete backend, module by module](#the-complete-backend-module-by-module-2026-09-24) | Gaurav |
 | 2026-09-24 | [Backend deep-dive Q&A](#backend-deep-dive-qa-2026-09-24) | Gaurav |
@@ -89,6 +90,42 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Real SMTP configured — verification emails now actually send (2026-10-01)
+
+**What:** `backend/.env`'s `SMTP_HOST`/`SMTP_PORT`/`SMTP_SECURE`/`SMTP_USER`/
+`SMTP_PASSWORD`/`MAIL_FROM` are now filled in with a real Gmail account and
+app password (16-character app password generated under that account's
+2-Step Verification settings, not the account's login password). No code
+changed — `src/services/mail/mailer.js` already picked `nodemailer`'s real
+transport over its dev `jsonTransport` fallback the moment `SMTP_HOST` was
+non-empty.
+
+**Verified end-to-end**, not just "should work": `ALLOWED_EMAIL_DOMAINS` was
+temporarily widened to `mmcoe.edu.in,gmail.com`, a test account was
+registered with the real Gmail address, and the OTP email arrived in that
+inbox. The allow-list was then reverted to `mmcoe.edu.in` only, and the test
+user + its `otps` row were deleted from the database. The repository's actual
+config file (`backend/.env`, git-ignored) still holds the credential — this
+entry just records that the step is done.
+
+**What this closes:** open question #5 in `docs/reviews/REVIEW-SCRIPT.md`
+("we need ... an SMTP account so verification codes and reminders go out as
+real email — today they are written to the server log") is resolved for
+registration/password-reset OTPs and for the reminder worker's emails, which
+share the same mailer.
+
+**What teammates need to do:** nothing in code. Anyone running the backend
+locally without `SMTP_HOST` set still gets the dev fallback (OTP codes
+printed to the terminal) — that path is untouched and remains the default for
+a machine with no SMTP configured.
+
+**Gmail's sending limits** (~500/day on a free account) are irrelevant at
+this project's volume (a handful of emails per demo session), so no paid
+transactional-email service was added — see `CLAUDE.md`'s "no dependency
+without a reason" rule.
 
 ---
 
