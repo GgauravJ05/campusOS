@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-10-01 | [Commit history cleaned of AI co-author trailers](#commit-history-cleaned-of-ai-co-author-trailers-2026-10-01) | Gaurav |
 | 2026-10-01 | [External participants moved to future scope, with a full design](#external-participants-moved-to-future-scope-with-a-full-design-2026-10-01) | Gaurav |
 | 2026-10-01 | [Password-reset email flow verified end-to-end](#password-reset-email-flow-verified-end-to-end-2026-10-01) | Gaurav |
 | 2026-10-01 | [Real SMTP configured — verification emails now actually send](#real-smtp-configured--verification-emails-now-actually-send-2026-10-01) | Gaurav |
@@ -92,6 +93,36 @@ build history. Every change that lands gets an entry (see
 | 2026-09-05 | [Phase 0 — Foundation](#phase-0--foundation-2026-09-05) | Gaurav |
 | 2026-09-01 | Frontend page mock-ups (login, admin dashboard, venues, events) | Shravani |
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
+
+---
+
+## Commit history cleaned of AI co-author trailers (2026-10-01)
+
+**What:** 91 of the repository's 121 `dev` commits carried a
+`Co-Authored-By: Claude ...` trailer, added automatically by the AI coding
+tool used for parts of this project. GitHub reads that trailer to list a
+name in the repository's Contributors graph, which put "Claude" alongside
+the real team members. Rewrote every affected commit message with
+`git filter-repo` (message-only rewrite, restricted to the `dev` ref) to
+strip the trailer, verified the resulting tree is byte-identical to before
+the rewrite (`git diff <old-head> <new-head>` is empty — only messages
+changed, no file content), then force-pushed `dev`. Confirmed via the GitHub
+API that Claude no longer appears under Contributors, and that CI is still
+green on the rewritten history.
+
+**Why:** an academic PBL submission should show the actual student authors,
+not a coding assistant, in the project's contribution record.
+
+**What teammates need to do:** nothing — this project has no other local
+checkouts of `dev` to reconcile (solo development on this branch). A full
+backup bundle of the pre-rewrite history was taken locally before the
+rewrite, kept outside the repository, in case it's ever needed.
+
+**Scope note:** `main` (3 commits, the original scaffold) was untouched —
+none of its commits carried the trailer, and it isn't a descendant of any
+rewritten commit. A handful of stale Dependabot branches on the remote still
+reference the old history; they're harmless (no open PRs) and Dependabot
+will reconcile or replace them on its own.
 
 ---
 
