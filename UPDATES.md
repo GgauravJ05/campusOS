@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-10-13 | [Blog post draft for the PBL publication](#blog-post-draft-for-the-pbl-publication-2026-10-13) | Gaurav |
 | 2026-10-01 | [Commit history cleaned of AI co-author trailers](#commit-history-cleaned-of-ai-co-author-trailers-2026-10-01) | Gaurav |
 | 2026-10-01 | [External participants moved to future scope, with a full design](#external-participants-moved-to-future-scope-with-a-full-design-2026-10-01) | Gaurav |
 | 2026-10-01 | [Password-reset email flow verified end-to-end](#password-reset-email-flow-verified-end-to-end-2026-10-01) | Gaurav |
@@ -95,6 +96,29 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Blog post draft for the PBL publication (2026-10-13)
+
+**What:** added `blog.md` at the repository root, a first draft of the project
+blog the guide asked each team to publish. It is a case study, "From Syllabus to
+Software": the problem, what CampusOS does, then one section per course (DBMS,
+OS, DSA, OOP, CN/web, security) with real snippets from `db/schema.sql` and
+`backend/src/domain/User.js`, the deadlock story from
+`docs/DEADLOCK-CASE-STUDY.md`, the test numbers from `docs/TEST-REPORT.md`, the
+lessons learned (port 5000, silently skipped tests, the palette change) and the
+honest limits. Every claim was taken from the existing docs; nothing new is claimed.
+
+**Why:** B25IT304's rubric gives 10% to contest participation / publication, which
+was the one row still at ⬜ in `docs/SYLLABUS-MAPPING.md`. This is a draft, so that
+row stays ⬜ until the post is actually published.
+
+**What teammates need to do:** nothing to run. Before publishing: fill in the
+team list at the end, upload the screenshots where the image links are (Medium and
+Hashnode don't read repo paths), delete the draft-notes comment at the top, and
+re-check the numbers if the code changed.
+
+**Open:** where to publish (Medium, Hashnode or dev.to), and whether the guide wants
+one team post or one post per member.
 
 ## Commit history cleaned of AI co-author trailers (2026-10-01)
 
