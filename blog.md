@@ -7,7 +7,6 @@ Guide: Prof. Nishanti C. Naidu · B25IT304 Project Based Learning, A.Y. 2025-26
 
 <!-- DRAFT NOTES (delete before publishing)
 - Images: paths below point into the repo. On Medium/Hashnode, upload each image where it appears.
-- Fill in the team list at the end. Only names already in docs/CONTRIBUTIONS.md are filled in.
 - If the GitHub repo is public, keep the link at the end; if not, remove it.
 - Numbers are from docs/TEST-REPORT.md and README.md (measured 21 Sept 2026). Re-check before publishing if the code changed.
 -->
@@ -383,14 +382,10 @@ load testing, and QR-code check-in at events.
 
 ---
 
-## The team
+## Acknowledgements
 
-**Team A6**, Department of Information Technology, Marathwada Mitra Mandal's College of
-Engineering (MMCOE), Pune.
-
-- Gaurav Jadhav (full stack: database, backend, frontend, testing, documentation)
-- Gayatri Muttepawar (frontend)
-- *[add the remaining team members and their roles]*
+CampusOS was built by Team A6, Department of Information Technology, Marathwada Mitra
+Mandal's College of Engineering (MMCOE), Pune.
 
 Thanks to our guide, **Prof. Nishanti C. Naidu**, for pushing us to apply our
 fundamentals properly instead of reaching for something flashy.

@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-10-13 | [Blog draft: team member names removed](#blog-draft-team-member-names-removed-2026-10-13) | Gaurav |
 | 2026-10-13 | [Blog post draft for the PBL publication](#blog-post-draft-for-the-pbl-publication-2026-10-13) | Gaurav |
 | 2026-10-01 | [Commit history cleaned of AI co-author trailers](#commit-history-cleaned-of-ai-co-author-trailers-2026-10-01) | Gaurav |
 | 2026-10-01 | [External participants moved to future scope, with a full design](#external-participants-moved-to-future-scope-with-a-full-design-2026-10-01) | Gaurav |
@@ -96,6 +97,17 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Blog draft: team member names removed (2026-10-13)
+
+**What:** removed the team member list from `blog.md`. The closing section is now
+"Acknowledgements": it names Team A6, the department and the guide, and no
+individual members. Also removed the draft note about filling in the list.
+
+**Why:** the post should not name team members (decided by Gaurav).
+
+**What teammates need to do:** nothing. The previous entry's step "fill in the
+team list" no longer applies.
 
 ## Blog post draft for the PBL publication (2026-10-13)
 
