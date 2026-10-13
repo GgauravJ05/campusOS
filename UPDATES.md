@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-10-13 | [Medium and LinkedIn versions of the blog](#medium-and-linkedin-versions-of-the-blog-2026-10-13) | Gaurav |
 | 2026-10-13 | [Blog draft: team member names removed](#blog-draft-team-member-names-removed-2026-10-13) | Gaurav |
 | 2026-10-13 | [Blog post draft for the PBL publication](#blog-post-draft-for-the-pbl-publication-2026-10-13) | Gaurav |
 | 2026-10-01 | [Commit history cleaned of AI co-author trailers](#commit-history-cleaned-of-ai-co-author-trailers-2026-10-01) | Gaurav |
@@ -97,6 +98,27 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Medium and LinkedIn versions of the blog (2026-10-13)
+
+**What:** added two files at the repository root.
+- `blog_medium.md`: the same post as `blog.md`, reworked for Medium. Every table
+  became a bullet or numbered list (Medium has no tables), and nine images are
+  placed in the text with a caption under each: dashboard, venues by floor,
+  architecture, core ER diagram, competing requests, auto-reject after approval,
+  fully booked event, slot suggestions, audit trail. A hidden comment at the top
+  explains how to paste it into Medium and upload the images.
+- `linkedin.md`: a short LinkedIn post (1,765 characters, plain text, since
+  LinkedIn has no markdown) that links to the Medium post, plus the four photos
+  to attach and the order to attach them in.
+
+Neither file names team members.
+
+**Why:** the plan is to publish the full post on Medium and share it from
+LinkedIn. `blog.md` stays as the master copy.
+
+**What teammates need to do:** nothing to run. Publish the Medium post first,
+then put its link into the LinkedIn post where it says `[MEDIUM LINK]`.
 
 ## Blog draft: team member names removed (2026-10-13)
 
