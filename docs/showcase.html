@@ -1,0 +1,591 @@
+<title>CampusOS Syllabus Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #f7f4f2;
+    --surface: #ffffff;
+    --sunk: #ede7e3;
+    --line: #dcd2cb;
+    --ink: #17120f;
+    --ink-2: #493d36;
+    --muted: #6d5f55;
+    --clay: #9c4a22;
+    --clay-soft: #fbf0ea;
+    --clay-line: #e9b896;
+    --teal: #0f766e;
+    --teal-soft: #ecfaf8;
+    --teal-line: #a6e3da;
+    --warn: #8a5a00;
+    --warn-soft: #fff6e0;
+    --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    --body: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #17120f; --surface: #221b17; --sunk: #2c2420; --line: #3d332d;
+      --ink: #f3ede9; --ink-2: #d6cbc3; --muted: #a8998e;
+      --clay: #e39468; --clay-soft: #33221a; --clay-line: #6b3a22;
+      --teal: #5fcbbb; --teal-soft: #15302c; --teal-line: #1f5a52;
+      --warn: #f0c66a; --warn-soft: #33290f;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #17120f; --surface: #221b17; --sunk: #2c2420; --line: #3d332d;
+    --ink: #f3ede9; --ink-2: #d6cbc3; --muted: #a8998e;
+    --clay: #e39468; --clay-soft: #33221a; --clay-line: #6b3a22;
+    --teal: #5fcbbb; --teal-soft: #15302c; --teal-line: #1f5a52;
+    --warn: #f0c66a; --warn-soft: #33290f;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font: 400 16px/1.55 var(--body);
+    padding-inline: 20px;
+    padding-block: 0 64px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  code, .path { font-family: var(--mono); font-size: 0.82em; }
+  a { color: var(--teal); }
+  :focus-visible { outline: 2px solid var(--clay); outline-offset: 2px; border-radius: 4px; }
+
+  /* ---------- Header ---------- */
+  header.top { padding-block: 44px 28px; display: grid; gap: 18px; }
+  .eyebrow {
+    font: 600 12px/1 var(--body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--clay);
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  }
+  .eyebrow span + span::before { content: "·"; margin-right: 10px; color: var(--muted); }
+  h1 { font-size: clamp(34px, 6vw, 58px); font-weight: 800; line-height: 1.02; letter-spacing: -0.025em; }
+  h1 em { font-style: normal; color: var(--clay); }
+  .lede { font-size: 18px; color: var(--ink-2); max-width: 64ch; margin: 0; }
+  .rule {
+    margin: 4px 0 0; padding: 16px 20px; border-left: 3px solid var(--teal);
+    background: var(--teal-soft); color: var(--ink); max-width: 72ch; border-radius: 0 10px 10px 0;
+    font-size: 16px;
+  }
+  .rule b { color: var(--teal); }
+
+  .facts { display: flex; flex-wrap: wrap; gap: 8px 22px; padding-top: 6px; color: var(--muted); font-size: 14px; }
+  .facts b { color: var(--ink); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  /* ---------- Section frame ---------- */
+  section { padding-block: 34px 8px; }
+  .sec-head { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .sec-head h2 { font-size: clamp(24px, 3.2vw, 32px); font-weight: 700; letter-spacing: -0.015em; }
+  .sec-head p { margin: 0; color: var(--muted); font-size: 14px; max-width: 52ch; }
+
+  /* ---------- Request trace ---------- */
+  .trace { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; position: relative; }
+  .hop { padding: 18px 18px 20px; border: 1px solid var(--line); background: var(--surface); display: grid; gap: 10px; align-content: start; }
+  .hop + .hop { border-left: none; }
+  .hop:first-child { border-radius: 14px 0 0 14px; }
+  .hop:last-child { border-radius: 0 14px 14px 0; }
+  .hop .where { font: 500 12px/1 var(--mono); color: var(--muted); }
+  .hop h3 { font-size: 19px; font-weight: 700; }
+  .hop p { margin: 0; font-size: 14px; color: var(--ink-2); }
+  .hop .arrow {
+    position: absolute; width: 22px; height: 22px; border-radius: 50%; background: var(--clay); color: #fff;
+    display: grid; place-items: center; font-size: 13px; z-index: 2;
+  }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    font: 600 11px/1 var(--body); letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 5px 7px; border-radius: 5px; background: var(--clay-soft); color: var(--clay); border: 1px solid var(--clay-line);
+  }
+  .tag.t { background: var(--teal-soft); color: var(--teal); border-color: var(--teal-line); }
+  .trace-note { margin: 14px 0 0; font-size: 14px; color: var(--muted); max-width: 80ch; }
+  .trace-note code { color: var(--ink-2); }
+
+  /* ---------- Subject tabs ---------- */
+  .tabs {
+    display: flex; gap: 6px; flex-wrap: wrap; padding: 6px; background: var(--sunk); border-radius: 12px;
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; margin-bottom: 22px;
+  }
+  .tabs button {
+    font: 600 14px/1 var(--body); color: var(--ink-2); background: transparent; border: 0; cursor: pointer;
+    padding: 10px 14px; border-radius: 8px; display: inline-flex; gap: 8px; align-items: center;
+  }
+  .tabs button .n { font: 500 12px/1 var(--mono); color: var(--muted); }
+  .tabs button:hover { background: var(--surface); }
+  .tabs button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+  .tabs button[aria-pressed="true"] .n { color: var(--clay-line); }
+
+  .subject { margin-bottom: 34px; }
+  .subject-head { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; align-items: baseline; margin-bottom: 12px; }
+  .code-badge {
+    grid-row: span 2; font: 800 22px/1 var(--display); color: var(--clay); letter-spacing: -0.01em;
+    padding: 12px 12px; border: 2px solid var(--clay); border-radius: 10px; min-width: 70px; text-align: center;
+  }
+  .subject-head h3 { font-size: 22px; font-weight: 700; }
+  .subject-head p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .rows { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--surface); }
+  .row {
+    display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.5fr) minmax(0, 1.45fr);
+    gap: 18px; padding: 16px 18px; border-top: 1px solid var(--line);
+  }
+  .row:first-child { border-top: none; }
+  .row.head {
+    background: var(--sunk); padding-block: 10px;
+    font: 600 11px/1.2 var(--body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+  }
+  .topic { font-weight: 600; color: var(--ink); }
+  .topic small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .job { color: var(--ink-2); font-size: 15px; }
+  .evidence { display: grid; gap: 6px; align-content: start; }
+  .path {
+    display: inline-block; justify-self: start; max-width: 100%; overflow-wrap: anywhere;
+    padding: 3px 7px; border-radius: 6px; background: var(--sunk); color: var(--ink);
+  }
+  .proof { font-size: 13px; color: var(--teal); display: flex; gap: 6px; align-items: baseline; }
+  .proof::before { content: "✓"; font-weight: 700; }
+  .proof.demo { color: var(--muted); }
+  .proof.demo::before { content: "▸"; }
+  .caveat { font-size: 13px; color: var(--warn); background: var(--warn-soft); padding: 6px 9px; border-radius: 6px; }
+
+  /* ---------- Proof strip ---------- */
+  .proofs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .pcard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 8px; align-content: start; }
+  .pcard .big { font: 800 34px/1 var(--display); color: var(--clay); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .pcard h3 { font-size: 17px; font-weight: 700; }
+  .pcard p { margin: 0; font-size: 14px; color: var(--ink-2); }
+  .cmd {
+    font: 400 13px/1.5 var(--mono); background: var(--ink); color: var(--ground); padding: 10px 12px; border-radius: 8px;
+    overflow-x: auto; white-space: pre; margin: 4px 0 0;
+  }
+  .cmd .ok { color: #7fd6c8; }
+
+  /* ---------- Not applied ---------- */
+  .na { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .na div { border: 1px dashed var(--line); border-radius: 14px; padding: 16px 18px; background: transparent; }
+  .na h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .na p { margin: 0; font-size: 14px; color: var(--ink-2); }
+  .na .gap-list { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 14px; display: grid; gap: 4px; }
+
+  footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+  @media (max-width: 860px) {
+    .trace { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hop + .hop { border-left: 1px solid var(--line); }
+    .hop:nth-child(2n) { border-left: none; }
+    .hop:nth-child(n+3) { border-top: none; }
+    .hop:first-child { border-radius: 14px 0 0 0; }
+    .hop:nth-child(2) { border-radius: 0 14px 0 0; }
+    .hop:nth-child(3) { border-radius: 0 0 0 14px; }
+    .hop:last-child { border-radius: 0 0 14px 0; }
+    .hop .arrow { display: none; }
+    .proofs { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 680px) {
+    .row { grid-template-columns: 1fr; gap: 8px; }
+    .row.head { display: none; }
+    .na { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    .trace { grid-template-columns: 1fr; }
+    .hop, .hop + .hop, .hop:nth-child(2n) { border: 1px solid var(--line); border-top: none; border-radius: 0; }
+    .hop:first-child { border-top: 1px solid var(--line); border-radius: 14px 14px 0 0; }
+    .hop:last-child { border-radius: 0 0 14px 14px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .tabs button { transition: background-color .15s ease, color .15s ease; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow"><span>CampusOS</span><span>Team A6 · MMCOE Pune</span><span>Second Year IT syllabus</span></div>
+    <h1>Every syllabus topic, <em>where it lives</em> in the code.</h1>
+    <p class="lede">CampusOS is the campus platform where a club requests a venue, faculty approve it, students reserve seats, and every decision is recorded. This page shows which second-year topic each part applies, the exact file it is written in, and the test that proves it works.</p>
+    <p class="rule"><b>Our rule:</b> we used a topic only where the project had a real job for it. Anything else, we left out and say so at the end of this page.</p>
+    <div class="facts">
+      <span><b>24</b> tables</span>
+      <span><b>70</b> REST endpoints</span>
+      <span><b>1,278</b> automated tests, all passing</span>
+      <span><b>98.7%</b> backend coverage</span>
+      <span>React · Express · PostgreSQL</span>
+    </div>
+  </header>
+
+  <!-- ================= One request ================= -->
+  <section aria-labelledby="trace-title">
+    <div class="sec-head">
+      <h2 id="trace-title">One request, end to end</h2>
+      <p>A coordinator clicks <b>Approve</b>. Each step it passes through applies a different subject.</p>
+    </div>
+    <div class="trace">
+      <div class="hop">
+        <span class="where">frontend/src · :5173</span>
+        <h3>Browser</h3>
+        <p>React app sends <code>POST /api/bookings/5/approve</code> with a login token.</p>
+        <div class="tags"><span class="tag">WD</span><span class="tag">CN</span></div>
+      </div>
+      <div class="hop">
+        <span class="where">backend/src/app.js · :5050</span>
+        <h3>Security pipeline</h3>
+        <p>Request id, secure headers, CORS, rate limit, token check, role check, input validation. In that order, every time.</p>
+        <div class="tags"><span class="tag">CN</span><span class="tag">OS</span></div>
+      </div>
+      <div class="hop">
+        <span class="where">services/bookings/booking.service.js</span>
+        <h3>One transaction</h3>
+        <p>Lock the venue row, ask the <code>Booking</code> class if approving is legal, approve, auto-reject clashes, notify, write the audit log.</p>
+        <div class="tags"><span class="tag">DBMS</span><span class="tag">OS</span><span class="tag">OOP</span></div>
+      </div>
+      <div class="hop">
+        <span class="where">db/schema.sql · :55432</span>
+        <h3>Database</h3>
+        <p>An exclusion constraint refuses two approved bookings for one room and time, even if our code had a bug.</p>
+        <div class="tags"><span class="tag">DBMS</span></div>
+      </div>
+    </div>
+    <p class="trace-note">Any failure rolls the whole transaction back, so nothing is left half-done. The database enforces what must never break. The code is the friendly layer on top.</p>
+  </section>
+
+  <!-- ================= Subjects ================= -->
+  <section aria-labelledby="map-title">
+    <div class="sec-head">
+      <h2 id="map-title">Subject by subject</h2>
+      <p>Paths are from the repository root. Choose a subject, or view all.</p>
+    </div>
+
+    <div class="tabs" role="toolbar" aria-label="Filter by subject">
+      <button type="button" id="tab-all" data-f="all" aria-pressed="true">All</button>
+      <button type="button" id="tab-dsa" data-f="dsa" aria-pressed="false">DSA <span class="n">6</span></button>
+      <button type="button" id="tab-oop" data-f="oop" aria-pressed="false">OOP <span class="n">4</span></button>
+      <button type="button" id="tab-dbms" data-f="dbms" aria-pressed="false">DBMS <span class="n">7</span></button>
+      <button type="button" id="tab-os" data-f="os" aria-pressed="false">OS <span class="n">5</span></button>
+      <button type="button" id="tab-cn" data-f="cn" aria-pressed="false">CN <span class="n">3</span></button>
+      <button type="button" id="tab-wd" data-f="wd" aria-pressed="false">WD <span class="n">3</span></button>
+      <button type="button" id="tab-se" data-f="se" aria-pressed="false">SE <span class="n">3</span></button>
+    </div>
+
+    <!-- DSA -->
+    <div class="subject" data-s="dsa" id="dsa">
+      <div class="subject-head">
+        <div class="code-badge">DSA</div>
+        <h3>Data Structures and Algorithms</h3>
+        <p>All hand-written in <code>backend/src/lib/ds/</code>, each with its own test.</p>
+      </div>
+      <div class="rows">
+        <div class="row head"><span>Topic</span><span>Its job in CampusOS</span><span>Where it is written · proof</span></div>
+        <div class="row">
+          <div class="topic">Tree<small>preorder, postorder, level order</small></div>
+          <div class="job">The campus → building → floor → venue list. Postorder adds up the venues on each floor.</div>
+          <div class="evidence"><span class="path">lib/ds/Tree.js</span><span class="path">services/venues/venue.service.js:146</span><span class="proof">tree.test.js</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Circular queue</div>
+          <div class="job">The event waitlist. When a seat frees up, the longest-waiting student who fits is promoted.</div>
+          <div class="evidence"><span class="path">lib/ds/CircularQueue.js</span><span class="path">services/events/eligibility.js:141</span><span class="proof">circularQueue.test.js</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Binary min-heap</div>
+          <div class="job">"Recommended for you" and the nearest free times. Takes the best few without sorting everything.</div>
+          <div class="evidence"><span class="path">lib/ds/MinHeap.js</span><span class="path">services/events/event.service.js:767</span><span class="proof">minHeap.test.js</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Merge sort + binary search</div>
+          <div class="job">Suggesting free slots when a time is taken: sort the day's bookings once, then search.</div>
+          <div class="evidence"><span class="path">lib/ds/mergeSort.js · binarySearch.js</span><span class="path">services/scheduling/timeWindow.js:151</span><span class="proof">Same answers as the slow version on 3,000 random days</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Graph<small>BFS, Dijkstra</small></div>
+          <div class="job">"Nearest free venue": buildings are nodes and walking paths are weighted edges.</div>
+          <div class="evidence"><span class="path">lib/ds/Graph.js</span><span class="path">services/venues/nearest.service.js:30</span><span class="proof">graph.test.js</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Hash table<small>chaining, resizes at 0.75 load</small></div>
+          <div class="job">Counts a student's past registrations by category to explain recommendations.</div>
+          <div class="evidence"><span class="path">lib/ds/HashTable.js</span><span class="path">services/events/event.service.js:723</span><span class="proof">hashTable.test.js</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OOP -->
+    <div class="subject" data-s="oop" id="oop">
+      <div class="subject-head">
+        <div class="code-badge">OOP</div>
+        <h3>Object Oriented Programming</h3>
+        <p>Classes in <code>backend/src/domain/</code>. JavaScript, but the same ideas as the C++ syllabus.</p>
+      </div>
+      <div class="rows">
+        <div class="row head"><span>Topic</span><span>Its job in CampusOS</span><span>Where it is written · proof</span></div>
+        <div class="row">
+          <div class="topic">Inheritance + polymorphism<small>multilevel and hierarchical</small></div>
+          <div class="job">Student → ClubMember → ClubHead, and Faculty → DeptCoordinator / Principal. Each role overrides what it may do, replacing chains of <code>if</code> statements.</div>
+          <div class="evidence"><span class="path">domain/User.js:48–149</span><span class="proof">domain.user.test.js</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Encapsulation<small>private <code>#status</code></small></div>
+          <div class="job">A booking changes only through approve, reject, request changes or cancel. Rejected → approved is impossible.</div>
+          <div class="evidence"><span class="path">domain/Booking.js:67</span><span class="proof">domain.booking.test.js</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Abstraction + file I/O</div>
+          <div class="job">An abstract <code>Report</code>; each of the four reports overrides <code>build()</code> and can be saved to disk as CSV or PDF.</div>
+          <div class="evidence"><span class="path">domain/Report.js:33, 117</span><span class="proof">domain.report.test.js</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Exception hierarchy</div>
+          <div class="job"><code>SlotUnavailableError</code> extends <code>ConflictError</code> extends <code>ApiError</code>. One handler turns each into the right HTTP reply.</div>
+          <div class="evidence"><span class="path">utils/ApiError.js:113</span><span class="proof">ApiError.test.js</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DBMS -->
+    <div class="subject" data-s="dbms" id="dbms">
+      <div class="subject-head">
+        <div class="code-badge">DBMS</div>
+        <h3>Database Management Systems</h3>
+        <p>The design is <code>db/schema.sql</code>, 24 tables in third normal form. Our strongest subject.</p>
+      </div>
+      <div class="rows">
+        <div class="row head"><span>Topic</span><span>Its job in CampusOS</span><span>Where it is written · proof</span></div>
+        <div class="row">
+          <div class="topic">Integrity constraint<small>exclusion constraint</small></div>
+          <div class="job">The database itself refuses two approved bookings for the same room and overlapping time.</div>
+          <div class="evidence"><span class="path">db/schema.sql:560</span><span class="proof">schema.test.js: 2nd overlap refused (23P01)</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Normalisation<small>3NF, 4NF, composite keys</small></div>
+          <div class="job">Eligible departments and years kept in two separate junction tables, each with a composite primary key. No arrays in columns.</div>
+          <div class="evidence"><span class="path">db/schema.sql:307, 453, 466</span><span class="proof">schema.test.js</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Transactions + row locks<small>ACID</small></div>
+          <div class="job">An approval is one all-or-nothing transaction that locks the venue row first.</div>
+          <div class="evidence"><span class="path">services/bookings/booking.service.js:479–540</span><span class="path">config/db.js:85</span><span class="proof">20 simultaneous approvals → exactly 1 wins</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Triggers</div>
+          <div class="job">Seats can never exceed capacity. The audit log is append-only: even direct SQL cannot edit it.</div>
+          <div class="evidence"><span class="path">db/schema.sql:616–646, 842–850</span><span class="proof">governance.flow.test.js: edit refused</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">SQL forms<small>UNION, NOT IN, self-join, MIN/MAX/AVG, GROUP BY/HAVING</small></div>
+          <div class="job">"My activity", students not yet marked present, related events, busiest venue, clubs that ran events.</div>
+          <div class="evidence"><span class="path">services/events/event.service.js:797, 208</span><span class="path">services/events/attendance.service.js:98</span><span class="path">services/reports/metrics.service.js:72</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Cursor, function, views</div>
+          <div class="job">A cursor closes finished events row by row, run by the reminder worker. A registration function and four report views are defined in the database too.</div>
+          <div class="evidence"><span class="path">db/schema.sql:871–1010</span><span class="caveat">The views and <code>register_for_event()</code> are shown in psql. The app's screens run the same logic in its service code.</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">NoSQL substitute<small>JSONB + GIN index</small></div>
+          <div class="job">Event feedback answers differ by event type, so they are stored as a JSON document, not dozens of empty columns.</div>
+          <div class="evidence"><span class="path">db/schema.sql:697, 1050</span><span class="proof">feedback.flow.test.js</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OS -->
+    <div class="subject" data-s="os" id="os">
+      <div class="subject-head">
+        <div class="code-badge">OS</div>
+        <h3>Operating Systems</h3>
+        <p>Concurrency is the heart of a booking system, so this is where OS applies.</p>
+      </div>
+      <div class="rows">
+        <div class="row head"><span>Topic</span><span>Its job in CampusOS</span><span>Where it is written · proof</span></div>
+        <div class="row">
+          <div class="topic">Counting semaphore</div>
+          <div class="job">Seats: reserving is P, cancelling is V, and the waitlist is the blocked queue.</div>
+          <div class="evidence"><span class="path">domain/SeatSemaphore.js</span><span class="proof">20 students, 1 seat → exactly 1 gets it</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Mutual exclusion<small>critical section</small></div>
+          <div class="job">A row lock (<code>SELECT … FOR UPDATE</code>) means only one approver at a time can decide a venue.</div>
+          <div class="evidence"><span class="path">services/bookings/booking.service.js:479</span><span class="proof demo">db/demo/run-demo.sh 02: session B waits for A</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Deadlock<small>found, fixed, prevented</small></div>
+          <div class="job">Two functions locked clubs and users in opposite order (circular wait). Fixed with one global lock order.</div>
+          <div class="evidence"><span class="path">services/users/user.service.js:173</span><span class="path">docs/DEADLOCK-CASE-STUDY.md</span><span class="proof">15 + 15 at once, never deadlocks</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">CPU scheduling<small>FCFS, SJF, priority</small></div>
+          <div class="job">Orders the faculty approval inbox, showing waiting and turnaround time for each policy.</div>
+          <div class="evidence"><span class="path">lib/os/scheduler.js</span><span class="path">services/bookings/inbox.service.js</span><span class="proof">scheduler.test.js</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Page replacement<small>LRU cache</small></div>
+          <div class="job">Caches settings and venue lookups; hits and misses shown on <code>/api/health/metrics</code>.</div>
+          <div class="evidence"><span class="path">lib/ds/LruCache.js</span><span class="path">services/lookupCache.js</span><span class="proof">lruCache.test.js</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CN -->
+    <div class="subject" data-s="cn" id="cn">
+      <div class="subject-head">
+        <div class="code-badge">CN</div>
+        <h3>Computer Networks</h3>
+        <p>The browser and API are separate programs talking over HTTP. Write-up: <code>docs/NETWORK.md</code>.</p>
+      </div>
+      <div class="rows">
+        <div class="row head"><span>Topic</span><span>Its job in CampusOS</span><span>Where it is written · proof</span></div>
+        <div class="row">
+          <div class="topic">REST over HTTP</div>
+          <div class="job">70 endpoints: resources at URLs, GET/POST/PATCH/DELETE, JSON in and out, stateless.</div>
+          <div class="evidence"><span class="path">backend/src/routes/</span><span class="proof">integration suites</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Status codes</div>
+          <div class="job">401 not signed in, 403 not allowed, 409 slot taken, 422 bad input, 429 too many requests.</div>
+          <div class="evidence"><span class="path">middleware/errorHandler.js</span><span class="proof">errorHandler.test.js</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Cookies + CORS</div>
+          <div class="job">The refresh token sits in an httpOnly cookie that scripts cannot read. Only listed websites may call the API.</div>
+          <div class="evidence"><span class="path">controllers/auth.controller.js:19</span><span class="path">app.js:30</span><span class="proof">app.test.js</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WD -->
+    <div class="subject" data-s="wd" id="wd">
+      <div class="subject-head">
+        <div class="code-badge">WD</div>
+        <h3>Web Development</h3>
+        <p>A React app, plus a separate hand-written page for the core web syllabus.</p>
+      </div>
+      <div class="rows">
+        <div class="row head"><span>Topic</span><span>Its job in CampusOS</span><span>Where it is written · proof</span></div>
+        <div class="row">
+          <div class="topic">HTML5 + hand-written CSS</div>
+          <div class="job">Semantic tags, Flexbox, Grid, media queries and CSS variables on the public About page.</div>
+          <div class="evidence"><span class="path">frontend/public/about/index.html</span><span class="path">frontend/public/about/campus.css</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Bootstrap, jQuery, AJAX</div>
+          <div class="job">Navbar, accordion and feature filter. An XMLHttpRequest checks live whether the API is online.</div>
+          <div class="evidence"><span class="path">frontend/public/about/about.js</span><span class="proof demo">Open /about/index.html</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Form validation<small>browser and server</small></div>
+          <div class="job">Name and 10-digit mobile checks run in the browser and again on the server, which never trusts the browser.</div>
+          <div class="evidence"><span class="path">frontend/public/about/validate.js</span><span class="path">backend/src/lib/validation.js</span><span class="proof">validation.test.js</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SE -->
+    <div class="subject" data-s="se" id="se">
+      <div class="subject-head">
+        <div class="code-badge">SE</div>
+        <h3>Software Engineering and Modelling</h3>
+        <p>How the project was specified, modelled, built and verified.</p>
+      </div>
+      <div class="rows">
+        <div class="row head"><span>Topic</span><span>Its job in CampusOS</span><span>Where it is written · proof</span></div>
+        <div class="row">
+          <div class="topic">Requirements + models</div>
+          <div class="job">An SRS with numbered requirements FR1–FR21, and use-case, architecture and ER diagrams.</div>
+          <div class="evidence"><span class="path">docs/src/</span><span class="path">docs/diagrams/</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Layered design</div>
+          <div class="job">Routes → thin controllers → services with the rules → domain classes → database.</div>
+          <div class="evidence"><span class="path">backend/src/</span><span class="path">controllers/bookings.controller.js</span></div>
+        </div>
+        <div class="row">
+          <div class="topic">Testing + CI + change log</div>
+          <div class="job">1,278 tests on a real database, run on every push, with a coverage gate. Every change logged with a date.</div>
+          <div class="evidence"><span class="path">.github/workflows/ci.yml</span><span class="path">UPDATES.md</span><span class="proof">1,278 passing, 0 skipped</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Proof ================= -->
+  <section aria-labelledby="proof-title">
+    <div class="sec-head">
+      <h2 id="proof-title">How we know it works</h2>
+      <p>Tests run against a real PostgreSQL database, not a mock, because our guarantees are enforced by the database.</p>
+    </div>
+    <div class="proofs">
+      <div class="pcard">
+        <span class="big">1,278</span>
+        <h3>Automated tests</h3>
+        <p>1,030 backend and 248 frontend. Unit, integration, concurrency, constraint and equivalence tests. All passing, none skipped.</p>
+      </div>
+      <div class="pcard">
+        <span class="big">20 → 1</span>
+        <h3>The race, proved</h3>
+        <p>Twenty students request the last seat at the same instant. Exactly one gets it. We can run this live.</p>
+        <pre class="cmd">npx jest tests/integration/rsvp.concurrency.test.js
+<span class="ok">Tests: 4 passed, 4 total</span></pre>
+      </div>
+      <div class="pcard">
+        <span class="big">98.7%</span>
+        <h3>Backend coverage</h3>
+        <p>Every push runs every test in GitHub Actions with a real database. The build fails if coverage drops.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Not applied ================= -->
+  <section aria-labelledby="na-title">
+    <div class="sec-head">
+      <h2 id="na-title">What we did not force in</h2>
+      <p>Stated openly. A forced link would be weaker than saying no.</p>
+    </div>
+    <div class="na">
+      <div>
+        <h3>Startup Fundamentals and Financing</h3>
+        <p>Not applicable. CampusOS is a free internal college tool with no revenue model, so we did not invent one.</p>
+      </div>
+      <div>
+        <h3>Fundamentals of AI</h3>
+        <p>Not used, by design: the department asked for fundamentals. "Recommendations" is a weighted score ranked with a heap, not a model.</p>
+      </div>
+      <div>
+        <h3>Structures with no job here</h3>
+        <p>No stack, BST or round-robin scheduler. Nothing in a booking system needs them, and a demo file would not be an application of the course.</p>
+      </div>
+      <div>
+        <h3>Not finished yet</h3>
+        <ul class="gap-list">
+          <li>Sign-in for students of other colleges (planned: email + one-time code)</li>
+          <li>Load test at 500 users (measured on one laptop only)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>CampusOS · Team A6 · Marathwada Mitra Mandal's College of Engineering, Pune</span>
+    <span>Full detail: <code>docs/CODE-MAP.md</code></span>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var buttons = document.querySelectorAll('.tabs button');
+    var subjects = document.querySelectorAll('.subject');
+    function apply(f) {
+      buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.f === f)); });
+      subjects.forEach(function (s) { s.hidden = f !== 'all' && s.dataset.s !== f; });
+      try { localStorage.setItem('campusos-map-filter', f); } catch (e) {}
+    }
+    buttons.forEach(function (b) {
+      b.addEventListener('click', function () { apply(b.dataset.f); });
+    });
+    var start = (location.hash || '').slice(1);
+    if (!/^(dsa|oop|dbms|os|cn|wd|se)$/.test(start)) {
+      try { start = localStorage.getItem('campusos-map-filter') || 'all'; } catch (e) { start = 'all'; }
+    }
+    apply(start);
+  })();
+</script>

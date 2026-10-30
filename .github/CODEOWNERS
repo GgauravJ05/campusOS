@@ -1,0 +1,9 @@
+# Owners are requested for review automatically on pull requests
+# touching these paths. Last matching pattern wins.
+
+*                     @GgauravJ05
+
+# Changes here affect every phase - always need maintainer review.
+/db/                  @GgauravJ05
+/.github/             @GgauravJ05
+/backend/src/config/  @GgauravJ05

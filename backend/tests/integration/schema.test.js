@@ -1,0 +1,492 @@
+'use strict';
+
+/**
+ * Schema-level guarantees, verified against a real PostgreSQL database.
+ *
+ * These are the constraints the SRS treats as hard requirements, so they
+ * are tested where they are enforced rather than only in application code.
+ *
+ * Requires a database with db/schema.sql applied:
+ *
+ *   createdb campusos_test
+ *   psql -d campusos_test -f db/schema.sql -f db/seed.sql
+ *   TEST_DATABASE_URL=postgresql://postgres@localhost:5432/campusos_test npm test
+ *
+ * Without TEST_DATABASE_URL the whole suite is skipped, so `npm test` stays
+ * green on a machine that has no PostgreSQL installed.
+ */
+
+const { Pool } = require('pg');
+
+const connectionString = process.env.TEST_DATABASE_URL;
+const describeWithDb = connectionString ? describe : describe.skip;
+
+describeWithDb('database schema', () => {
+  /** @type {Pool} */
+  let pool;
+  const fixtures = {};
+
+  beforeAll(async () => {
+    pool = new Pool({ connectionString, max: 4 });
+
+    const { rows: [role] } = await pool.query(
+      `SELECT role_id FROM roles WHERE role_key = 'CLUB_HEAD'`,
+    );
+    const { rows: [user] } = await pool.query(
+      `INSERT INTO users (full_name, email, password_hash, role_id, is_verified)
+       VALUES ('Schema Test User', $1, 'x', $2, TRUE)
+       ON CONFLICT (email) DO UPDATE SET full_name = EXCLUDED.full_name
+       RETURNING user_id`,
+      [`schema.test.${Date.now()}@mmcoe.edu.in`, role.role_id],
+    );
+    const { rows: [venue] } = await pool.query(
+      `INSERT INTO venues (venue_name, building, floor, venue_type, capacity)
+       VALUES ($1, 'Test Building', 1, 'SEMINAR_HALL', 100)
+       RETURNING venue_id`,
+      [`Schema Test Venue ${Date.now()}`],
+    );
+    const { rows: [club] } = await pool.query(
+      `INSERT INTO clubs (club_name, club_head_id) VALUES ($1, $2) RETURNING club_id`,
+      [`Schema Test Club ${Date.now()}`, user.user_id],
+    );
+
+    Object.assign(fixtures, { userId: user.user_id, venueId: venue.venue_id, clubId: club.club_id });
+  });
+
+  afterAll(async () => {
+    if (!pool) return;
+
+    await pool.query('DELETE FROM bookings WHERE venue_id = $1', [fixtures.venueId]);
+    await pool.query('DELETE FROM events WHERE club_id = $1', [fixtures.clubId]);
+    await pool.query('DELETE FROM clubs WHERE club_id = $1', [fixtures.clubId]);
+    await pool.query('DELETE FROM venues WHERE venue_id = $1', [fixtures.venueId]);
+
+    // The fixture user authored admin_logs rows, and admin_logs is
+    // append-only by design (FR20) - so the audit trail pins the user row in
+    // place and it cannot be hard deleted. That is the intended behaviour:
+    // deactivate rather than delete, exactly as the application must.
+    const { rows: [audit] } = await pool.query(
+      'SELECT count(*)::int AS n FROM admin_logs WHERE admin_id = $1',
+      [fixtures.userId],
+    );
+
+    if (audit.n > 0) {
+      await pool.query('UPDATE users SET is_active = FALSE WHERE user_id = $1', [fixtures.userId]);
+    } else {
+      await pool.query('DELETE FROM users WHERE user_id = $1', [fixtures.userId]);
+    }
+
+    await pool.end();
+  });
+
+  /** Creates an event to hang bookings off. */
+  async function createEvent(overrides = {}) {
+    const { rows } = await pool.query(
+      `INSERT INTO events (club_id, created_by, title, category, event_date, start_time, end_time, status, max_seats)
+       VALUES ($1, $2, $3, $4, CURRENT_DATE + 7, '10:00', '12:00', 'APPROVED', $5)
+       RETURNING event_id`,
+      [
+        fixtures.clubId,
+        fixtures.userId,
+        overrides.title || 'Schema Test Event',
+        overrides.category || 'TECHNICAL',
+        overrides.maxSeats ?? 2,
+      ],
+    );
+    return rows[0].event_id;
+  }
+
+  async function createBooking({ eventId, status, start, end, approve = true }) {
+    return pool.query(
+      `INSERT INTO bookings (event_id, venue_id, requested_by, approved_by, start_at, end_at, status, decided_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING booking_id`,
+      [
+        eventId,
+        fixtures.venueId,
+        fixtures.userId,
+        approve ? fixtures.userId : null,
+        start,
+        end,
+        status,
+        approve ? new Date() : null,
+      ],
+    );
+  }
+
+  describe('venue double-booking (FR10)', () => {
+    it('refuses a second APPROVED booking overlapping the first', async () => {
+      const first = await createEvent();
+      const second = await createEvent();
+
+      await createBooking({
+        eventId: first,
+        status: 'APPROVED',
+        start: '2030-01-01T10:00:00Z',
+        end: '2030-01-01T12:00:00Z',
+      });
+
+      await expect(
+        createBooking({
+          eventId: second,
+          status: 'APPROVED',
+          start: '2030-01-01T11:00:00Z',
+          end: '2030-01-01T13:00:00Z',
+        }),
+      ).rejects.toMatchObject({ code: '23P01' });
+    });
+
+    it('allows back-to-back bookings that only touch at the boundary', async () => {
+      const first = await createEvent();
+      const second = await createEvent();
+
+      await createBooking({
+        eventId: first,
+        status: 'APPROVED',
+        start: '2030-02-01T10:00:00Z',
+        end: '2030-02-01T12:00:00Z',
+      });
+
+      // The range is [start, end) so 12:00-14:00 does not overlap 10:00-12:00.
+      // The 15-minute buffer (FR9) is applied by the application, not here.
+      await expect(
+        createBooking({
+          eventId: second,
+          status: 'APPROVED',
+          start: '2030-02-01T12:00:00Z',
+          end: '2030-02-01T14:00:00Z',
+        }),
+      ).resolves.toBeDefined();
+    });
+
+    it('allows multiple competing PENDING requests for the same slot (FR12)', async () => {
+      const first = await createEvent();
+      const second = await createEvent();
+      const window = { start: '2030-03-01T10:00:00Z', end: '2030-03-01T12:00:00Z' };
+
+      await createBooking({ eventId: first, status: 'PENDING', approve: false, ...window });
+
+      await expect(
+        createBooking({ eventId: second, status: 'PENDING', approve: false, ...window }),
+      ).resolves.toBeDefined();
+    });
+  });
+
+  describe('booking decision integrity (FR13)', () => {
+    it('refuses a REJECTED booking with no recorded reason', async () => {
+      const eventId = await createEvent();
+
+      await expect(
+        pool.query(
+          `INSERT INTO bookings (event_id, venue_id, requested_by, approved_by, start_at, end_at, status, decided_at)
+           VALUES ($1, $2, $3, $3, '2030-04-01T10:00:00Z', '2030-04-01T12:00:00Z', 'REJECTED', now())`,
+          [eventId, fixtures.venueId, fixtures.userId],
+        ),
+      ).rejects.toMatchObject({ code: '23514' });
+    });
+
+    it('refuses an end time at or before the start time', async () => {
+      const eventId = await createEvent();
+
+      await expect(
+        createBooking({
+          eventId,
+          status: 'PENDING',
+          approve: false,
+          start: '2030-05-01T12:00:00Z',
+          end: '2030-05-01T10:00:00Z',
+        }),
+      ).rejects.toMatchObject({ code: '23514' });
+    });
+
+    it('caps the extension at 15 minutes', async () => {
+      const eventId = await createEvent();
+
+      await expect(
+        pool.query(
+          `INSERT INTO bookings (event_id, venue_id, requested_by, start_at, end_at, status, extension_minutes)
+           VALUES ($1, $2, $3, '2030-06-01T10:00:00Z', '2030-06-01T12:00:00Z', 'PENDING', 30)`,
+          [eventId, fixtures.venueId, fixtures.userId],
+        ),
+      ).rejects.toMatchObject({ code: '23514' });
+    });
+  });
+
+  describe('seat capacity (FR15)', () => {
+    it('refuses booked_seats above max_seats', async () => {
+      const eventId = await createEvent({ maxSeats: 2 });
+
+      await expect(
+        pool.query('UPDATE events SET booked_seats = 3 WHERE event_id = $1', [eventId]),
+      ).rejects.toMatchObject({ code: '23514' });
+    });
+
+    it('refuses a negative seat count', async () => {
+      const eventId = await createEvent({ maxSeats: 2 });
+
+      await expect(
+        pool.query('UPDATE events SET booked_seats = -1 WHERE event_id = $1', [eventId]),
+      ).rejects.toMatchObject({ code: '23514' });
+    });
+
+    it('refuses a duplicate RSVP from the same student', async () => {
+      const eventId = await createEvent();
+
+      await pool.query(
+        'INSERT INTO event_registrations (event_id, student_id) VALUES ($1, $2)',
+        [eventId, fixtures.userId],
+      );
+
+      await expect(
+        pool.query('INSERT INTO event_registrations (event_id, student_id) VALUES ($1, $2)', [
+          eventId,
+          fixtures.userId,
+        ]),
+      ).rejects.toMatchObject({ code: '23505' });
+    });
+  });
+
+  describe('stored functions and cursor (DBMS Unit 2)', () => {
+    /** A second student, since register_for_event needs a distinct one per call. */
+    let otherStudentId;
+
+    beforeAll(async () => {
+      const { rows: [role] } = await pool.query(`SELECT role_id FROM roles WHERE role_key = 'STUDENT'`);
+      const { rows: [student] } = await pool.query(
+        `INSERT INTO users (full_name, email, password_hash, role_id, is_verified)
+         VALUES ('Schema Test Student', $1, 'x', $2, TRUE) RETURNING user_id`,
+        [`schema.test.student.${Date.now()}@mmcoe.edu.in`, role.role_id],
+      );
+      otherStudentId = student.user_id;
+    });
+
+    afterAll(async () => {
+      await pool.query('DELETE FROM users WHERE user_id = $1', [otherStudentId]);
+    });
+
+    async function publishedEvent(overrides = {}) {
+      const { rows } = await pool.query(
+        `INSERT INTO events (club_id, created_by, title, category, event_date, start_time, end_time, status, max_seats)
+         VALUES ($1, $2, $3, $4, CURRENT_DATE + 7, '10:00', '12:00', 'PUBLISHED', $5)
+         RETURNING event_id`,
+        [
+          fixtures.clubId, fixtures.userId, overrides.title || 'Register Function Test', 'TECHNICAL',
+          overrides.maxSeats ?? 1,
+        ],
+      );
+      return rows[0].event_id;
+    }
+
+    it('register_for_event() inserts a registration and bumps booked_seats', async () => {
+      const eventId = await publishedEvent({ maxSeats: 2 });
+
+      const { rows: [{ register_for_event: registrationId }] } = await pool.query(
+        'SELECT register_for_event($1, $2, 1)', [eventId, fixtures.userId],
+      );
+      expect(registrationId).toEqual(expect.any(Number));
+
+      const { rows: [event] } = await pool.query('SELECT booked_seats FROM events WHERE event_id = $1', [eventId]);
+      expect(event.booked_seats).toBe(1);
+    });
+
+    it('register_for_event() refuses an event that is not published', async () => {
+      const { rows: [{ event_id: eventId }] } = await pool.query(
+        `INSERT INTO events (club_id, created_by, title, category, event_date, start_time, end_time, status)
+         VALUES ($1, $2, 'Draft Event', 'TECHNICAL', CURRENT_DATE + 7, '10:00', '12:00', 'DRAFT') RETURNING event_id`,
+        [fixtures.clubId, fixtures.userId],
+      );
+
+      await expect(pool.query('SELECT register_for_event($1, $2, 1)', [eventId, fixtures.userId]))
+        .rejects.toMatchObject({ code: '23514' });
+    });
+
+    it('the capacity trigger refuses a registration that would overbook the event, even outside register_for_event()', async () => {
+      const eventId = await publishedEvent({ maxSeats: 1 });
+      await pool.query('SELECT register_for_event($1, $2, 1)', [eventId, fixtures.userId]);
+
+      // A raw INSERT, not the function - the trigger is the guard here, not
+      // application code, so it must catch this regardless of the caller.
+      await expect(
+        pool.query('INSERT INTO event_registrations (event_id, student_id, seats) VALUES ($1, $2, 1)', [
+          eventId, otherStudentId,
+        ]),
+      ).rejects.toMatchObject({ code: '23514' });
+    });
+
+    it('close_past_events() marks an event COMPLETED once its approved booking has ended, and leaves future ones alone', async () => {
+      const pastEventId = await publishedEvent({ title: 'Past Cursor Event' });
+      await createBooking({
+        eventId: pastEventId,
+        status: 'APPROVED',
+        start: new Date(Date.now() - 3 * 86_400_000),
+        end: new Date(Date.now() - 3 * 86_400_000 + 2 * 3_600_000),
+      });
+      const futureEventId = await publishedEvent({ title: 'Future Cursor Event' });
+      await createBooking({
+        eventId: futureEventId,
+        status: 'APPROVED',
+        start: new Date(Date.now() + 3 * 86_400_000),
+        end: new Date(Date.now() + 3 * 86_400_000 + 2 * 3_600_000),
+      });
+
+      const { rows: [{ close_past_events: closedCount }] } = await pool.query('SELECT close_past_events()');
+      expect(closedCount).toBeGreaterThanOrEqual(1);
+
+      const { rows: statuses } = await pool.query(
+        `SELECT event_id, status FROM events WHERE event_id IN ($1, $2)`, [pastEventId, futureEventId],
+      );
+      const byId = Object.fromEntries(statuses.map((r) => [r.event_id, r.status]));
+      expect(byId[pastEventId]).toBe('COMPLETED');
+      expect(byId[futureEventId]).toBe('PUBLISHED');
+    });
+  });
+
+  describe('related events (self-join)', () => {
+    /** event.service.js's relatedEvents() query, run directly: two events
+     * from `events` joined to itself on club_id, excluding the row itself. */
+    async function relatedTo(eventId) {
+      const { rows } = await pool.query(
+        `SELECT e2.event_id, e2.title
+           FROM events e1
+           JOIN events e2 ON e2.club_id = e1.club_id AND e2.event_id <> e1.event_id
+          WHERE e1.event_id = $1 AND e2.status = 'PUBLISHED' AND e2.event_date >= CURRENT_DATE
+          ORDER BY e2.event_date ASC`,
+        [eventId],
+      );
+      return rows.map((r) => r.event_id);
+    }
+
+    async function publishedEvent(overrides = {}) {
+      const { rows: [row] } = await pool.query(
+        `INSERT INTO events (club_id, created_by, title, category, event_date, start_time, end_time, status)
+         VALUES ($1, $2, $3, 'TECHNICAL', CURRENT_DATE + 30, '10:00', '12:00', 'PUBLISHED') RETURNING event_id`,
+        [fixtures.clubId, fixtures.userId, overrides.title || 'Self-Join Test Event'],
+      );
+      return row.event_id;
+    }
+
+    it('finds another published event from the same club, not itself', async () => {
+      const first = await publishedEvent({ title: 'Series Part 1' });
+      const second = await publishedEvent({ title: 'Series Part 2' });
+
+      const related = await relatedTo(first);
+      expect(related).toContain(second);
+      expect(related).not.toContain(first);
+    });
+
+    it('finds nothing for an event with no club', async () => {
+      const { rows: [role] } = await pool.query(`SELECT role_id FROM roles WHERE role_key = 'SUPER_ADMIN'`);
+      const { rows: [admin] } = await pool.query(
+        `INSERT INTO users (full_name, email, password_hash, role_id, is_verified)
+         VALUES ('Schema Test Admin', $1, 'x', $2, TRUE) RETURNING user_id`,
+        [`schema.test.admin.${Date.now()}@mmcoe.edu.in`, role.role_id],
+      );
+      const { rows: [{ event_id: soloEventId }] } = await pool.query(
+        `INSERT INTO events (club_id, created_by, title, category, event_date, start_time, end_time, status, event_scope)
+         VALUES (NULL, $1, 'College Address', 'SEMINAR', CURRENT_DATE + 30, '10:00', '11:00', 'PUBLISHED', 'COLLEGE')
+         RETURNING event_id`,
+        [admin.user_id],
+      );
+
+      expect(await relatedTo(soloEventId)).toEqual([]);
+
+      await pool.query('DELETE FROM events WHERE event_id = $1', [soloEventId]);
+      await pool.query('DELETE FROM users WHERE user_id = $1', [admin.user_id]);
+    });
+  });
+
+  describe('department floors', () => {
+    it('gives each department its own floor, one to six', async () => {
+      const { rows } = await pool.query('SELECT dept_code, floor FROM departments ORDER BY floor');
+      expect(rows).toEqual([
+        { dept_code: 'ELEC', floor: 1 }, { dept_code: 'MECH', floor: 2 }, { dept_code: 'ENTC', floor: 3 },
+        { dept_code: 'IT', floor: 4 }, { dept_code: 'CS', floor: 5 }, { dept_code: 'AIDS', floor: 6 },
+      ]);
+    });
+
+    it('refuses two departments on one floor, and a nonsense floor', async () => {
+      await expect(pool.query(`INSERT INTO departments (dept_code, dept_name, floor) VALUES ('DUP', 'Duplicate Floor', 4)`))
+        .rejects.toMatchObject({ code: '23505' });
+      await expect(pool.query(`INSERT INTO departments (dept_code, dept_name, floor) VALUES ('HIGH', 'Too High', 99)`))
+        .rejects.toMatchObject({ code: '23514' });
+    });
+
+    it('seeds the classrooms every floor has and the rooms the IT department named', async () => {
+      const { rows } = await pool.query(
+        `SELECT floor, string_agg(venue_name, ',' ORDER BY venue_name) AS names
+           FROM venues WHERE building = 'Academic Building' AND (venue_name LIKE 'AC %' OR venue_name LIKE 'MB %')
+          GROUP BY floor ORDER BY floor`,
+      );
+      for (const floor of [1, 2, 3, 5, 6]) {
+        expect(rows.find((r) => r.floor === floor).names).toBe([1, 2, 3, 4].map((k) => `AC ${floor}0${k}`).join(','));
+      }
+      expect(rows.find((r) => r.floor === 4).names)
+        .toBe('AC 401,AC 402,AC 403,AC 404,MB 405,MB 407,MB 408,MB 409,MB 411,MB 413,MB 414');
+    });
+  });
+
+  describe('shared spaces', () => {
+    it('has Conference Room and Syndicate Room on the Admin Block\'s one floor, and four spaces on Campus', async () => {
+      const { rows } = await pool.query(
+        `SELECT building, floor, string_agg(venue_name, ', ' ORDER BY venue_name) AS names
+           FROM venues WHERE building IN ('Admin Block', 'Campus', 'Main Building') GROUP BY building, floor ORDER BY building`,
+      );
+      expect(rows).toEqual([
+        { building: 'Admin Block', floor: 1, names: 'Conference Room, Syndicate Room' },
+        { building: 'Campus', floor: 0, names: 'Atmayog Kuti, FMCII Hall, Main Building Entry Space, Sports Ground' },
+      ]); // no "Main Building" any more: it was merged into Campus
+    });
+  });
+
+  describe('user credentials', () => {
+    it('refuses an account with neither a password nor an OAuth identity', async () => {
+      const { rows: [role] } = await pool.query(`SELECT role_id FROM roles WHERE role_key = 'STUDENT'`);
+
+      await expect(
+        pool.query(
+          `INSERT INTO users (full_name, email, role_id) VALUES ('No Creds', $1, $2)`,
+          [`nocreds.${Date.now()}@mmcoe.edu.in`, role.role_id],
+        ),
+      ).rejects.toMatchObject({ code: '23514' });
+    });
+
+    it('accepts an OAuth-only account (FR1)', async () => {
+      const { rows: [role] } = await pool.query(`SELECT role_id FROM roles WHERE role_key = 'STUDENT'`);
+      const email = `oauth.${Date.now()}@gmail.com`;
+
+      await expect(
+        pool.query(
+          `INSERT INTO users (full_name, email, oauth_provider, oauth_subject, role_id)
+           VALUES ('OAuth User', $1, 'google', $2, $3)`,
+          [email, `sub-${Date.now()}`, role.role_id],
+        ),
+      ).resolves.toBeDefined();
+
+      await pool.query('DELETE FROM users WHERE email = $1', [email]);
+    });
+  });
+
+  describe('audit trail immutability (FR20)', () => {
+    it('refuses an UPDATE to admin_logs', async () => {
+      const { rows: [log] } = await pool.query(
+        `INSERT INTO admin_logs (admin_id, action) VALUES ($1, 'TEST_ACTION') RETURNING log_id`,
+        [fixtures.userId],
+      );
+
+      await expect(
+        pool.query(`UPDATE admin_logs SET action = 'TAMPERED' WHERE log_id = $1`, [log.log_id]),
+      ).rejects.toThrow(/append-only/);
+    });
+
+    it('refuses a DELETE from admin_logs', async () => {
+      const { rows: [log] } = await pool.query(
+        `INSERT INTO admin_logs (admin_id, action) VALUES ($1, 'TEST_ACTION_2') RETURNING log_id`,
+        [fixtures.userId],
+      );
+
+      await expect(
+        pool.query('DELETE FROM admin_logs WHERE log_id = $1', [log.log_id]),
+      ).rejects.toThrow(/append-only/);
+    });
+  });
+});
