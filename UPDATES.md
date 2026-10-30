@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-10-30 | [EDI report rewritten in plainer language](#edi-report-rewritten-in-plainer-language-2026-10-30) | Gaurav |
 | 2026-10-30 | [EDI mini-project report (Word)](#edi-mini-project-report-word-2026-10-30) | Gaurav |
 | 2026-10-13 | [Medium and LinkedIn versions of the blog](#medium-and-linkedin-versions-of-the-blog-2026-10-13) | Gaurav |
 | 2026-10-13 | [Blog draft: team member names removed](#blog-draft-team-member-names-removed-2026-10-13) | Gaurav |
@@ -99,6 +100,19 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## EDI report rewritten in plainer language (2026-10-30)
+
+**What:** reworded the prose of `docs/report/CampusOS_EDI_Project_Report.docx` in a
+plainer, student-report style. Long sentences are split into shorter ones,
+em dashes and arrows inside sentences are gone, bold lead-ins on bullets in
+Chapters 1, 4, 7, 8 and 10 are removed, and stock phrases are replaced with simpler
+wording. The facts, numbers, tables, figures and references are unchanged.
+
+**Why:** the team asked for the report to read in its own voice.
+
+**What teammates need to do:** read it once and change any sentence that does not
+sound like you.
 
 ## EDI mini-project report (Word) (2026-10-30)
 
