@@ -19,11 +19,11 @@ function event(overrides = {}) {
     category: 'TECHNICAL',
     scope: 'CLUB',
     status: 'PUBLISHED',
-    date: '2026-10-12',
+    date: '2099-10-12',
     startTime: '10:00',
     endTime: '12:00',
-    startAt: '2026-10-12T04:30:00.000Z',
-    endAt: '2026-10-12T06:30:00.000Z',
+    startAt: '2099-10-12T04:30:00.000Z',
+    endAt: '2099-10-12T06:30:00.000Z',
     bannerUrl: null,
     maxSeats: 40,
     bookedSeats: 12,
@@ -231,7 +231,7 @@ describe('event detail and RSVP (FR15, FR16)', () => {
     const { user } = renderApp('/events/1', { user: student })
 
     expect(await screen.findByRole('heading', { name: 'Hack Night' })).toBeInTheDocument()
-    expect(screen.getByText('Monday, 12 October 2026')).toBeInTheDocument()
+    expect(screen.getByText('Monday, 12 October 2099')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Seminar Hall A' })).toHaveAttribute('href', '/venues/3')
     expect(screen.getByText('12 of 40 seats taken')).toBeInTheDocument()
 
