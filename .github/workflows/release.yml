@@ -1,7 +1,7 @@
 # ============================================================
 # CampusOS - Continuous Delivery
 #
-# Every push to main (i.e. every merged release PR from dev) and every
+# Every push to main (i.e. every merged pull request) and every
 # version tag (v1.2.3) produces deployable artifacts:
 #
 #   * the web app as a static build attached to the run (and to the

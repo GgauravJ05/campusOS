@@ -28,7 +28,7 @@
 
 ## Checklist
 
-- [ ] Branch is up to date with `dev`
+- [ ] Branch is up to date with `main`
 - [ ] `npm test` passes in `backend/` and `frontend/`
 - [ ] New code has tests; coverage gate still passes
 - [ ] `npm run lint` passes in `frontend/`

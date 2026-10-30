@@ -1,7 +1,7 @@
 # ============================================================
 # CampusOS - Continuous Integration
 #
-# Runs on every pull request and every push to dev / main.
+# Runs on every pull request and every push to main.
 # A pull request cannot be merged until every job here is green
 # (enable "Require status checks" in branch protection).
 #
@@ -16,7 +16,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [dev, main]
+    branches: [main]
   workflow_dispatch:
   # Lets release.yml run this exact pipeline as its gate.
   workflow_call:

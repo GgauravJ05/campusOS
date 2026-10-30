@@ -5,7 +5,6 @@
 | Branch | Supported |
 | ------ | --------- |
 | `main` | ✅        |
-| `dev`  | ✅ (pre-release) |
 
 ## Reporting a vulnerability
 

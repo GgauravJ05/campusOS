@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-10-30 | [main is now the only branch](#main-is-now-the-only-branch-2026-10-30) | Gaurav |
 | 2026-10-30 | [EDI report rewritten in plainer language](#edi-report-rewritten-in-plainer-language-2026-10-30) | Gaurav |
 | 2026-10-30 | [EDI mini-project report (Word)](#edi-mini-project-report-word-2026-10-30) | Gaurav |
 | 2026-10-13 | [Medium and LinkedIn versions of the blog](#medium-and-linkedin-versions-of-the-blog-2026-10-13) | Gaurav |
@@ -100,6 +101,24 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## main is now the only branch (2026-10-30)
+
+**What:** the whole project moved from `dev` to `main`. `main` is now the default
+branch on GitHub and `dev` is deleted. The old `main` held only the three setup
+commits from 30 July. Its history is kept through a merge, and its files are
+replaced by the current project. CI runs on pushes to `main`, Dependabot opens its
+PRs against `main`, and the README badge, PR template, CONTRIBUTING and SECURITY
+now name `main`. Open Dependabot PRs that targeted `dev` are closed; Dependabot
+will reopen them against `main` on its next run.
+
+**Why:** decided by Gaurav. One branch is simpler for a team this size.
+
+**What teammates need to do:** in your local checkout, run
+`git fetch origin && git checkout main && git reset --hard origin/main`
+(this throws away local changes; commit or stash them first), then
+`git branch -D dev`. Open new branches and PRs from and against `main`. Every push
+to `main` also runs the release workflow, which builds the web app as an artifact.
 
 ## EDI report rewritten in plainer language (2026-10-30)
 
