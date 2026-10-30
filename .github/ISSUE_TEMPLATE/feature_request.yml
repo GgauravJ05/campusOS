@@ -1,0 +1,30 @@
+name: Feature / task
+description: New functionality or a planned piece of work
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or goal
+      description: Who needs this and why?
+    validations:
+      required: true
+  - type: input
+    id: requirement
+    attributes:
+      label: SRS requirement
+      placeholder: e.g. FR15
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - [ ] ...
+        - [ ] Tests cover ...
+    validations:
+      required: true

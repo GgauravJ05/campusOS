@@ -1,0 +1,9 @@
+{
+  "name": "campusos-er-diagram",
+  "private": true,
+  "type": "module",
+  "description": "Generates docs/diagrams/er-diagram.{md,svg,png} from db/schema.sql. A separate tool: neither backend/ nor frontend/ gains a dependency.",
+  "dependencies": {
+    "playwright-core": "^1.49.0"
+  }
+}
