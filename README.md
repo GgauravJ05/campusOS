@@ -1,6 +1,6 @@
 # 🏫 CampusOS — Smart Campus Management Platform
 
-[![CI](https://github.com/GgauravJ05/campusOS/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/GgauravJ05/campusOS/actions/workflows/ci.yml)
+[![CI](https://github.com/GgauravJ05/campusOS/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/GgauravJ05/campusOS/actions/workflows/ci.yml)
 [![Release](https://github.com/GgauravJ05/campusOS/actions/workflows/release.yml/badge.svg)](https://github.com/GgauravJ05/campusOS/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
@@ -353,7 +353,7 @@ Who built what is recorded in [`docs/CONTRIBUTIONS.md`](docs/CONTRIBUTIONS.md), 
 ## Contributing
 
 Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a pull request: branch
-from `dev`, use Conventional Commits, keep CI green, and add an `UPDATES.md`
+from `main`, use Conventional Commits, keep CI green, and add an `UPDATES.md`
 entry. Everyone is expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 Security issues go through [`SECURITY.md`](SECURITY.md), never a public issue.
 

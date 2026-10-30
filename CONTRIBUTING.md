@@ -21,16 +21,14 @@ is the supported version.
 ## 2. Branching model
 
 ```
-main   ← stable, release-ready. Only updated by a PR from dev. Every push publishes a release.
-dev    ← integration branch. Default branch; all feature PRs target it.
+main   ← default branch. All PRs target it; every push builds the release artifacts.
 feature/<phase>-<short-name>   e.g. feature/p2-conflict-engine
 fix/<short-name>               e.g. fix/login-redirect-loop
 docs/<short-name>, chore/<short-name>
 ```
 
-- Never commit directly to `main`.
-- Branch from the latest `dev`, keep branches short-lived (days, not weeks).
-- Rebase or merge `dev` into your branch before opening a PR.
+- Branch from the latest `main`, keep branches short-lived (days, not weeks).
+- Rebase or merge `main` into your branch before opening a PR.
 
 ## 3. Commit messages
 
@@ -65,7 +63,7 @@ A PR without an `UPDATES.md` entry will not be merged.
 
 ## 5. Pull requests
 
-1. Open a PR against `dev` and fill in the template.
+1. Open a PR against `main` and fill in the template.
 2. CI must be green: backend tests (with a real PostgreSQL), coverage gate,
    frontend lint, tests and build, dependency audit.
 3. At least **one approving review**. Changes under `db/`, `.github/` or
