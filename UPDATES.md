@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-10-30 | [EDI mini-project report (Word)](#edi-mini-project-report-word-2026-10-30) | Gaurav |
 | 2026-10-13 | [Medium and LinkedIn versions of the blog](#medium-and-linkedin-versions-of-the-blog-2026-10-13) | Gaurav |
 | 2026-10-13 | [Blog draft: team member names removed](#blog-draft-team-member-names-removed-2026-10-13) | Gaurav |
 | 2026-10-13 | [Blog post draft for the PBL publication](#blog-post-draft-for-the-pbl-publication-2026-10-13) | Gaurav |
@@ -98,6 +99,24 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## EDI mini-project report (Word) (2026-10-30)
+
+**What:** added `docs/report/CampusOS_EDI_Project_Report.docx`, the EDI mini-project
+report in the department's template (cover, project scope, certificate,
+acknowledgement, contents, lists of figures, tables and abbreviations, Chapters 1-10,
+bibliography and references). About 45 pages, A4, Times New Roman, page border.
+It has 15 figures (architecture, use case, core ER diagram, 12 app screenshots) and
+16 tables. All 12 SRS team members are listed by name, without roll numbers. The guide
+is written as Prof. Nishanthi Naidu, and the HOD line is left blank for a signature.
+Figures come from `docs/TEST-REPORT.md` (the 20 Sep run), the SRS and
+`docs/SYLLABUS-MAPPING.md`.
+
+**Why:** the report is a required EDI submission.
+
+**What teammates need to do:** open it in Word and, when asked, allow it to update
+fields so the contents page gets its page numbers. Check the literature survey
+entries against the papers before submitting, and sign the certificate.
 
 ## Medium and LinkedIn versions of the blog (2026-10-13)
 
