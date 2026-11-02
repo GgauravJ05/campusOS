@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-11-02 | [IEEE-format methodology draft, survey correction](#ieee-format-methodology-draft-survey-correction-2026-11-02) | Gaurav |
 | 2026-11-02 | [IEEE-format literature survey](#ieee-format-literature-survey-2026-11-02) | Gaurav |
 | 2026-10-30 | [main is now the only branch](#main-is-now-the-only-branch-2026-10-30) | Gaurav |
 | 2026-10-30 | [EDI report rewritten in plainer language](#edi-report-rewritten-in-plainer-language-2026-10-30) | Gaurav |
@@ -102,6 +103,14 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## IEEE-format methodology draft, survey correction (2026-11-02)
+
+**What:** Added `docs/report/CampusOS_IEEE_Methodology.docx` and a `.pdf` copy: a 3-page Methodology only, in the IEEE two-column A4 layout, with 11 references. It covers requirements, the survey search, the development phases, the booking method, the test levels, the concurrency scenarios, the response-time probe and the limits. It leaves out results. Also corrected the literature survey, which wrongly said a test run exposed the deadlock.
+
+**Why:** Gaurav wants to approve the method before it goes further. The deadlock was found by reading the code, as `docs/DEADLOCK-CASE-STUDY.md` records, and the test was added with the fix.
+
+**What teammates need to do:** Nothing for the code. The Methodology is a draft until approved. It does not yet mention AI tools used in the build, so settle that before submitting.
 
 ## IEEE-format literature survey (2026-11-02)
 
