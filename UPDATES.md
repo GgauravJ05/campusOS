@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-11-02 | [IEEE-format literature survey](#ieee-format-literature-survey-2026-11-02) | Gaurav |
 | 2026-10-30 | [main is now the only branch](#main-is-now-the-only-branch-2026-10-30) | Gaurav |
 | 2026-10-30 | [EDI report rewritten in plainer language](#edi-report-rewritten-in-plainer-language-2026-10-30) | Gaurav |
 | 2026-10-30 | [EDI mini-project report (Word)](#edi-mini-project-report-word-2026-10-30) | Gaurav |
@@ -101,6 +102,14 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## IEEE-format literature survey (2026-11-02)
+
+**What:** Added `docs/report/CampusOS_IEEE_Literature_Survey.docx` and a `.pdf` copy: a 5-page survey on preventing double booking in campus systems, in the IEEE two-column A4 conference layout, with 28 references. It compares ten application papers and lists five gaps. All DOIs were checked on Crossref.
+
+**Why:** To show the faculty. It reports only what we could read: three papers in full and seven by abstract, which Table I marks. CampusOS's limits are stated too (not deployed, no user trial, 500-user target unverified).
+
+**What teammates need to do:** Nothing for the code. Before submitting, open the `.docx` in Word to check the layout, since it was only rendered in Pages, and run it through the college plagiarism checker.
 
 ## main is now the only branch (2026-10-30)
 
