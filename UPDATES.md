@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-11-27 | [Review deck corrected, architecture redrawn](#review-deck-corrected-architecture-redrawn-2026-11-27) | Gaurav |
 | 2026-11-02 | [IEEE-format methodology draft, survey correction](#ieee-format-methodology-draft-survey-correction-2026-11-02) | Gaurav |
 | 2026-11-02 | [IEEE-format literature survey](#ieee-format-literature-survey-2026-11-02) | Gaurav |
 | 2026-10-30 | [main is now the only branch](#main-is-now-the-only-branch-2026-10-30) | Gaurav |
@@ -103,6 +104,19 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Review deck corrected, architecture redrawn (2026-11-27)
+
+**What:** Added `docs/report/CampusOS_EDI_Review_Presentation.pptx`, a corrected copy of the EDI review deck with the same 15-slide outline. Changes:
+- Slide 5: literature table now uses papers whose details were checked, with citations.
+- Slide 7: new architecture figure, `docs/diagrams/architecture-slide.html` and `.png`, readable at slide size.
+- Slide 12: rebuilt as a normal editable slide instead of a picture inside an embedded PowerPoint file.
+- Slide 14: IEEE-format references matching slide 5.
+- Slides 7 to 13: fixed the 3NF claim, the service count, the FR1 wording and the latency chart title.
+
+**Why:** Slide 12 showed blank outside PowerPoint. The old references lacked authors and years. The deck said "3NF" although `docs/SYLLABUS-MAPPING.md` records two exceptions, and "8 service modules" did not match `backend/src/services`.
+
+**What teammates need to do:** Fill in the Review 2 to 4 dates and outcomes on slide 11, and check the title-slide date.
 
 ## IEEE-format methodology draft, survey correction (2026-11-02)
 
