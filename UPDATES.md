@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-11-27 | [One-minute launch video of the live app](#one-minute-launch-video-of-the-live-app-2026-11-27) | Gaurav |
 | 2026-11-27 | [Launch video extended to 35 seconds](#launch-video-extended-to-35-seconds-2026-11-27) | Gaurav |
 | 2026-11-27 | [20-second launch video](#20-second-launch-video-2026-11-27) | Gaurav |
 | 2026-11-27 | [Review deck as PDF and PPTX, Review 4 removed](#review-deck-as-pdf-and-pptx-review-4-removed-2026-11-27) | Gaurav |
@@ -110,6 +111,14 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## One-minute launch video of the live app (2026-11-27)
+
+**What:** `brag-output/brag.mp4` is now 60 seconds, and most of it is the real app working. Each clip was recorded with real clicks and typing in CampusOS running locally: a student signs in and reserves a seat, a full event, the venues page, a club head booking MB 405 through the three-step form, the coordinator approving one of two clashing requests (the other is rejected with its reason), the other club head's notification, the principal's audit trail and reports, and dark mode. It still opens with the wall of panels and keeps the email cards and the test-count outro. The recordings used a throwaway database (`campusos_video`) and an API with mail switched off, so no emails were sent. `brag-output/work/record-clips.js` records the clips, `render-frames.js` renders the video page frame by frame, and `score.py` makes the soundtrack. The clip frames (`work/clips/`, about 300 MB) are git-ignored.
+
+**Why:** Gaurav asked for a one-minute video with more of the app working.
+
+**What teammates need to do:** Nothing.
 
 ## Launch video extended to 35 seconds (2026-11-27)
 
