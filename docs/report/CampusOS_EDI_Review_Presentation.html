@@ -499,6 +499,16 @@ ul.dash li::before { height: 2px; width: 14px; background: var(--t-accent); }
 .so-meth { height: 478px; }
 .ts-race { height: 494px; }
 .cc-l, .cc-r { height: 600px; }
+/* ===========================================
+   PRINT / PDF: one 1920x1080 slide per page, everything shown, colours kept
+   =========================================== */
+@page { size: 1920px 1080px; margin: 0; }
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  html, body, .deck-viewport { background: var(--slide-bg) !important; }
+  .reveal, .grow { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .ts-chart svg { transform: scale(.94) !important; }
+}
 </style>
 </head>
 <body>
@@ -847,7 +857,6 @@ ul.dash li::before { height: 2px; width: 14px; background: var(--t-accent); }
       <div class="r"><div class="h">Review 1<span>22 Sep</span></div><div class="o">Working app, 1,278 tests</div></div>
       <div class="r"><div class="h">Review 2<span>3 Nov</span></div><div class="o">Real email: sign-up codes + password reset</div></div>
       <div class="r"><div class="h">Review 3<span>28 Nov</span></div><div class="o">Final demo of the complete platform</div></div>
-      <div class="r todo"><div class="h">Review 4<span>[date]</span></div><div class="o">[add outcome]</div></div>
     </div>
   </div>
   <div class="ft"><span>CampusOS · Team A6</span><span>11</span></div>

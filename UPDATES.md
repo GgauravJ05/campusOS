@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-11-27 | [Review deck as PDF and PPTX, Review 4 removed](#review-deck-as-pdf-and-pptx-review-4-removed-2026-11-27) | Gaurav |
 | 2026-11-27 | [HTML deck restyled with soft cards](#html-deck-restyled-with-soft-cards-2026-11-27) | Gaurav |
 | 2026-11-27 | [HTML deck: new colours, dates, outcomes trimmed](#html-deck-new-colours-dates-outcomes-trimmed-2026-11-27) | Gaurav |
 | 2026-11-27 | [Review deck as an HTML presentation](#review-deck-as-an-html-presentation-2026-11-27) | Gaurav |
@@ -107,6 +108,14 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Review deck as PDF and PPTX, Review 4 removed (2026-11-27)
+
+**What:** Removed the empty Review 4 row from slide 11 of the HTML deck. Added `docs/report/CampusOS_EDI_Review_Presentation.pdf` (15 pages, exported from the HTML, fonts embedded) and replaced `docs/report/CampusOS_EDI_Review_Presentation.pptx` with an editable PowerPoint in the same soft-cards style. The PPTX was rebuilt from the HTML's layout: text boxes and shapes are editable, the latency chart is a real PowerPoint chart, and the screenshots and Video Link keep their Google Drive links. The architecture figure is a picture.
+
+**Why:** Gaurav wanted the final deck in all three formats. The old pptx is still in the git history.
+
+**What teammates need to do:** The PPTX uses Calibri, not the HTML's Figtree font, so line breaks can differ slightly. Check any slide you edit in PowerPoint before presenting from it.
 
 ## HTML deck restyled with soft cards (2026-11-27)
 
