@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-11-27 | [HTML deck restyled with soft cards](#html-deck-restyled-with-soft-cards-2026-11-27) | Gaurav |
 | 2026-11-27 | [HTML deck: new colours, dates, outcomes trimmed](#html-deck-new-colours-dates-outcomes-trimmed-2026-11-27) | Gaurav |
 | 2026-11-27 | [Review deck as an HTML presentation](#review-deck-as-an-html-presentation-2026-11-27) | Gaurav |
 | 2026-11-27 | [Review deck corrected, architecture redrawn](#review-deck-corrected-architecture-redrawn-2026-11-27) | Gaurav |
@@ -106,6 +107,14 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## HTML deck restyled with soft cards (2026-11-27)
+
+**What:** Restyled the whole `docs/report/CampusOS_EDI_Review_Presentation.html`: a light grey-blue page, white rounded cards with hairline borders, a muted slate-blue accent and the Figtree font. The thick bars, dark panels and bright orange are gone; the chart and architecture figure use the same blues. Text, outline, links and dates are unchanged.
+
+**Why:** Gaurav found the previous navy and orange version too high in contrast. He picked this style from three previews.
+
+**What teammates need to do:** Nothing.
 
 ## HTML deck: new colours, dates, outcomes trimmed (2026-11-27)
 

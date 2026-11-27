@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CampusOS: Smart Campus Management Platform</title>
-<!-- Fonts: Archivo (headings) + Nunito (body). Fallbacks keep the layout usable offline. -->
+<!-- Font: Figtree for headings and body. Fallbacks keep the layout usable offline. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Nunito:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 /* ===========================================
    THEME: change these to restyle the whole deck
@@ -408,6 +408,97 @@ body.editing [contenteditable="true"] { outline: 2px dashed rgba(228, 87, 46, .6
   font: 600 15px/1 var(--font-body); padding: 12px 18px; opacity: 0; transition: opacity .3s; pointer-events: none; }
 .toast.show { opacity: 1; }
 @media print { .progress, .counter, .edit-hotzone, .edit-toggle, .toast { display: none !important; } }
+
+/* ===========================================
+   SOFT THEME LAYER: overrides the base deck styling.
+   Each theme sets the tokens below; this block turns the
+   heavy bars, dark panels and loud numbers into calm ones.
+   =========================================== */
+:root { --stage-bg: var(--t-stage); --slide-bg: var(--t-bg); --ink: var(--t-heading); --red: var(--t-accent);
+        --red-tint: var(--t-accent-soft); --grey: var(--t-muted); --soft: var(--t-panel); --line: var(--t-rule);
+        --font-display: var(--t-font-head); --font-body: var(--t-font-body); }
+.slide { color: var(--t-text); }
+.slide::before { display: none; }
+/* headings and chrome */
+.hd h2, .t-title, .ty-title { font-family: var(--t-font-head); font-weight: var(--t-head-weight); letter-spacing: var(--t-head-track); color: var(--t-heading); }
+.hd .n { font-family: var(--t-font-body); font-weight: 600; font-size: 22px; color: var(--t-accent); }
+.hrule, .t-rule, .ty-rule { height: 1px; background: var(--t-rule-strong); }
+.mark { top: 112px; width: var(--t-mark-w); height: var(--t-mark-h); border-radius: var(--t-mark-r); background: var(--t-accent); display: var(--t-mark-display); }
+.lab { font-family: var(--t-font-body); font-weight: 700; font-size: 17px; letter-spacing: .16em; color: var(--t-accent); }
+.ft { font-family: var(--t-font-body); font-weight: 600; font-size: 16px; color: var(--t-muted); }
+.ft span:last-child { color: var(--t-muted); }
+h3, .col-top h3, .card h3, .oc h3, .ar-cards .c h3, .ts-race h3 { font-family: var(--t-font-h3); font-weight: var(--t-h3-weight); color: var(--t-heading); }
+/* thin rules instead of 5px bars */
+.col-top, .ol-item, .stat, .card, .oc, .ar-cards .c, .role:first-child { border-top: 1px solid var(--t-rule-strong); }
+.col-top.red, .stat:first-child, .oc:first-child, .ar-cards .c:last-child { border-top: 2px solid var(--t-accent); }
+/* big numbers: lighter weight, calmer colour */
+.ol-item .no, .pb-row .no, .flow .st .no, .oc .big { font-family: var(--t-font-num); font-weight: var(--t-num-weight); color: var(--t-accent); letter-spacing: -.01em; }
+.stat .v { font-family: var(--t-font-num); font-weight: var(--t-num-weight); color: var(--t-heading); letter-spacing: -.02em; }
+.ol-item .tx, .flow .st .tx, .shot .cap, .role .k, .tl .r .h, .rf li b, .layer .k, .card .tag, .btn { font-family: var(--t-font-body); }
+.ol-item .tx { font-weight: 600; color: var(--t-heading); }
+ol.num li::before { font-family: var(--t-font-body); font-weight: 700; font-size: 22px; color: var(--t-accent); }
+ul.dash li::before { height: 2px; width: 14px; background: var(--t-accent); }
+/* no solid dark panels: light tinted boxes with dark text */
+.panel-black, .pb-mot, .so-safe, .rs-fr, .oc-impact { background: var(--t-panel); color: var(--t-text); border: 1px solid var(--t-rule); border-radius: var(--t-radius); }
+.pb-mot h3, .so-safe h3 { color: var(--t-heading); }
+.layer { border-top-color: var(--t-rule); }
+.rs-fr b, .oc-impact h3 { color: var(--t-accent); font-family: var(--t-font-num); font-weight: var(--t-num-weight); }
+.flow .st { background: var(--t-panel); border-top: 2px solid var(--t-rule-strong); border-radius: 0 0 var(--t-radius) var(--t-radius); }
+.flow .st:last-child { background: var(--t-accent-soft); color: var(--t-text); border-top-color: var(--t-accent); }
+.flow .st:not(:last-child)::after { height: 2px; background: var(--t-rule-strong); }
+.lt th { background: var(--t-panel); color: var(--t-heading); font-family: var(--t-font-body); border-bottom: 2px solid var(--t-accent); }
+.lt td:first-child { font-family: var(--t-font-num); font-weight: var(--t-num-weight); color: var(--t-accent); }
+.lt tr.found td { background: var(--t-accent-soft); }
+.gap { border-left-width: 4px; border-left-color: var(--t-accent); background: var(--t-accent-soft); border-radius: 0 var(--t-radius) var(--t-radius) 0; }
+.formula { border-left-width: 3px !important; border-left-color: var(--t-accent) !important; background: var(--t-panel) !important; }
+/* timeline */
+.tl::before { width: 2px; left: 14px; background: var(--t-rule-strong); }
+.tl .r::before { width: 18px; height: 18px; left: 6px; top: 8px; border-radius: 50%; background: var(--t-accent); }
+.tl .r.todo::before { background: var(--t-bg); border: 2px solid var(--t-rule-strong); }
+.role.lead .k { color: var(--t-accent); }
+/* title and closing blocks */
+.t-block { background: var(--t-block1); border-radius: var(--t-radius); }
+.t-block::after { background: var(--t-block2); border-radius: var(--t-radius); }
+.ty-block { background: var(--t-block1); }
+.ty-block::after { background: var(--t-block2); }
+.ty-logo { border-radius: var(--t-radius); }
+.btn { background: var(--t-accent); border-radius: var(--t-radius); letter-spacing: .08em; }
+.shot img { border-color: var(--t-rule); border-radius: var(--t-radius); }
+.ar-fig svg { border-color: var(--t-rule); border-radius: var(--t-radius); }
+.progress { background: var(--t-accent); }
+/* chart and diagram: recolour the inline SVG fills */
+.ts-chart text { font-family: var(--t-font-body); }
+.ts-chart rect[fill="#1a2238"] { fill: var(--t-chart1); }
+.ts-chart rect[fill="#e4572e"] { fill: var(--t-chart2); }
+.ts-chart text[fill="#1a2238"] { fill: var(--t-heading); }
+.ts-chart text[fill="#e4572e"] { fill: var(--t-chart2-text); }
+.ts-chart line[stroke="#1a2238"] { stroke: var(--t-rule-strong); }
+.ar-fig [fill="#1a2238"] { fill: var(--t-heading); } .ar-fig [stroke="#1a2238"] { stroke: var(--t-heading); }
+.ar-fig [fill="#e4572e"] { fill: var(--t-accent); } .ar-fig [stroke="#e4572e"] { stroke: var(--t-accent); }
+.ar-fig [fill="#fcebe4"] { fill: var(--t-accent-soft); } .ar-fig [fill="#f0eee8"] { fill: var(--t-panel); }
+.ar-fig text { font-family: var(--t-font-body); }
+
+/* THEME B: soft cards. Light grey-blue page, white rounded cards, muted slate-blue accent. */
+:root { --t-bg: #f4f6f9; --t-stage: #e3e8ef; --t-text: #344054; --t-heading: #1f2a3d; --t-muted: #667085;
+  --t-accent: #4a6fa5; --t-accent-soft: #e7eef8; --t-panel: #ffffff; --t-rule: #e2e7ee; --t-rule-strong: #cbd4e1;
+  --t-font-head: 'Figtree', 'Helvetica Neue', Arial, sans-serif; --t-font-h3: 'Figtree', 'Helvetica Neue', Arial, sans-serif; --t-font-body: 'Figtree', 'Helvetica Neue', Arial, sans-serif;
+  --t-font-num: 'Figtree', 'Helvetica Neue', Arial, sans-serif; --t-head-weight: 700; --t-h3-weight: 700; --t-head-track: -.02em; --t-num-weight: 600;
+  --t-radius: 14px; --t-mark-w: 0; --t-mark-h: 0; --t-mark-r: 0; --t-mark-display: none;
+  --t-block1: #dfe7f3; --t-block2: #b8c9e2;
+  --t-chart1: #4a6fa5; --t-chart2: #a9bddb; --t-chart2-text: #5d7fb0; }
+/* cards: white, rounded, hairline border */
+.ol-item, .stat, .card, .oc, .ar-cards .c, .col-top { background: #fff; border: 1px solid var(--t-rule) !important; border-radius: 14px; padding: 22px 26px; }
+.ol-item .no { font-size: 56px; } .ts-stats .stat .v { font-size: 80px; }
+.hrule { display: none; }
+.ol-grid { row-gap: 32px; column-gap: 28px; } .ol-item { height: 190px; }
+.ts-chart { background: #fff; border: 1px solid var(--t-rule); border-radius: 14px; padding: 24px 28px; }
+.ts-chart svg { transform: scale(.94); transform-origin: top left; }
+.t-block { border-radius: 24px; } .t-block::after { border-radius: 18px; }
+
+/* equal heights for cards that sit side by side */
+.so-meth { height: 478px; }
+.ts-race { height: 494px; }
+.cc-l, .cc-r { height: 600px; }
 </style>
 </head>
 <body>
@@ -904,7 +995,7 @@ const deck = new SlidePresentation();
    Press E (or hover the top-left corner and click the pencil) to edit text.
    Ctrl/Cmd+S saves edits in this browser; Ctrl/Cmd+Shift+S downloads an edited copy of the file.
    =========================================== */
-const EDIT_KEY = 'campusos-edi-deck-v2';
+const EDIT_KEY = 'campusos-edi-deck-v3';
 const editor = {
   isActive: false,
   targets() {
