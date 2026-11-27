@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-11-27 | [20-second launch video](#20-second-launch-video-2026-11-27) | Gaurav |
 | 2026-11-27 | [Review deck as PDF and PPTX, Review 4 removed](#review-deck-as-pdf-and-pptx-review-4-removed-2026-11-27) | Gaurav |
 | 2026-11-27 | [HTML deck restyled with soft cards](#html-deck-restyled-with-soft-cards-2026-11-27) | Gaurav |
 | 2026-11-27 | [HTML deck: new colours, dates, outcomes trimmed](#html-deck-new-colours-dates-outcomes-trimmed-2026-11-27) | Gaurav |
@@ -108,6 +109,14 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## 20-second launch video (2026-11-27)
+
+**What:** Added `brag-output/` with a 20.5-second 1080p launch video of CampusOS (`brag.mp4`), its poster (`brag.jpg`), the storyboard (`brag-plan.md`) and ready-to-post captions (`share-copy.txt`). The video opens on a wall of twelve real app screens, then the logo and tagline. It then shows an approval that auto-rejects the competing booking, the fully booked event, and the audit trail and venue report. It ends on "1,278 tests · 0 failed". Every screen is one of the screenshots in `docs/screenshots/`. The music and sound effects were generated for this video, so there are no licensing issues. `brag-output/work/video.html` is the animated page the frames were rendered from.
+
+**Why:** Gaurav wanted a short shareable video that shows all the panels first.
+
+**What teammates need to do:** Nothing. To change a caption, edit `video.html` and re-render (the page needs `frontend/node_modules` installed for the Inter font).
 
 ## Review deck as PDF and PPTX, Review 4 removed (2026-11-27)
 
