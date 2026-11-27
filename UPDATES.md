@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-11-27 | [Review deck as an HTML presentation](#review-deck-as-an-html-presentation-2026-11-27) | Gaurav |
 | 2026-11-27 | [Review deck corrected, architecture redrawn](#review-deck-corrected-architecture-redrawn-2026-11-27) | Gaurav |
 | 2026-11-02 | [IEEE-format methodology draft, survey correction](#ieee-format-methodology-draft-survey-correction-2026-11-02) | Gaurav |
 | 2026-11-02 | [IEEE-format literature survey](#ieee-format-literature-survey-2026-11-02) | Gaurav |
@@ -104,6 +105,14 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Review deck as an HTML presentation (2026-11-27)
+
+**What:** Added `docs/report/CampusOS_EDI_Review_Presentation.html`, the same 15-slide review deck redesigned as one self-contained web page (white, black and red, with a visible column grid). Every slide keeps the pptx's outline and wording. Images, the architecture figure and the latency chart are inside the file, and the screenshots and the "Video Link" button open the same Google Drive files as the pptx.
+
+**Why:** To make the deck look sharper for the review. The pptx and PDF versions will follow in this style.
+
+**What teammates need to do:** Open the file in Chrome or Edge, press F11 for full screen, and use the arrow keys or Space to move between slides. Press E to edit text, Ctrl+S to keep edits in that browser, or Ctrl+Shift+S to download an edited copy. Fonts load from Google Fonts, so presenting offline falls back to Arial-like fonts. The Review 2 to 4 rows on slide 11 are still placeholders.
 
 ## Review deck corrected, architecture redrawn (2026-11-27)
 
