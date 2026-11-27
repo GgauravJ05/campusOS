@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-11-27 | [HTML deck: new colours, dates, outcomes trimmed](#html-deck-new-colours-dates-outcomes-trimmed-2026-11-27) | Gaurav |
 | 2026-11-27 | [Review deck as an HTML presentation](#review-deck-as-an-html-presentation-2026-11-27) | Gaurav |
 | 2026-11-27 | [Review deck corrected, architecture redrawn](#review-deck-corrected-architecture-redrawn-2026-11-27) | Gaurav |
 | 2026-11-02 | [IEEE-format methodology draft, survey correction](#ieee-format-methodology-draft-survey-correction-2026-11-02) | Gaurav |
@@ -105,6 +106,18 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## HTML deck: new colours, dates, outcomes trimmed (2026-11-27)
+
+**What:** Updated `docs/report/CampusOS_EDI_Review_Presentation.html`:
+- New colours: deep navy text and panels, a warm orange-red accent, off-white slides.
+- Title date is now 28 November 2026.
+- Slide 11 timeline: Review 2 on 3 Nov (real email for sign-up codes and password reset), Review 3 on 28 Nov (final demo). Review 4 is still blank.
+- Slide 12: removed the publication / patent card, leaving technical validation, SDG 9 and cost.
+
+**Why:** Gaurav asked for better colours and for the deck to show only work that is in the repo. Every remaining figure was checked against the repo: `docs/TEST-REPORT.md` (tests, coverage, races, response times), `db/schema.sql`, `backend/package.json`, `backend/src/lib/ds` and `docs/SYLLABUS-MAPPING.md`.
+
+**What teammates need to do:** Nothing. Edits saved in the browser under the old version are not loaded into this one.
 
 ## Review deck as an HTML presentation (2026-11-27)
 
