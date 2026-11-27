@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-11-27 | [Launch video extended to 35 seconds](#launch-video-extended-to-35-seconds-2026-11-27) | Gaurav |
 | 2026-11-27 | [20-second launch video](#20-second-launch-video-2026-11-27) | Gaurav |
 | 2026-11-27 | [Review deck as PDF and PPTX, Review 4 removed](#review-deck-as-pdf-and-pptx-review-4-removed-2026-11-27) | Gaurav |
 | 2026-11-27 | [HTML deck restyled with soft cards](#html-deck-restyled-with-soft-cards-2026-11-27) | Gaurav |
@@ -109,6 +110,14 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Launch video extended to 35 seconds (2026-11-27)
+
+**What:** `brag-output/brag.mp4` is now 35.5 seconds instead of 20.5. The panel wall and logo reveal are slower. It adds three new parts: the student dashboard and events list, venues by floor and the three-step booking form, and the verification and password-reset emails. The emails are cropped to the email card, so no inbox or sender address shows. The music was re-timed to the new cut, and the poster, storyboard and share copy were updated.
+
+**Why:** Gaurav asked for a longer video.
+
+**What teammates need to do:** Nothing.
 
 ## 20-second launch video (2026-11-27)
 
