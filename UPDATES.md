@@ -10,6 +10,7 @@ build history. Every change that lands gets an entry (see
 | Date | Change | Author |
 | ---- | ------ | ------ |
 | 2026-11-28 | [Team names added to the README](#team-names-added-to-the-readme-2026-11-28) | Gaurav |
+| 2026-11-28 | [Launch video and assistant files kept out of the repository](#launch-video-and-assistant-files-kept-out-of-the-repository-2026-11-28) | Gaurav |
 | 2026-11-28 | [Launch video voiceover in an Indian English voice](#launch-video-voiceover-in-an-indian-english-voice-2026-11-28) | Gaurav |
 | 2026-11-28 | [Launch video: voiceover instead of music](#launch-video-voiceover-instead-of-music-2026-11-28) | Gaurav |
 | 2026-11-27 | [One-minute launch video of the live app](#one-minute-launch-video-of-the-live-app-2026-11-27) | Gaurav |
@@ -122,6 +123,14 @@ build history. Every change that lands gets an entry (see
 **Why:** Gaurav asked for the names on GitHub.
 
 **What teammates need to do:** Check your name's spelling.
+
+## Launch video and assistant files kept out of the repository (2026-11-28)
+
+**What:** The `brag-output/` folder is no longer in the repository. It, `CLAUDE.md` and `.claude/` are now git-ignored. The files stay on Gaurav's computer. Earlier commits still contain them.
+
+**Why:** Gaurav wants the GitHub repository to hold only the project.
+
+**What teammates need to do:** Nothing. The next pull removes `brag-output/` from your copy.
 
 ## Launch video voiceover in an Indian English voice (2026-11-28)
 

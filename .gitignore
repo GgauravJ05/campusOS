@@ -39,3 +39,9 @@ scripts/demo-video/out/
 # live in docs/screenshots/ instead.
 /reference/
 /scripts/
+
+# Local only, never pushed: the launch video and AI assistant files
+/brag-output*/
+CLAUDE.md
+CLAUDE.local.md
+.claude/
