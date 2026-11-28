@@ -10,6 +10,7 @@ build history. Every change that lands gets an entry (see
 | Date | Change | Author |
 | ---- | ------ | ------ |
 | 2026-11-28 | [Team names added to the README](#team-names-added-to-the-readme-2026-11-28) | Gaurav |
+| 2026-11-28 | [Launch video: voiceover instead of music](#launch-video-voiceover-instead-of-music-2026-11-28) | Gaurav |
 | 2026-11-27 | [One-minute launch video of the live app](#one-minute-launch-video-of-the-live-app-2026-11-27) | Gaurav |
 | 2026-11-27 | [Launch video extended to 35 seconds](#launch-video-extended-to-35-seconds-2026-11-27) | Gaurav |
 | 2026-11-27 | [20-second launch video](#20-second-launch-video-2026-11-27) | Gaurav |
@@ -120,6 +121,14 @@ build history. Every change that lands gets an entry (see
 **Why:** Gaurav asked for the names on GitHub.
 
 **What teammates need to do:** Check your name's spelling.
+
+## Launch video: voiceover instead of music (2026-11-28)
+
+**What:** `brag-output/brag.mp4` now has a spoken voiceover instead of music. It uses the macOS Samantha voice (US English). There are 14 short lines, each timed to its scene, for example "Two clubs. One hall. Same slot. Exactly one gets it." The script is in `brag-output/work/narration.tsv` and the mixed track in `work/voiceover.wav`. The picture is unchanged.
+
+**Why:** Gaurav wanted a computer voiceover in a voice that is easy to hear.
+
+**What teammates need to do:** Nothing.
 
 ## One-minute launch video of the live app (2026-11-27)
 
