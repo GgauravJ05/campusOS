@@ -10,6 +10,7 @@ build history. Every change that lands gets an entry (see
 | Date | Change | Author |
 | ---- | ------ | ------ |
 | 2026-11-28 | [Team names added to the README](#team-names-added-to-the-readme-2026-11-28) | Gaurav |
+| 2026-11-28 | [Launch video voiceover in an Indian English voice](#launch-video-voiceover-in-an-indian-english-voice-2026-11-28) | Gaurav |
 | 2026-11-28 | [Launch video: voiceover instead of music](#launch-video-voiceover-instead-of-music-2026-11-28) | Gaurav |
 | 2026-11-27 | [One-minute launch video of the live app](#one-minute-launch-video-of-the-live-app-2026-11-27) | Gaurav |
 | 2026-11-27 | [Launch video extended to 35 seconds](#launch-video-extended-to-35-seconds-2026-11-27) | Gaurav |
@@ -121,6 +122,14 @@ build history. Every change that lands gets an entry (see
 **Why:** Gaurav asked for the names on GitHub.
 
 **What teammates need to do:** Check your name's spelling.
+
+## Launch video voiceover in an Indian English voice (2026-11-28)
+
+**What:** The voiceover in `brag-output/brag.mp4` is now spoken by the macOS Aman voice (English, India) instead of Samantha (US English). The script, timing and picture are unchanged, and the voice is at a relaxed 175 words per minute.
+
+**Why:** Gaurav wanted to try an Indian English voice.
+
+**What teammates need to do:** Nothing.
 
 ## Launch video: voiceover instead of music (2026-11-28)
 
