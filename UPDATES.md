@@ -9,6 +9,7 @@ build history. Every change that lands gets an entry (see
 
 | Date | Change | Author |
 | ---- | ------ | ------ |
+| 2026-11-28 | [Team names added to the README](#team-names-added-to-the-readme-2026-11-28) | Gaurav |
 | 2026-11-27 | [One-minute launch video of the live app](#one-minute-launch-video-of-the-live-app-2026-11-27) | Gaurav |
 | 2026-11-27 | [Launch video extended to 35 seconds](#launch-video-extended-to-35-seconds-2026-11-27) | Gaurav |
 | 2026-11-27 | [20-second launch video](#20-second-launch-video-2026-11-27) | Gaurav |
@@ -111,6 +112,14 @@ build history. Every change that lands gets an entry (see
 | 2026-08-20 | First PostgreSQL schema | Chaitali |
 
 ---
+
+## Team names added to the README (2026-11-28)
+
+**What:** The Team section of `README.md` now lists all twelve members of Team A6, the EDI Mentor and the EDI Coordinator, taken from the first slide of the review deck. The mentor's name is now spelled as on the slide (Prof. Nishanthi Naidu).
+
+**Why:** Gaurav asked for the names on GitHub.
+
+**What teammates need to do:** Check your name's spelling.
 
 ## One-minute launch video of the live app (2026-11-27)
 

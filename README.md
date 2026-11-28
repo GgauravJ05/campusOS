@@ -8,7 +8,7 @@
 > A web platform for **MMCOE Pune** that streamlines campus club events, venue scheduling, student seat reservations and administrative governance, with the double-booking and overbooking problems solved **inside the database**.
 
 **Team A6**, Department of Information Technology, Marathwada Mitra Mandal's College of Engineering, Pune
-· Guide: **Prof. Nishanti C. Naidu**
+· EDI Mentor: **Prof. Nishanthi Naidu**
 · Course: **B25IT304 Project Based Learning** (Second Year IT, A.Y. 2025-26) and EDI-1.
 
 > **What changed recently?** See [`UPDATES.md`](UPDATES.md), every change and build, newest first.
@@ -345,7 +345,26 @@ Stated here so nobody is surprised:
 
 ## Team
 
-**Team A6**, Department of Information Technology, MMCOE Pune. Guide: **Prof. Nishanti C. Naidu**.
+**Team A6**, Department of Information Technology, MMCOE Pune.
+
+| # | Name |
+| - | ---- |
+| 1 | Gaurav Jadhav |
+| 2 | Atharva Desai |
+| 3 | Aditya Patil |
+| 4 | Varad Rajboinwad |
+| 5 | Tushar Deshpande |
+| 6 | Chaitali Shahapurkar |
+| 7 | Tanishka Patil |
+| 8 | Srushti Mane |
+| 9 | Sarvesh Khaladkar |
+| 10 | Shravani Khandzode |
+| 11 | Omkar Shinde |
+| 12 | Gayatri Muttepawar |
+
+* **EDI Mentor:** Prof. Nishanthi Naidu
+* **EDI Coordinator:** Ms. P. R. Balage
+
 Who built what is recorded in [`docs/CONTRIBUTIONS.md`](docs/CONTRIBUTIONS.md), and the full history is in `git log` and [`UPDATES.md`](UPDATES.md).
 
 ---
